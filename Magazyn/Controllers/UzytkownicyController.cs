@@ -449,7 +449,7 @@ ORDER BY DataZapomnienia DESC;
         using var con = Db.OpenConnection(DbPath);
 
         static int SecureNext(int maxExclusive) =>
-            (int)(RandomNumberGenerator.GetInt32(maxExclusive));
+            RandomNumberGenerator.GetInt32(maxExclusive);
 
         static string RandDigits(int len)
         {
