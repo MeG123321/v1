@@ -100,25 +100,25 @@
                                 <label>Płeć</label>
                                 <select name="Plec" required>
                                     <option value="">Wybierz...</option>
-                                    <option value="Kobieta" selected="@(Model?.Plec == "Kobieta")">Kobieta</option>
-                                    <option value="Mężczyzna" selected="@(Model?.Plec == "Mężczyzna")">Mężczyzna</option>
+                                    <option value="Kobieta" selected="@(Model?.Plec == "Kobieta" ? "selected" : null)">Kobieta</option>
+                                    <option value="Mężczyzna" selected="@(Model?.Plec == "Mężczyzna" ? "selected" : null)">Mężczyzna</option>
                                 </select>
                             </div>
 
                             <div>
                                 <label>Status</label>
                                 <select name="Status" required>
-                                    <option value="Aktywny" selected="@(string.IsNullOrEmpty(Model?.Status) || Model?.Status == "Aktywny")">Aktywny</option>
-                                    <option value="Nieaktywny" selected="@(Model?.Status == "Nieaktywny")">Nieaktywny</option>
+                                    <option value="Aktywny" selected="@(string.IsNullOrEmpty(Model?.Status) || Model?.Status == "Aktywny" ? "selected" : null)">Aktywny</option>
+                                    <option value="Nieaktywny" selected="@(Model?.Status == "Nieaktywny" ? "selected" : null)">Nieaktywny</option>
                                 </select>
                             </div>
 
                             <div>
                                 <label>Rola</label>
                                 <select name="Rola" required>
-                                    <option value="Użytkownik" selected="@(string.IsNullOrEmpty(Model?.Rola) || Model?.Rola == "Użytkownik")">Użytkownik</option>
-                                    <option value="Moderator" selected="@(Model?.Rola == "Moderator")">Moderator</option>
-                                    <option value="Admin" selected="@(Model?.Rola == "Admin")">Admin</option>
+                                    <option value="Użytkownik" selected="@(string.IsNullOrEmpty(Model?.Rola) || Model?.Rola == "Użytkownik" ? "selected" : null)">Użytkownik</option>
+                                    <option value="Moderator" selected="@(Model?.Rola == "Moderator" ? "selected" : null)">Moderator</option>
+                                    <option value="Admin" selected="@(Model?.Rola == "Admin" ? "selected" : null)">Admin</option>
                                 </select>
                             </div>
 

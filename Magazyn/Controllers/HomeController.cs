@@ -131,7 +131,7 @@ LIMIT 1;
             lastName = r["LastName"],
             pesel = r["pesel"],
             status = r["Status"],
-            plec = Convert.ToInt32(r["Plec"]),
+            plec = r["Plec"] == DBNull.Value ? 0 : Convert.ToInt32(r["Plec"]),
             dataUrodzenia = r["DataUrodzenia"],
             email = r["Email"],
             nrTelefonu = r["NrTelefonu"],

@@ -96,27 +96,16 @@
                         <div>
                             <label>Płeć</label>
                             <select name="Plec" required>
-                                <option value="Kobieta" selected="@(Model.Plec == "Kobieta")">Kobieta</option>
-                                <option value="Mężczyzna" selected="@(Model.Plec == "Mężczyzna")">Mężczyzna</option>
+                                <option value="Kobieta" selected="@(Model.Plec == "Kobieta" ? "selected" : null)">Kobieta</option>
+                                <option value="Mężczyzna" selected="@(Model.Plec == "Mężczyzna" ? "selected" : null)">Mężczyzna</option>
                             </select>
                         </div>
 
                         <div>
                             <label>Status</label>
                             <select name="Status" required>
-                                <option value="Aktywny" selected="@(Model.Status == "Aktywny")">Aktywny</option>
-                                <option value="Nieaktywny" selected="@(Model.Status == "Nieaktywny")">Nieaktywny</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label>Rola</label>
-                            <select name="Rola" required>
-                                <option value="Użytkownik" selected="@(Model.Rola == "Użytkownik")">Użytkownik</option>
-                                <option value="Moderator" selected="@(Model.Rola == "Moderator")">Moderator</option>
-                                <option value="Admin" selected="@(Model.Rola == "Admin")">Admin</option>
-                                <option value="Brak" selected="@(Model.Rola == "Brak")">Brak</option>
-                                <option value="Zapomniany" selected="@(Model.Rola == "Zapomniany")">Zapomniany</option>
+                                <option value="Aktywny" selected="@(Model.Status == "Aktywny" ? "selected" : null)">Aktywny</option>
+                                <option value="Nieaktywny" selected="@(Model.Status == "Nieaktywny" ? "selected" : null)">Nieaktywny</option>
                             </select>
                         </div>
 
