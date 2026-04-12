@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.Sqlite;
+using System.Security.Cryptography;
 using Magazyn.Data;
 using Magazyn.Models;
 using Magazyn.Models.Dtos;
@@ -447,29 +448,29 @@ ORDER BY DataZapomnienia DESC;
 
         using var con = Db.OpenConnection(DbPath);
 
+        static int SecureNext(int maxExclusive) =>
+            (int)(RandomNumberGenerator.GetInt32(maxExclusive));
+
         static string RandDigits(int len)
         {
-            var rng = Random.Shared;
             var chars = new char[len];
-            for (int i = 0; i < len; i++) chars[i] = (char)('0' + rng.Next(0, 10));
+            for (int i = 0; i < len; i++) chars[i] = (char)('0' + SecureNext(10));
             return new string(chars);
         }
 
         static string RandLetters(int len)
         {
             const string a = "abcdefghijklmnopqrstuvwxyz";
-            var rng = Random.Shared;
             var chars = new char[len];
-            for (int i = 0; i < len; i++) chars[i] = a[rng.Next(a.Length)];
+            for (int i = 0; i < len; i++) chars[i] = a[SecureNext(a.Length)];
             return char.ToUpper(chars[0]) + new string(chars, 1, len - 1);
         }
 
         static string RandToken(int len)
         {
             const string a = "abcdefghijklmnopqrstuvwxyz0123456789_";
-            var rng = Random.Shared;
             var chars = new char[len];
-            for (int i = 0; i < len; i++) chars[i] = a[rng.Next(a.Length)];
+            for (int i = 0; i < len; i++) chars[i] = a[SecureNext(a.Length)];
             return new string(chars);
         }
 
@@ -477,12 +478,12 @@ ORDER BY DataZapomnienia DESC;
         var newLast = RandLetters(8);
         var newPesel = RandDigits(11);
 
-        var year = Random.Shared.Next(1950, 2006);
-        var month = Random.Shared.Next(1, 13);
-        var day = Random.Shared.Next(1, DateTime.DaysInMonth(year, month) + 1);
+        var year = 1950 + SecureNext(56); // 1950-2005
+        var month = 1 + SecureNext(12);
+        var day = 1 + SecureNext(DateTime.DaysInMonth(year, month));
         var newDob = new DateTime(year, month, day).ToString("yyyy-MM-dd");
 
-        var newPlec = Random.Shared.Next(0, 2);
+        var newPlec = SecureNext(2);
         var newUsername = "del_" + RandToken(10);
         var newPassword = RandToken(12);
         var newEmail = $"{RandToken(8)}@example.com";
