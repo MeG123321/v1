@@ -29,8 +29,7 @@ public class UserVm
     [Required]
     public string Plec { get; set; } = "";
 
-    [Required]
-    public string Rola { get; set; } = "";
+    public string? Rola { get; set; }
 
     [Required]
     public string DataUrodzenia { get; set; } = ""; // YYYY-MM-DD
