@@ -1,20 +1,20 @@
 {
   "format": 1,
   "restore": {
-    "/workspaces/testowanie_magazyn/Magazyn/Magazyn.csproj": {}
+    "/home/runner/work/v1/v1/Magazyn/Magazyn.csproj": {}
   },
   "projects": {
-    "/workspaces/testowanie_magazyn/Magazyn/Magazyn.csproj": {
+    "/home/runner/work/v1/v1/Magazyn/Magazyn.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/workspaces/testowanie_magazyn/Magazyn/Magazyn.csproj",
+        "projectUniqueName": "/home/runner/work/v1/v1/Magazyn/Magazyn.csproj",
         "projectName": "Magazyn",
-        "projectPath": "/workspaces/testowanie_magazyn/Magazyn/Magazyn.csproj",
-        "packagesPath": "/home/codespace/.nuget/packages/",
-        "outputPath": "/workspaces/testowanie_magazyn/Magazyn/obj/",
+        "projectPath": "/home/runner/work/v1/v1/Magazyn/Magazyn.csproj",
+        "packagesPath": "/home/runner/.nuget/packages/",
+        "outputPath": "/home/runner/work/v1/v1/Magazyn/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/codespace/.nuget/NuGet/NuGet.Config"
+          "/home/runner/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net10.0"
@@ -38,7 +38,7 @@
           "auditLevel": "low",
           "auditMode": "all"
         },
-        "SdkAnalysisLevel": "10.0.100"
+        "SdkAnalysisLevel": "10.0.200"
       },
       "frameworks": {
         "net10.0": {
@@ -68,7 +68,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/10.0.100/PortableRuntimeIdentifierGraph.json",
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/10.0.201/PortableRuntimeIdentifierGraph.json",
           "packagesToPrune": {
             "Microsoft.AspNetCore": "(,10.0.32767]",
             "Microsoft.AspNetCore.Antiforgery": "(,10.0.32767]",
