@@ -16,6 +16,12 @@ public class HomeController : Controller
 
     private string DbPath => Db.GetDbPath(_env);
 
+    private static string StatusToText(object dbValue)
+    {
+        if (dbValue == DBNull.Value) return "Nieaktywny";
+        return Convert.ToInt32(dbValue) == 1 ? "Aktywny" : "Nieaktywny";
+    }
+
     public IActionResult Index() => View();
 
     // =========================
@@ -120,6 +126,8 @@ LIMIT 1;
         if (!r.Read())
             return NotFound(new { msg = "Nie znaleziono użytkownika" });
 
+        var statusInt = r["Status"] == DBNull.Value ? 0 : Convert.ToInt32(r["Status"]);
+
         return Json(new
         {
             id = r["id"],
@@ -128,7 +136,11 @@ LIMIT 1;
             firstName = r["firstName"],
             lastName = r["LastName"],
             pesel = r["pesel"],
-            status = r["Status"],
+
+            // Status: int + tekst
+            statusInt = statusInt,
+            status = StatusToText(r["Status"]),
+
             plec = r["Plec"] == DBNull.Value ? 0 : Convert.ToInt32(r["Plec"]),
             dataUrodzenia = r["DataUrodzenia"],
             email = r["Email"],

@@ -2,7 +2,9 @@
 @{
     Layout = null;
 
-    var active = string.Equals(Model.Status, "Aktywny", StringComparison.OrdinalIgnoreCase);
+    // Pobieramy status i czyścimy go z białych znaków, aby porównanie było precyzyjne
+    var currentStatus = Model.Status?.Trim() ?? "";
+    var active = string.Equals(currentStatus, "Aktywny", StringComparison.OrdinalIgnoreCase);
 }
 
 <!DOCTYPE html>
@@ -45,7 +47,8 @@
         .name-line { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
         .status-pill {
-            padding: 6px 10px;
+            display: inline-block;
+            padding: 6px 12px;
             border-radius: 999px;
             font-weight: 800;
             font-size: 12px;
@@ -53,7 +56,11 @@
             background: #f6fff2;
             color: #2e7d32;
         }
-        .status-pill.off { background: #fff3f3; color: #b42318; }
+        .status-pill.off { 
+            background: #fff3f3; 
+            color: #b42318; 
+            border-color: rgba(180, 35, 24, 0.2);
+        }
         .subline { opacity: .85; margin-top: 4px; font-size: 13px; }
 
         .keyval th { width: 240px; opacity: .85; text-align: left; padding-right: 12px; white-space: nowrap; }
@@ -150,8 +157,10 @@
                         <div>
                             <div class="name-line">
                                 <h2 style="margin:0;">@Model.FirstName @Model.LastName</h2>
+                                
+                                @* POPRAWKA WYŚWIETLANIA STATUSU *@
                                 <span class="status-pill @(active ? "" : "off")">
-                                    Status: @(!string.IsNullOrWhiteSpace(Model.Status) ? Model.Status : "-")
+                                    @(string.IsNullOrWhiteSpace(currentStatus) ? "Status: Nieokreślony" : $"Status: {currentStatus}")
                                 </span>
                             </div>
 
@@ -210,6 +219,7 @@
                     </table>
                 </div>
 
+                @* Popup do nadawania ról *@
                 <div id="role-popup" class="role-fallback">
                     <div class="role-box">
                         <a class="close-x" href="#" aria-label="Zamknij">&times;</a>

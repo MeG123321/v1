@@ -58,7 +58,7 @@ SELECT u.id,
        u.LastName,
        u.Email,
        u.pesel,
-       u.Status,
+       CASE WHEN u.Status = 1 THEN 'Aktywny' ELSE 'Nieaktywny' END AS Status,
        $rola AS Rola
 FROM Uzytkownik_Uprawnienia uu
 JOIN Uzytkownicy u ON u.id = uu.uzytkownik_id

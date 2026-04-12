@@ -25,6 +25,19 @@ public class UzytkownicyController : Controller
         return v.Trim().Equals("Mężczyzna", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
     }
 
+    // STATUS: w bazie INT (1=Aktywny, 0=Nieaktywny)
+    private static string StatusToText(object dbValue)
+    {
+        if (dbValue == DBNull.Value) return "Nieaktywny";
+        return Convert.ToInt32(dbValue) == 1 ? "Aktywny" : "Nieaktywny";
+    }
+
+    private static int StatusToInt(string? v)
+    {
+        if (string.IsNullOrWhiteSpace(v)) return 1; // domyślnie aktywny
+        return v.Trim().Equals("Aktywny", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
+    }
+
     // ============================================
     // ADMIN PANEL
     // ============================================
@@ -48,7 +61,7 @@ SELECT u.id,
        u.LastName,
        u.Email,
        u.pesel,
-       u.Status,
+       CASE WHEN u.Status = 1 THEN 'Aktywny' ELSE 'Nieaktywny' END AS Status,
        COALESCE(GROUP_CONCAT(p.Nazwa, ', '), '-') AS Rola
 FROM Uzytkownicy u
 LEFT JOIN Uzytkownik_Uprawnienia uu ON uu.uzytkownik_id = u.id
@@ -57,7 +70,7 @@ WHERE COALESCE(u.czy_zapomniany,0) = 0
   AND ($login IS NULL OR $login = '' OR LOWER(TRIM(u.username)) LIKE '%' || LOWER(TRIM($login)) || '%')
   AND ($name  IS NULL OR $name  = '' OR LOWER(TRIM(u.firstName || ' ' || u.LastName)) LIKE '%' || LOWER(TRIM($name)) || '%')
   AND ($pesel IS NULL OR $pesel = '' OR TRIM(u.pesel) LIKE '%' || TRIM($pesel) || '%')
-GROUP BY u.id, u.username, u.firstName, u.LastName, u.Email, u.pesel, u.Status
+GROUP BY u.id, u.username, u.firstName, u.LastName, u.Email, u.pesel
 ORDER BY u.id;
 ";
         cmd.Parameters.AddWithValue("$login", login ?? "");
@@ -100,7 +113,7 @@ SELECT u.id,
        u.firstName,
        u.LastName,
        u.pesel,
-       u.Status,
+       CASE WHEN u.Status = 1 THEN 'Aktywny' ELSE 'Nieaktywny' END AS Status,
        u.Plec,
        u.DataUrodzenia,
        u.Email,
@@ -206,16 +219,16 @@ LIMIT 1;
             }
         }
 
-        using (var checkPesel = con.CreateCommand())
-        {
-            checkPesel.CommandText = @"SELECT COUNT(*) FROM Uzytkownicy WHERE TRIM(pesel) = TRIM($p);";
-            checkPesel.Parameters.AddWithValue("$p", dto.Pesel);
-            if (Convert.ToInt32(checkPesel.ExecuteScalar()) > 0)
-            {
-                ModelState.AddModelError("", "Taki PESEL już istnieje.");
-                return View(dto);
-            }
-        }
+  using (var checkPesel = con.CreateCommand())
+{
+    checkPesel.CommandText = @"SELECT COUNT(*) FROM Uzytkownicy WHERE TRIM(pesel) = TRIM($p);";
+    checkPesel.Parameters.AddWithValue("$p", dto.Pesel);
+    if (Convert.ToInt32(checkPesel.ExecuteScalar()) > 0)
+    {
+        ModelState.AddModelError("", "Taki PESEL już istnieje.");
+        return View(dto);
+    }
+}
 
         using (var cmd = con.CreateCommand())
         {
@@ -243,7 +256,7 @@ VALUES
             cmd.Parameters.AddWithValue("$Password", string.IsNullOrWhiteSpace(dto.Password) ? DBNull.Value : dto.Password);
             cmd.Parameters.AddWithValue("$KodPocztowy", dto.KodPocztowy);
             cmd.Parameters.AddWithValue("$NrPosesji", dto.NrPosesji);
-            cmd.Parameters.AddWithValue("$Status", string.IsNullOrWhiteSpace(dto.Status) ? "Aktywny" : dto.Status);
+            cmd.Parameters.AddWithValue("$Status", StatusToInt(dto.Status));
             cmd.ExecuteNonQuery();
         }
 
@@ -282,7 +295,7 @@ LIMIT 1;
             FirstName = r["firstName"]?.ToString() ?? "",
             LastName = r["LastName"]?.ToString() ?? "",
             Pesel = r["pesel"]?.ToString() ?? "",
-            Status = r["Status"]?.ToString() ?? "",
+            Status = StatusToText(r["Status"]),
             Plec = PlecToText(r["Plec"] == DBNull.Value ? 0 : Convert.ToInt32(r["Plec"])),
             DataUrodzenia = r["DataUrodzenia"]?.ToString() ?? "",
             Email = r["Email"]?.ToString() ?? "",
@@ -353,7 +366,7 @@ WHERE id = $Id;
         cmd.Parameters.AddWithValue("$FirstName", vm.FirstName);
         cmd.Parameters.AddWithValue("$LastName", vm.LastName);
         cmd.Parameters.AddWithValue("$Pesel", vm.Pesel);
-        cmd.Parameters.AddWithValue("$Status", vm.Status);
+        cmd.Parameters.AddWithValue("$Status", StatusToInt(vm.Status));
         cmd.Parameters.AddWithValue("$Plec", PlecToInt(vm.Plec));
         cmd.Parameters.AddWithValue("$DataUrodzenia", vm.DataUrodzenia);
         cmd.Parameters.AddWithValue("$Email", vm.Email);
@@ -499,7 +512,7 @@ SET czy_zapomniany = 1,
     pesel = $Pesel,
     DataUrodzenia = $DataUrodzenia,
     Plec = $Plec,
-    Status = 'Nieaktywny',
+    Status = 0,
     username = $Username,
     Password = $Password,
     Email = $Email
