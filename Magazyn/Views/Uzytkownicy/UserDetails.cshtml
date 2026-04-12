@@ -61,15 +61,18 @@
 
         .action-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
 
-        /* Popup bez JS: dialog + :target (fallback) */
-        dialog.role-dialog {
-            border: none;
-            border-radius: 14px;
-            padding: 0;
-            width: min(620px, 95vw);
-            background: transparent;
+        .role-fallback {
+            display:none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.55);
+            align-items: center;
+            justify-content: center;
+            padding: 18px;
+            z-index: 9999;
         }
-        dialog.role-dialog::backdrop { background: rgba(0,0,0,.55); }
+        .role-fallback:target { display:flex; }
+        .role-fallback .role-box { width: min(620px, 95vw); }
 
         .role-box {
             background: #0f0f10;
@@ -105,21 +108,6 @@
             color:#fff;
         }
 
-        /* fallback :target (gdyby dialog nie działał) */
-        .role-fallback {
-            display:none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,.55);
-            align-items: center;
-            justify-content: center;
-            padding: 18px;
-            z-index: 9999;
-        }
-        .role-fallback:target { display:flex; }
-        .role-fallback .role-box { width: min(620px, 95vw); }
-
-        /* żeby formularz POST wyglądał jak przycisk */
         .inline-form { display:inline; }
     </style>
 </head>
@@ -131,10 +119,10 @@
             <nav class="gitanav">
                 <p>Zarządzanie użytkownikami</p>
                 <ul>
-                    <li><a asp-controller="Home" asp-action="AdminPanel" class="active">Przegląd personelu</a></li>
-                    <li><a asp-controller="Home" asp-action="Rejestracja">Rejestracja pracownika</a></li>
-                    <li><a asp-controller="Home" asp-action="ForgottenUsers">Użytkownicy zapomniani (RODO)</a></li>
-                    <li><a asp-controller="Home" asp-action="Uprawnienia">Nadaj Uprawnienia</a></li>
+                    <li><a asp-controller="Uzytkownicy" asp-action="AdminPanel" class="active">Przegląd personelu</a></li>
+                    <li><a asp-controller="Uzytkownicy" asp-action="Rejestracja">Rejestracja pracownika</a></li>
+                    <li><a asp-controller="Uzytkownicy" asp-action="ForgottenUsers">Użytkownicy zapomniani (RODO)</a></li>
+                    <li><a asp-controller="Uprawnienia" asp-action="Uprawnienia">Nadaj Uprawnienia</a></li>
                 </ul>
             </nav>
         </aside>
@@ -149,7 +137,7 @@
             </header>
 
             <section class="zaw">
-                <a asp-controller="Home" asp-action="AdminPanel" style="display:inline-block; margin-bottom:14px;">
+                <a asp-controller="Uzytkownicy" asp-action="AdminPanel" style="display:inline-block; margin-bottom:14px;">
                     ← Wróć do listy klientów
                 </a>
 
@@ -175,23 +163,20 @@
                     </div>
 
                     <div class="action-row">
-                        <!-- EDYTUJ: działa -->
                         <a class="btn-primary"
-                           asp-controller="Home"
+                           asp-controller="Uzytkownicy"
                            asp-action="EditUser"
                            asp-route-id="@Model.Id"
                            style="text-decoration:none; display:inline-block; text-align:center;">
                             Edytuj
                         </a>
 
-                        <!-- ZAPOMNIJ: bez JS (POST) -->
                         <form class="inline-form"
-                              asp-controller="Home"
+                              asp-controller="Uzytkownicy"
                               asp-action="ForgetUserFromDetails"
                               asp-route-id="@Model.Id"
                               method="post">
                             @Html.AntiForgeryToken()
-                            <!-- na razie adminId=1 (tak jak masz w starym JS). Potem podepniemy z sesji/logowania -->
                             <input type="hidden" name="adminId" value="1" />
                             <button type="submit" class="btn-secondary"
                                     onclick="return confirm('Na pewno zapomnieć użytkownika?');">
@@ -199,8 +184,6 @@
                             </button>
                         </form>
 
-                        <!-- NADAJ UPRAWNIENIA: popup bez JS -->
-                        <!-- 1) NOWOCZESNE: <dialog> otwierany linkiem + autofocus w środku -->
                         <a class="btn-primary"
                            href="#role-popup"
                            style="text-decoration:none; display:inline-block; text-align:center;">
@@ -217,8 +200,7 @@
                             <tr><th>PESEL</th><td>@(string.IsNullOrWhiteSpace(Model.Pesel) ? "-" : Model.Pesel)</td></tr>
                             <tr><th>Data urodzenia</th><td>@(string.IsNullOrWhiteSpace(Model.DataUrodzenia) ? "-" : Model.DataUrodzenia)</td></tr>
                             <tr><th>Nr telefonu</th><td>@(string.IsNullOrWhiteSpace(Model.NrTelefonu) ? "-" : Model.NrTelefonu)</td></tr>
-                           <tr><th>Płeć</th><td>@((Convert.ToInt32(Model.Plec) == 1) ? "Mężczyzna" : "Kobieta")</td></tr>
-
+                            <tr><th>Płeć</th><td>@((Convert.ToInt32(Model.Plec) == 1) ? "Mężczyzna" : "Kobieta")</td></tr>
                             <tr><th>Miejscowość</th><td>@(string.IsNullOrWhiteSpace(Model.Miejscowosc) ? "-" : Model.Miejscowosc)</td></tr>
                             <tr><th>Kod pocztowy</th><td>@(string.IsNullOrWhiteSpace(Model.KodPocztowy) ? "-" : Model.KodPocztowy)</td></tr>
                             <tr><th>Ulica</th><td>@(string.IsNullOrWhiteSpace(Model.Ulica) ? "-" : Model.Ulica)</td></tr>
@@ -228,15 +210,12 @@
                     </table>
                 </div>
 
-                <!-- =========================
-                     POPUP ROLE (bez JS): fallback przez :target
-                     ========================= -->
                 <div id="role-popup" class="role-fallback">
                     <div class="role-box">
                         <a class="close-x" href="#" aria-label="Zamknij">&times;</a>
                         <h3>Nadaj uprawnienia</h3>
 
-                        <form asp-controller="Home" asp-action="SetRole" method="post">
+                        <form asp-controller="Uprawnienia" asp-action="SetRole" method="post">
                             @Html.AntiForgeryToken()
                             <input type="hidden" name="id" value="@Model.Id" />
 

@@ -21,10 +21,10 @@
             <nav class="gitanav">
                 <p>Zarządzanie użytkownikami</p>
                 <ul>
-                    <li><a asp-controller="Home" asp-action="AdminPanel">Przegląd personelu</a></li>
-                    <li><a asp-controller="Home" asp-action="Rejestracja">Rejestracja pracownika</a></li>
-                    <li><a asp-controller="Home" asp-action="ForgottenUsers">Użytkownicy zapomniani (RODO)</a></li>
-                    <li><a asp-controller="Home" asp-action="Uprawnienia" class="active">Nadaj Uprawnienia</a></li>
+                    <li><a asp-controller="Uzytkownicy" asp-action="AdminPanel">Przegląd personelu</a></li>
+                    <li><a asp-controller="Uzytkownicy" asp-action="Rejestracja">Rejestracja pracownika</a></li>
+                    <li><a asp-controller="Uzytkownicy" asp-action="ForgottenUsers">Użytkownicy zapomniani (RODO)</a></li>
+                    <li><a asp-controller="Uprawnienia" asp-action="Uprawnienia" class="active">Nadaj Uprawnienia</a></li>
                 </ul>
             </nav>
         </aside>
@@ -39,7 +39,7 @@
             </header>
 
             <section class="zaw">
-                <a asp-controller="Home" asp-action="Uprawnienia" style="display:inline-block; margin-bottom:14px;">
+                <a asp-controller="Uprawnienia" asp-action="Uprawnienia" style="display:inline-block; margin-bottom:14px;">
                     ← Wróć do ról
                 </a>
 
@@ -78,7 +78,7 @@
                                         <td>@u.Status</td>
                                         <td>
                                             <a class="btn-secondary"
-                                               asp-controller="Home"
+                                               asp-controller="Uzytkownicy"
                                                asp-action="UserDetails"
                                                asp-route-id="@u.Id"
                                                style="text-decoration:none; display:inline-block; text-align:center;">

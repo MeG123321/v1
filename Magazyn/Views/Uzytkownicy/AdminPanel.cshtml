@@ -1,7 +1,6 @@
 @model List<Magazyn.Models.Dtos.UserListRowDto>
 @{
     Layout = null;
-    var rola = (string?)ViewBag.Rola ?? "-";
 }
 
 <!DOCTYPE html>
@@ -9,9 +8,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Magazyn GiTA - Użytkownicy roli @rola</title>
+    <title>Magazyn GiTA - Zarządzanie</title>
 
     <link rel="stylesheet" href="~/css/style.css" />
+
+    <script defer src="~/js/script.js"></script>
 </head>
 
 <body data-home-url='@Url.Action("Index", "Home")'>
@@ -21,10 +22,14 @@
             <nav class="gitanav">
                 <p>Zarządzanie użytkownikami</p>
                 <ul>
-                    <li><a asp-controller="Home" asp-action="AdminPanel">Przegląd personelu</a></li>
-                    <li><a asp-controller="Home" asp-action="Rejestracja">Rejestracja pracownika</a></li>
-                    <li><a asp-controller="Home" asp-action="ForgottenUsers">Użytkownicy zapomniani (RODO)</a></li>
-                    <li><a asp-controller="Home" asp-action="Uprawnienia" class="active">Nadaj Uprawnienia</a></li>
+                    <li>
+                        <a asp-controller="Uzytkownicy" asp-action="AdminPanel" class="active">Przegląd personelu</a>
+                    </li>
+                    <li>
+                        <a asp-controller="Uzytkownicy" asp-action="Rejestracja">Rejestracja pracownika</a>
+                    </li>
+                    <li><a asp-controller="Uzytkownicy" asp-action="ForgottenUsers">Użytkownicy zapomniani (RODO)</a></li>
+                    <li><a asp-controller="Uprawnienia" asp-action="Uprawnienia">Nadaj Uprawnienia</a></li>
                 </ul>
             </nav>
         </aside>
@@ -39,11 +44,33 @@
             </header>
 
             <section class="zaw">
-                <a asp-controller="Home" asp-action="Uprawnienia" style="display:inline-block; margin-bottom:14px;">
-                    ← Wróć do ról
-                </a>
+                <h2>Baza pracowników - Magazyn GiTA</h2>
 
-                <h2>Użytkownicy z rolą: @rola</h2>
+                <div class="search-bar">
+                    <form method="get" asp-controller="Uzytkownicy" asp-action="AdminPanel">
+                        <div class="tabelka">
+                            <div>
+                                <label for="login">Login</label>
+                                <input type="text" id="login" name="login" value="@ViewBag.Login" placeholder="Podaj login użytkownika">
+                            </div>
+                            <div>
+                                <label for="name">Imię i Nazwisko</label>
+                                <input type="text" id="name" name="name" value="@ViewBag.Name" placeholder="Podaj imię lub nazwisko użytkownika">
+                            </div>
+                            <div>
+                                <label for="pesel">PESEL</label>
+                                <input type="text" id="pesel" name="pesel" value="@ViewBag.Pesel" maxlength="11" placeholder="Ciąg 11 liczb">
+                            </div>
+                        </div>
+
+                        <div class="btn-group">
+                            <button type="submit" class="btn-primary">Wyszukaj</button>
+                            <a class="btn-secondary"
+                               asp-controller="Uzytkownicy" asp-action="AdminPanel"
+                               style="text-decoration:none; display:inline-block; text-align:center;">Wyczyść</a>
+                        </div>
+                    </form>
+                </div>
 
                 <div class="tabelka-wyniki">
                     <table>
@@ -55,6 +82,7 @@
                                 <th>Email</th>
                                 <th>PESEL</th>
                                 <th>Status</th>
+                                <th>Rola</th>
                                 <th>Akcje</th>
                             </tr>
                         </thead>
@@ -62,7 +90,7 @@
                             @if (Model == null || Model.Count == 0)
                             {
                                 <tr>
-                                    <td colspan="7" style="color:#ff6b6b; font-weight:700;">Brak użytkowników z tą rolą</td>
+                                    <td colspan="8" style="color:#ff6b6b; font-weight:700;">NIE ZNALEZIONO</td>
                                 </tr>
                             }
                             else
@@ -76,9 +104,10 @@
                                         <td>@u.Email</td>
                                         <td>@u.Pesel</td>
                                         <td>@u.Status</td>
+                                        <td>@u.Rola</td>
                                         <td>
                                             <a class="btn-secondary"
-                                               asp-controller="Home"
+                                               asp-controller="Uzytkownicy"
                                                asp-action="UserDetails"
                                                asp-route-id="@u.Id"
                                                style="text-decoration:none; display:inline-block; text-align:center;">
