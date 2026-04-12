@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.Sqlite;
 using Magazyn.Data;
 using Magazyn.Models;
 
@@ -18,7 +17,6 @@ public class HomeController : Controller
     private string DbPath => Db.GetDbPath(_env);
 
     public IActionResult Index() => View();
-    public IActionResult Privacy() => View();
 
     // =========================
     // LOGOWANIE

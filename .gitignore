@@ -14,3 +14,7 @@ obj/
 
 ## macOS
 .DS_Store
+
+## SQLite WAL journal files
+*.db-shm
+*.db-wal
