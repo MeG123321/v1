@@ -4,6 +4,10 @@ using Magazyn.Models.Dtos;
 
 namespace Magazyn.Controllers;
 
+/// <summary>
+/// Kontroler zarządzający uprawnieniami (rolami) użytkowników.
+/// Umożliwia podgląd użytkowników przypisanych do danej roli oraz nadawanie ról.
+/// </summary>
 public class UprawnieniaController : Controller
 {
     private readonly IWebHostEnvironment _env;
@@ -13,6 +17,7 @@ public class UprawnieniaController : Controller
         _env = env;
     }
 
+    /// <summary>Pełna ścieżka do pliku bazy danych SQLite.</summary>
     private string DbPath => Db.GetDbPath(_env);
 
     // ============================================
@@ -24,6 +29,13 @@ public class UprawnieniaController : Controller
     // ============================================
     // USERS BY ROLE
     // ============================================
+
+    /// <summary>
+    /// Zwraca listę aktywnych użytkowników przypisanych do wskazanej roli (uprawnienia).
+    /// Najpierw wyszukuje identyfikator roli w tabeli Uprawnienia, a następnie
+    /// pobiera powiązanych użytkowników przez tabelę pośrednią Uzytkownik_Uprawnienia.
+    /// </summary>
+    /// <param name="rola">Nazwa roli (wartość kolumny Nazwa z tabeli Uprawnienia).</param>
     [HttpGet]
     public IActionResult UsersByRole(string rola)
     {
@@ -35,23 +47,25 @@ public class UprawnieniaController : Controller
 
         rola = rola.Trim();
 
-        using var con = Db.OpenConnection(DbPath);
+        using var connection = Db.OpenConnection(DbPath);
 
+        // Krok 1: pobierz identyfikator roli z tabeli Uprawnienia
         long roleId;
-        using (var cmd = con.CreateCommand())
+        using (var command = connection.CreateCommand())
         {
-            cmd.CommandText = @"SELECT Id FROM Uprawnienia WHERE TRIM(Nazwa) = TRIM($n) LIMIT 1;";
-            cmd.Parameters.AddWithValue("$n", rola);
-            var obj = cmd.ExecuteScalar();
-            if (obj == null)
+            command.CommandText = @"SELECT Id FROM Uprawnienia WHERE TRIM(Nazwa) = TRIM($nazwaRoli) LIMIT 1;";
+            command.Parameters.AddWithValue("$nazwaRoli", rola);
+            var roleIdScalar = command.ExecuteScalar();
+            if (roleIdScalar == null)
                 return NotFound(new { msg = "Nie znaleziono roli w tabeli Uprawnienia", rola });
-            roleId = Convert.ToInt64(obj);
+            roleId = Convert.ToInt64(roleIdScalar);
         }
 
-        var results = new List<UserListRowDto>();
-        using (var cmd = con.CreateCommand())
+        // Krok 2: pobierz wszystkich nieaktywnych (niezapomnianych) użytkowników z daną rolą
+        var userList = new List<UserListRowDto>();
+        using (var command = connection.CreateCommand())
         {
-            cmd.CommandText = @"
+            command.CommandText = @"
 SELECT u.id,
        u.username,
        u.firstName,
@@ -59,40 +73,48 @@ SELECT u.id,
        u.Email,
        u.pesel,
        CASE WHEN u.Status = 1 THEN 'Aktywny' ELSE 'Nieaktywny' END AS Status,
-       $rola AS Rola
+       $nazwaRoli AS Rola
 FROM Uzytkownik_Uprawnienia uu
 JOIN Uzytkownicy u ON u.id = uu.uzytkownik_id
-WHERE uu.uprawnienie_id = $rid
+WHERE uu.uprawnienie_id = $roleId
   AND COALESCE(u.czy_zapomniany,0) = 0
 ORDER BY u.LastName, u.firstName, u.username;
 ";
-            cmd.Parameters.AddWithValue("$rid", roleId);
-            cmd.Parameters.AddWithValue("$rola", rola);
+            command.Parameters.AddWithValue("$roleId", roleId);
+            command.Parameters.AddWithValue("$nazwaRoli", rola);
 
-            using var r = cmd.ExecuteReader();
-            while (r.Read())
+            using var dbReader = command.ExecuteReader();
+            while (dbReader.Read())
             {
-                results.Add(new UserListRowDto
+                userList.Add(new UserListRowDto
                 {
-                    Id = Convert.ToInt64(r["id"]),
-                    Username = r["username"]?.ToString(),
-                    FirstName = r["firstName"]?.ToString(),
-                    LastName = r["LastName"]?.ToString(),
-                    Email = r["Email"]?.ToString(),
-                    Pesel = r["pesel"]?.ToString(),
-                    Status = r["Status"]?.ToString(),
-                    Rola = r["Rola"]?.ToString()
+                    Id        = Convert.ToInt64(dbReader["id"]),
+                    Username  = dbReader["username"]?.ToString(),
+                    FirstName = dbReader["firstName"]?.ToString(),
+                    LastName  = dbReader["LastName"]?.ToString(),
+                    Email     = dbReader["Email"]?.ToString(),
+                    Pesel     = dbReader["pesel"]?.ToString(),
+                    Status    = dbReader["Status"]?.ToString(),
+                    Rola      = dbReader["Rola"]?.ToString()
                 });
             }
         }
 
         ViewBag.Rola = rola;
-        return View(results);
+        return View(userList);
     }
 
     // ============================================
     // NADAJ UPRAWNIENIA (POST)
     // ============================================
+
+    /// <summary>
+    /// Nadaje użytkownikowi wskazaną rolę (uprawnienie).
+    /// Najpierw usuwa wszystkie dotychczasowe role użytkownika,
+    /// a następnie wstawia nową – każdy użytkownik może mieć tylko jedną rolę.
+    /// </summary>
+    /// <param name="id">Identyfikator użytkownika.</param>
+    /// <param name="rola">Nazwa roli do nadania.</param>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public IActionResult SetRole(long id, string rola)
@@ -103,34 +125,38 @@ ORDER BY u.LastName, u.firstName, u.username;
         if (!System.IO.File.Exists(DbPath))
             return StatusCode(500, new { msg = "Brak bazy", path = DbPath });
 
-        using var con = Db.OpenConnection(DbPath);
+        using var connection = Db.OpenConnection(DbPath);
 
-        long permId;
-        using (var cmd = con.CreateCommand())
+        // Krok 1: pobierz identyfikator wybranej roli
+        long permissionId;
+        using (var command = connection.CreateCommand())
         {
-            cmd.CommandText = @"SELECT Id FROM Uprawnienia WHERE TRIM(Nazwa) = TRIM($n) LIMIT 1;";
-            cmd.Parameters.AddWithValue("$n", rola.Trim());
-            var obj = cmd.ExecuteScalar();
-            if (obj == null) return BadRequest(new { msg = "Nie ma takiego uprawnienia w tabeli Uprawnienia" });
-            permId = Convert.ToInt64(obj);
+            command.CommandText = @"SELECT Id FROM Uprawnienia WHERE TRIM(Nazwa) = TRIM($nazwaRoli) LIMIT 1;";
+            command.Parameters.AddWithValue("$nazwaRoli", rola.Trim());
+            var permissionIdScalar = command.ExecuteScalar();
+            if (permissionIdScalar == null)
+                return BadRequest(new { msg = "Nie ma takiego uprawnienia w tabeli Uprawnienia" });
+            permissionId = Convert.ToInt64(permissionIdScalar);
         }
 
-        using (var del = con.CreateCommand())
+        // Krok 2: usuń wszystkie poprzednie role użytkownika
+        using (var deleteCommand = connection.CreateCommand())
         {
-            del.CommandText = @"DELETE FROM Uzytkownik_Uprawnienia WHERE uzytkownik_id = $uid;";
-            del.Parameters.AddWithValue("$uid", id);
-            del.ExecuteNonQuery();
+            deleteCommand.CommandText = @"DELETE FROM Uzytkownik_Uprawnienia WHERE uzytkownik_id = $uzytkownikId;";
+            deleteCommand.Parameters.AddWithValue("$uzytkownikId", id);
+            deleteCommand.ExecuteNonQuery();
         }
 
-        using (var ins = con.CreateCommand())
+        // Krok 3: wstaw nową rolę
+        using (var insertCommand = connection.CreateCommand())
         {
-            ins.CommandText = @"
+            insertCommand.CommandText = @"
 INSERT INTO Uzytkownik_Uprawnienia (uprawnienie_id, uzytkownik_id)
-VALUES ($pid, $uid);
+VALUES ($permissionId, $uzytkownikId);
 ";
-            ins.Parameters.AddWithValue("$pid", permId);
-            ins.Parameters.AddWithValue("$uid", id);
-            ins.ExecuteNonQuery();
+            insertCommand.Parameters.AddWithValue("$permissionId", permissionId);
+            insertCommand.Parameters.AddWithValue("$uzytkownikId", id);
+            insertCommand.ExecuteNonQuery();
         }
 
         return RedirectToAction("UserDetails", "Uzytkownicy", new { id });

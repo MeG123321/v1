@@ -5,6 +5,9 @@ using Magazyn.Models;
 
 namespace Magazyn.Controllers;
 
+/// <summary>
+/// Kontroler główny obsługujący stronę startową, logowanie oraz podgląd użytkowników przez API.
+/// </summary>
 public class HomeController : Controller
 {
     private readonly IWebHostEnvironment _env;
@@ -14,8 +17,15 @@ public class HomeController : Controller
         _env = env;
     }
 
+    /// <summary>Pełna ścieżka do pliku bazy danych SQLite.</summary>
     private string DbPath => Db.GetDbPath(_env);
 
+    /// <summary>
+    /// Konwertuje wartość kolumny Status z bazy danych (INT lub DBNull)
+    /// na czytelny ciąg tekstowy: "Aktywny" lub "Nieaktywny".
+    /// </summary>
+    /// <param name="dbValue">Wartość odczytana z kolumny Status (może być DBNull).</param>
+    /// <returns>"Aktywny" gdy Status = 1, w przeciwnym razie "Nieaktywny".</returns>
     private static string StatusToText(object dbValue)
     {
         if (dbValue == DBNull.Value) return "Nieaktywny";
@@ -27,6 +37,14 @@ public class HomeController : Controller
     // =========================
     // LOGOWANIE
     // =========================
+
+    /// <summary>
+    /// Weryfikuje dane logowania użytkownika w bazie danych.
+    /// Sprawdza login i hasło (bez rozróżnienia wielkości liter dla loginu),
+    /// pomijając konta oznaczone jako zapomniane (RODO).
+    /// </summary>
+    /// <param name="username">Login użytkownika.</param>
+    /// <param name="password">Hasło użytkownika.</param>
     [HttpPost]
     public IActionResult Login(string username, string password)
     {
@@ -36,39 +54,56 @@ public class HomeController : Controller
         if (!System.IO.File.Exists(DbPath))
             return StatusCode(500, new { ok = false, msg = "Brak bazy", path = DbPath });
 
-        using var con = Db.OpenConnection(DbPath);
-        using var cmd = con.CreateCommand();
-        cmd.CommandText = @"
+        using var connection = Db.OpenConnection(DbPath);
+        using var command = connection.CreateCommand();
+
+        // Szukamy aktywnego użytkownika o podanym loginie i haśle.
+        // LOWER(TRIM(...)) zapewnia odporność na różnice w wielkości liter i zbędne spacje.
+        // COALESCE(czy_zapomniany,0) = 0 wyklucza konta usunięte zgodnie z RODO.
+        command.CommandText = @"
 SELECT username
 FROM Uzytkownicy
-WHERE LOWER(TRIM(username)) = LOWER(TRIM($u))
-  AND TRIM(COALESCE(Password,'')) = TRIM($p)
+WHERE LOWER(TRIM(username)) = LOWER(TRIM($username))
+  AND TRIM(COALESCE(Password,'')) = TRIM($password)
   AND COALESCE(czy_zapomniany,0) = 0
 LIMIT 1;
 ";
-        cmd.Parameters.AddWithValue("$u", username.Trim());
-        cmd.Parameters.AddWithValue("$p", password.Trim());
+        command.Parameters.AddWithValue("$username", username.Trim());
+        command.Parameters.AddWithValue("$password", password.Trim());
 
-        using var reader = cmd.ExecuteReader();
-        if (!reader.Read())
+        using var dbReader = command.ExecuteReader();
+        if (!dbReader.Read())
             return Unauthorized(new { ok = false, msg = "Błędne dane" });
 
-        return Json(new { ok = true, username = reader["username"]?.ToString() });
+        return Json(new { ok = true, username = dbReader["username"]?.ToString() });
     }
 
     // =========================
     // API: lista userów
     // =========================
+
+    /// <summary>
+    /// Zwraca listę aktywnych użytkowników (nie-zapomnianych) w formacie JSON.
+    /// Umożliwia filtrowanie po loginie, nazwisku lub peselu (częściowe dopasowanie, case-insensitive).
+    /// Używana przez JavaScript do dynamicznego podglądu użytkowników.
+    /// </summary>
+    /// <param name="login">Opcjonalny filtr na login (username).</param>
+    /// <param name="name">Opcjonalny filtr na imię i nazwisko.</param>
+    /// <param name="pesel">Opcjonalny filtr na PESEL.</param>
     [HttpGet]
     public IActionResult ApiUsers(string? login = null, string? name = null, string? pesel = null)
     {
         if (!System.IO.File.Exists(DbPath))
             return NotFound(new { error = "Brak pliku bazy", path = DbPath });
 
-        var results = new List<object>();
-        using var con = Db.OpenConnection(DbPath);
-        using var cmd = con.CreateCommand();
-        cmd.CommandText = @"
+        var userList = new List<object>();
+
+        using var connection = Db.OpenConnection(DbPath);
+        using var command = connection.CreateCommand();
+
+        // Pobiera podstawowe dane użytkowników z opcjonalnym filtrowaniem.
+        // Parametry NULL wyłączają dany filtr (brak ograniczenia).
+        command.CommandText = @"
 SELECT id, username, firstName, LastName, pesel, Email
 FROM Uzytkownicy
 WHERE COALESCE(czy_zapomniany,0) = 0
@@ -77,39 +112,47 @@ WHERE COALESCE(czy_zapomniany,0) = 0
   AND ($pesel IS NULL OR TRIM(pesel) LIKE '%' || TRIM($pesel) || '%')
 ORDER BY id;
 ";
-        cmd.Parameters.AddWithValue("$login", (object?)login ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("$name", (object?)name ?? DBNull.Value);
-        cmd.Parameters.AddWithValue("$pesel", (object?)pesel ?? DBNull.Value);
+        command.Parameters.AddWithValue("$login", (object?)login ?? DBNull.Value);
+        command.Parameters.AddWithValue("$name",  (object?)name  ?? DBNull.Value);
+        command.Parameters.AddWithValue("$pesel", (object?)pesel ?? DBNull.Value);
 
-        using var reader = cmd.ExecuteReader();
-        while (reader.Read())
+        using var dbReader = command.ExecuteReader();
+        while (dbReader.Read())
         {
-            results.Add(new
+            userList.Add(new
             {
-                id = reader["id"],
-                username = reader["username"],
-                firstName = reader["firstName"],
-                lastName = reader["LastName"],
-                email = reader["Email"],
-                pesel = reader["pesel"]
+                id        = dbReader["id"],
+                username  = dbReader["username"],
+                firstName = dbReader["firstName"],
+                lastName  = dbReader["LastName"],
+                email     = dbReader["Email"],
+                pesel     = dbReader["pesel"]
             });
         }
 
-        return Json(results);
+        return Json(userList);
     }
 
     // =========================
     // API: jeden user
     // =========================
+
+    /// <summary>
+    /// Zwraca pełne dane jednego użytkownika (łącznie z hasłem i danymi adresowymi) w formacie JSON.
+    /// Używana przez panel edycji do wstępnego załadowania formularza przez AJAX.
+    /// </summary>
+    /// <param name="id">Identyfikator użytkownika w tabeli Uzytkownicy.</param>
     [HttpGet]
     public IActionResult ApiUser(long id)
     {
         if (!System.IO.File.Exists(DbPath))
             return NotFound(new { msg = "Brak bazy", path = DbPath });
 
-        using var con = Db.OpenConnection(DbPath);
-        using var cmd = con.CreateCommand();
-        cmd.CommandText = @"
+        using var connection = Db.OpenConnection(DbPath);
+        using var command = connection.CreateCommand();
+
+        // Pobieramy kompletny rekord użytkownika wraz z danymi adresowymi i polami RODO.
+        command.CommandText = @"
 SELECT id, username, Password, firstName, LastName, pesel, Status, Plec, DataUrodzenia,
        Email, NrTelefonu,
        Miejscowosc, KodPocztowy, numer_posesji, Ulica, NrLokalu,
@@ -120,39 +163,39 @@ FROM Uzytkownicy
 WHERE id = $id
 LIMIT 1;
 ";
-        cmd.Parameters.AddWithValue("$id", id);
+        command.Parameters.AddWithValue("$id", id);
 
-        using var r = cmd.ExecuteReader();
-        if (!r.Read())
+        using var dbReader = command.ExecuteReader();
+        if (!dbReader.Read())
             return NotFound(new { msg = "Nie znaleziono użytkownika" });
 
-        var statusInt = r["Status"] == DBNull.Value ? 0 : Convert.ToInt32(r["Status"]);
+        var statusInt = dbReader["Status"] == DBNull.Value ? 0 : Convert.ToInt32(dbReader["Status"]);
 
         return Json(new
         {
-            id = r["id"],
-            username = r["username"],
-            password = r["Password"],
-            firstName = r["firstName"],
-            lastName = r["LastName"],
-            pesel = r["pesel"],
+            id           = dbReader["id"],
+            username     = dbReader["username"],
+            password     = dbReader["Password"],
+            firstName    = dbReader["firstName"],
+            lastName     = dbReader["LastName"],
+            pesel        = dbReader["pesel"],
 
-            // Status: int + tekst
-            statusInt = statusInt,
-            status = StatusToText(r["Status"]),
+            // Status: wartość liczbowa (0/1) oraz odpowiadający tekst
+            statusInt    = statusInt,
+            status       = StatusToText(dbReader["Status"]),
 
-            plec = r["Plec"] == DBNull.Value ? 0 : Convert.ToInt32(r["Plec"]),
-            dataUrodzenia = r["DataUrodzenia"],
-            email = r["Email"],
-            nrTelefonu = r["NrTelefonu"],
-            miejscowosc = r["Miejscowosc"],
-            kodPocztowy = r["KodPocztowy"],
-            nrPosesji = r["numer_posesji"],
-            ulica = r["Ulica"],
-            nrLokalu = r["NrLokalu"],
-            zapomniany = Convert.ToInt32(r["czy_zapomniany"]) == 1,
-            dataZapomnienia = r["DataZapomnienia"],
-            zapomnialUserId = r["ZapomnialUserId"]
+            plec         = dbReader["Plec"] == DBNull.Value ? 0 : Convert.ToInt32(dbReader["Plec"]),
+            dataUrodzenia= dbReader["DataUrodzenia"],
+            email        = dbReader["Email"],
+            nrTelefonu   = dbReader["NrTelefonu"],
+            miejscowosc  = dbReader["Miejscowosc"],
+            kodPocztowy  = dbReader["KodPocztowy"],
+            nrPosesji    = dbReader["numer_posesji"],
+            ulica        = dbReader["Ulica"],
+            nrLokalu     = dbReader["NrLokalu"],
+            zapomniany   = Convert.ToInt32(dbReader["czy_zapomniany"]) == 1,
+            dataZapomnienia  = dbReader["DataZapomnienia"],
+            zapomnialUserId  = dbReader["ZapomnialUserId"]
         });
     }
 
