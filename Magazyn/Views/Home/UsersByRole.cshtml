@@ -1,0 +1,98 @@
+@model List<Magazyn.Controllers.HomeController.UserListRowDto>
+@{
+    Layout = null;
+    var rola = (string?)ViewBag.Rola ?? "-";
+}
+
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magazyn GiTA - Użytkownicy roli @rola</title>
+
+    <link rel="stylesheet" href="~/css/style.css" />
+</head>
+
+<body data-home-url='@Url.Action("Index", "Home")'>
+    <div class="Wrapper">
+        <aside class="panelbok">
+            <div class="logo"><h1>Magazyn GiTA</h1></div>
+            <nav class="gitanav">
+                <p>Zarządzanie użytkownikami</p>
+                <ul>
+                    <li><a asp-controller="Home" asp-action="AdminPanel">Przegląd personelu</a></li>
+                    <li><a asp-controller="Home" asp-action="Rejestracja">Rejestracja pracownika</a></li>
+                    <li><a asp-controller="Home" asp-action="ForgottenUsers">Użytkownicy zapomniani (RODO)</a></li>
+                    <li><a asp-controller="Home" asp-action="Uprawnienia" class="active">Nadaj Uprawnienia</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main">
+            <header class="header">
+                <div class="info">
+                    <a href="#" id="akcja-wyloguj">Wyloguj</a>
+                    <a href="#">Konto</a>
+                    <a asp-controller="Home" asp-action="Index">Strona Główna</a>
+                </div>
+            </header>
+
+            <section class="zaw">
+                <a asp-controller="Home" asp-action="Uprawnienia" style="display:inline-block; margin-bottom:14px;">
+                    ← Wróć do ról
+                </a>
+
+                <h2>Użytkownicy z rolą: @rola</h2>
+
+                <div class="tabelka-wyniki">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Login</th>
+                                <th>Imię</th>
+                                <th>Nazwisko</th>
+                                <th>Email</th>
+                                <th>PESEL</th>
+                                <th>Status</th>
+                                <th>Akcje</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model == null || Model.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="7" style="color:#ff6b6b; font-weight:700;">Brak użytkowników z tą rolą</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                foreach (var u in Model)
+                                {
+                                    <tr>
+                                        <td>@u.Username</td>
+                                        <td>@u.FirstName</td>
+                                        <td>@u.LastName</td>
+                                        <td>@u.Email</td>
+                                        <td>@u.Pesel</td>
+                                        <td>@u.Status</td>
+                                        <td>
+                                            <a class="btn-secondary"
+                                               asp-controller="Home"
+                                               asp-action="UserDetails"
+                                               asp-route-id="@u.Id"
+                                               style="text-decoration:none; display:inline-block; text-align:center;">
+                                                Szczegóły
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>

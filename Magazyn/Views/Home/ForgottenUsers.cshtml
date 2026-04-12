@@ -1,0 +1,126 @@
+@model List<Magazyn.Controllers.HomeController.UserListRowDto>
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magazyn GiTA - Użytkownicy zapomniani (RODO)</title>
+
+    <link rel="stylesheet" href="~/css/style.css" />
+    <script defer src="~/js/script.js"></script>
+    <script defer src="~/js/forgotten-users.js"></script>
+</head>
+
+<body data-home-url='@Url.Action("Index", "Home")'>
+    <div class="Wrapper">
+        <aside class="panelbok">
+            <div class="logo"><h1>Magazyn GiTA</h1></div>
+            <nav class="gitanav">
+                <p>Zarządzanie użytkownikami</p>
+                <ul>
+                    <li><a asp-controller="Home" asp-action="AdminPanel">Przegląd personelu</a></li>
+                    <li><a asp-controller="Home" asp-action="Rejestracja">Rejestracja pracownika</a></li>
+                    <li><a asp-controller="Home" asp-action="ForgottenUsers" class="active">Użytkownicy zapomniani (RODO)</a></li>
+                    <li><a asp-controller="Home" asp-action="Uprawnienia">Nadaj Uprawnienia</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main">
+            <header class="header">
+                <div class="info">
+                    <a href="#" id="akcja-wyloguj">Wyloguj</a>
+                    <a asp-controller="Home" asp-action="Index">Strona Główna</a>
+                </div>
+            </header>
+
+            <section class="zaw">
+                <h2>Użytkownicy zapomniani (RODO)</h2>
+
+                <div class="search-bar">
+                    <form method="get" asp-controller="Home" asp-action="ForgottenUsers">
+                        <div class="tabelka">
+                            <div style="grid-column: span 2;">
+                                <label for="fname">Imię i nazwisko (po zapomnieniu)</label>
+                                <input type="text" id="fname" name="fname" value="@ViewBag.Fname" placeholder="np. Abc Xyz">
+                            </div>
+                            <div>
+                                <label for="adminId">ID admina</label>
+                                <input type="text" id="adminId" name="adminId" value="@ViewBag.AdminId" placeholder="np. 1">
+                            </div>
+                        </div>
+
+                        <div class="btn-group">
+                            <button type="submit" class="btn-primary">Wyszukaj</button>
+                            <a asp-controller="Home" asp-action="ForgottenUsers" class="btn-secondary">Wyczyść</a>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="tabelka-wyniki">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Identyfikator</th>
+                                <th>Imię i nazwisko po zapomnieniu</th>
+                                <th>Data zapomnienia</th>
+                                <th>ID użytkownika, który dokonał zapomnienia</th>
+                                <th>Akcje</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model == null || Model.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="5" style="color:#ff6b6b; font-weight:700;">NIE ZNALEZIONO</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                foreach (var u in Model)
+                                {
+                                    <tr>
+                                        <td>@u.Id</td>
+                                        <td>@u.FirstName @u.LastName</td>
+                                        <td>@u.Status</td>
+                                        <td>@u.Rola</td>
+                                        <td>
+                                            <button class="btn-secondary"
+                                                    onclick="openForgottenDetails(@u.Id)"
+                                                    style="text-decoration:none; display:inline-block; text-align:center;">
+                                                Szczegóły
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="forgot-status" style="margin-top:10px; color:#ff6b6b; font-size:12px; font-weight:700;"></div>
+            </section>
+        </main>
+    </div>
+
+    <!-- POPUP: SZCZEGÓŁY -->
+    <div id="modal-forgot-details" class="tlo-okienka" style="display:none;">
+        <div class="ramka-okienka" style="max-width: 900px; width: 95%;">
+            <span class="zamknij-x" data-close-modal="modal-forgot-details">&times;</span>
+            <h2 style="margin-top:0; color:white;">Szczegóły użytkownika (RODO)</h2>
+
+            <div id="forgot-details-loading" style="color:#57ab5a; font-size:12px;">Ładowanie...</div>
+
+            <div class="tabelka-wyniki" style="margin-top:10px;">
+                <table>
+                    <tbody id="forgot-details-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

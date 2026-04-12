@@ -1,0 +1,160 @@
+@model Magazyn.Models.UserVm
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magazyn GiTA - Edycja pracownika</title>
+
+    <link rel="stylesheet" href="~/css/style.css" />
+    <script defer src="~/js/script.js"></script>
+</head>
+
+<body data-home-url='@Url.Action("Index", "Home")'>
+    <div class="Wrapper">
+        <aside class="panelbok">
+            <div class="logo"><h1>Magazyn GiTA</h1></div>
+            <nav class="gitanav">
+                <p>Zarządzanie użytkownikami</p>
+                <ul>
+                    <li><a asp-controller="Home" asp-action="AdminPanel" class="active">Przegląd personelu</a></li>
+                    <li><a asp-controller="Home" asp-action="Rejestracja">Rejestracja pracownika</a></li>
+                    <li><a asp-controller="Home" asp-action="ForgottenUsers">Użytkownicy zapomniani (RODO)</a></li>
+                    <li><a asp-controller="Home" asp-action="Uprawnienia">Nadaj Uprawnienia</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main">
+            <header class="header">
+                <div class="info">
+                    <a href="#" id="akcja-wyloguj">Wyloguj</a>
+                    <a href="#">Konto</a>
+                    <a asp-controller="Home" asp-action="Index">Strona Główna</a>
+                </div>
+            </header>
+
+            <section class="zaw">
+                <a asp-controller="Home" asp-action="UserDetails" asp-route-id="@Model.Id" style="display:inline-block; margin-bottom:14px;">
+                    ← Wróć do szczegółów
+                </a>
+
+                <h2>Edycja użytkownika</h2>
+
+                <form asp-controller="Home" asp-action="EditUser" method="post" class="form-rejestracja">
+                    @Html.AntiForgeryToken()
+
+                    <div asp-validation-summary="All" style="color:#ff6b6b; margin-bottom:10px;"></div>
+
+                    <input type="hidden" name="Id" value="@Model.Id" />
+
+                    <div class="tabelka">
+                        <div>
+                            <label>Login (5-20 znaków)</label>
+                            <input type="text" name="Username" required minlength="5" maxlength="20" value="@Model.Username">
+                        </div>
+
+                        <div>
+                            <label>Hasło</label>
+                            <input type="text" name="Password" required minlength="8" maxlength="15" value="@Model.Password">
+                        </div>
+
+                        <div>
+                            <label>Imię</label>
+                            <input type="text" name="FirstName" required value="@Model.FirstName">
+                        </div>
+
+                        <div>
+                            <label>Nazwisko</label>
+                            <input type="text" name="LastName" required value="@Model.LastName">
+                        </div>
+
+                        <div>
+                            <label>Email</label>
+                            <input type="email" name="Email" required value="@Model.Email">
+                        </div>
+
+                        <div>
+                            <label>PESEL</label>
+                            <input type="text" name="Pesel" required maxlength="11" inputmode="numeric" pattern="\d{11}" value="@Model.Pesel">
+                        </div>
+
+                        <div>
+                            <label>Data urodzenia</label>
+                            <input type="date" name="DataUrodzenia" required value="@Model.DataUrodzenia">
+                        </div>
+
+                        <div>
+                            <label>Nr telefonu</label>
+                            <input type="text" name="NrTelefonu" required maxlength="9" inputmode="numeric" pattern="\d{9}" value="@Model.NrTelefonu">
+                        </div>
+
+                        <div>
+                            <label>Płeć</label>
+                            <select name="Plec" required>
+                                <option value="Kobieta" selected="@(Model.Plec == "Kobieta")">Kobieta</option>
+                                <option value="Mężczyzna" selected="@(Model.Plec == "Mężczyzna")">Mężczyzna</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label>Status</label>
+                            <select name="Status" required>
+                                <option value="Aktywny" selected="@(Model.Status == "Aktywny")">Aktywny</option>
+                                <option value="Nieaktywny" selected="@(Model.Status == "Nieaktywny")">Nieaktywny</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label>Rola</label>
+                            <select name="Rola" required>
+                                <option value="Użytkownik" selected="@(Model.Rola == "Użytkownik")">Użytkownik</option>
+                                <option value="Moderator" selected="@(Model.Rola == "Moderator")">Moderator</option>
+                                <option value="Admin" selected="@(Model.Rola == "Admin")">Admin</option>
+                                <option value="Brak" selected="@(Model.Rola == "Brak")">Brak</option>
+                                <option value="Zapomniany" selected="@(Model.Rola == "Zapomniany")">Zapomniany</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label>Miejscowość</label>
+                            <input type="text" name="Miejscowosc" required value="@Model.Miejscowosc">
+                        </div>
+
+                        <div>
+                            <label>Kod pocztowy</label>
+                            <input type="text" name="KodPocztowy" required pattern="\d{2}-\d{3}" value="@Model.KodPocztowy">
+                        </div>
+
+                        <div>
+                            <label>Ulica (opcjonalnie)</label>
+                            <input type="text" name="Ulica" value="@Model.Ulica">
+                        </div>
+
+                        <div>
+                            <label>Nr posesji</label>
+                            <input type="text" name="NrPosesji" required value="@Model.NrPosesji">
+                        </div>
+
+                        <div>
+                            <label>Nr lokalu (opcjonalnie)</label>
+                            <input type="text" name="NrLokalu" value="@Model.NrLokalu">
+                        </div>
+                    </div>
+
+                    <div class="btn-group" style="margin-top: 30px;">
+                        <button type="submit" class="btn-primary">Zapisz</button>
+                        <a class="btn-secondary"
+                           asp-controller="Home" asp-action="UserDetails" asp-route-id="@Model.Id"
+                           style="text-decoration:none; display:inline-block; text-align:center;">Anuluj</a>
+                    </div>
+                </form>
+            </section>
+        </main>
+    </div>
+</body>
+</html>
