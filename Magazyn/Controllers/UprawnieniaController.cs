@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.Sqlite;
 using Magazyn.Data;
 using Magazyn.Models.Dtos;
 
