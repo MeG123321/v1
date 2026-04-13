@@ -49,11 +49,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const errorMsg = document.getElementById("error-msg");
       if (errorMsg) errorMsg.style.display = "none";
 
+      const token = document.querySelector('#formularz-logowania input[name="__RequestVerificationToken"]')?.value || "";
+
       try {
         const res = await fetch("/Home/Login", {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
-          body: new URLSearchParams({ username: user, password: pass }).toString()
+          body: new URLSearchParams({ username: user, password: pass, __RequestVerificationToken: token }).toString()
         });
 
    if (!res.ok) {
@@ -74,7 +76,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const data = await res.json();
         if (data?.ok) {
           localStorage.setItem("czyAdmin", "tak");
-          localStorage.setItem("rola", data.rola || "");
+          localStorage.setItem("rola", data.role || "");
           zamknijWszystkieOkna();
 
           if (!adminUrl) {
@@ -99,7 +101,7 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
       localStorage.removeItem("czyAdmin");
       localStorage.removeItem("rola");
-      window.location.href = homeUrl;
+      window.location.href = "/Home/Logout";
     });
   }
 

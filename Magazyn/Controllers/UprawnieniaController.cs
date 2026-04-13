@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Magazyn.Data;
 using Magazyn.Models.Dtos;
@@ -8,17 +9,24 @@ namespace Magazyn.Controllers;
 /// Kontroler zarządzający uprawnieniami (rolami) użytkowników.
 /// Umożliwia podgląd użytkowników przypisanych do danej roli oraz nadawanie ról.
 /// </summary>
+[Authorize]
 public class UprawnieniaController : Controller
 {
     private readonly IWebHostEnvironment _env;
+    private readonly ILogger<UprawnieniaController> _logger;
 
-    public UprawnieniaController(IWebHostEnvironment env)
+    public UprawnieniaController(IWebHostEnvironment env, ILogger<UprawnieniaController> logger)
     {
         _env = env;
+        _logger = logger;
     }
 
     /// <summary>Pełna ścieżka do pliku bazy danych SQLite.</summary>
     private string DbPath => Db.GetDbPath(_env);
+
+    /// <summary>Usuwa znaki nowej linii z wartości wejściowej, aby zapobiec fałszowaniu wpisów w logach.</summary>
+    private static string SL(string? value) =>
+        (value ?? "").Replace('\r', '_').Replace('\n', '_');
 
     // ============================================
     // UPRAWNIENIA - lista ról
@@ -119,6 +127,9 @@ ORDER BY u.LastName, u.firstName, u.username;
     [ValidateAntiForgeryToken]
     public IActionResult SetRole(long id, string rola)
     {
+        _logger.LogInformation("[AdminAccess] '{User}' nadaje rolę '{Rola}' użytkownikowi id={TargetId} IP={RemoteIp}",
+            SL(User.Identity?.Name), SL(rola), id, HttpContext.Connection.RemoteIpAddress);
+
         if (string.IsNullOrWhiteSpace(rola))
             return BadRequest(new { msg = "Brak roli" });
 

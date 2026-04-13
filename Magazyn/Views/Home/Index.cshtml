@@ -49,6 +49,7 @@
             <h2 style="margin-top:0; color: white;">Logowanie</h2>
 
             <form id="formularz-logowania">
+                @Html.AntiForgeryToken()
                 <input type="text" id="input-login" placeholder="Login" required>
                 <input type="password" id="input-haslo" placeholder="Hasło" required>
                 <button type="submit" class="przycisk-wyslij" style="margin-top:20px;">Wejdź</button>
