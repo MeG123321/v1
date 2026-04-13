@@ -11,7 +11,9 @@ builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.Cookies.C
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
         options.SlidingExpiration = true;
         options.Cookie.HttpOnly = true;
-        options.Cookie.SecurePolicy = Microsoft.AspNetCore.Http.CookieSecurePolicy.SameAsRequest;
+        options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
+            ? Microsoft.AspNetCore.Http.CookieSecurePolicy.SameAsRequest
+            : Microsoft.AspNetCore.Http.CookieSecurePolicy.Always;
     });
 
 var app = builder.Build();

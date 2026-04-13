@@ -27,6 +27,12 @@ public class HomeController : Controller
     private string DbPath => Db.GetDbPath(_env);
 
     /// <summary>
+    /// Usuwa znaki nowej linii z wartości wejściowej, aby zapobiec fałszowaniu wpisów w logach.
+    /// </summary>
+    private static string SL(string? value) =>
+        (value ?? "").Replace('\r', '_').Replace('\n', '_');
+
+    /// <summary>
     /// Konwertuje wartość kolumny Status z bazy danych (INT lub DBNull)
     /// na czytelny ciąg tekstowy: "Aktywny" lub "Nieaktywny".
     /// </summary>
@@ -53,6 +59,7 @@ public class HomeController : Controller
     /// <param name="username">Login użytkownika.</param>
     /// <param name="password">Hasło użytkownika.</param>
     [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(string username, string password)
     {
         if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
@@ -62,53 +69,72 @@ public class HomeController : Controller
             return StatusCode(500, new { ok = false, msg = "Brak bazy", path = DbPath });
 
         using var connection = Db.OpenConnection(DbPath);
-        using var command = connection.CreateCommand();
 
-        // Pobieramy id, username i role użytkownika w jednym zapytaniu.
+        // Weryfikacja danych logowania i pobranie id użytkownika.
         // LOWER(TRIM(...)) zapewnia odporność na różnice w wielkości liter i zbędne spacje.
         // COALESCE(czy_zapomniany,0) = 0 wyklucza konta usunięte zgodnie z RODO.
-        command.CommandText = @"
-SELECT u.id,
-       u.username,
-       COALESCE(GROUP_CONCAT(p.Nazwa, ', '), '') AS Rola
-FROM Uzytkownicy u
-LEFT JOIN Uzytkownik_Uprawnienia uu ON uu.uzytkownik_id = u.id
-LEFT JOIN Uprawnienia p ON p.Id = uu.uprawnienie_id
-WHERE LOWER(TRIM(u.username)) = LOWER(TRIM($username))
-  AND TRIM(COALESCE(u.Password,'')) = TRIM($password)
-  AND COALESCE(u.czy_zapomniany,0) = 0
-GROUP BY u.id
+        long? userId;
+        string? loggedUsername;
+        using (var authCommand = connection.CreateCommand())
+        {
+            authCommand.CommandText = @"
+SELECT id, username
+FROM Uzytkownicy
+WHERE LOWER(TRIM(username)) = LOWER(TRIM($username))
+  AND TRIM(COALESCE(Password,'')) = TRIM($password)
+  AND COALESCE(czy_zapomniany,0) = 0
 LIMIT 1;
 ";
-        command.Parameters.AddWithValue("$username", username.Trim());
-        command.Parameters.AddWithValue("$password", password.Trim());
-
-        using var dbReader = command.ExecuteReader();
-        if (!dbReader.Read())
-        {
-            _logger.LogWarning("[AdminAccess] Nieudana próba logowania dla użytkownika '{Username}' z IP {RemoteIp}",
-                username, HttpContext.Connection.RemoteIpAddress);
-            return Unauthorized(new { ok = false, msg = "Błędne dane" });
+            authCommand.Parameters.AddWithValue("$username", username.Trim());
+            authCommand.Parameters.AddWithValue("$password", password.Trim());
+            using var authReader = authCommand.ExecuteReader();
+            if (!authReader.Read())
+            {
+                _logger.LogWarning("[AdminAccess] Nieudana próba logowania dla użytkownika '{Username}' z IP {RemoteIp}",
+                    SL(username), HttpContext.Connection.RemoteIpAddress);
+                return Unauthorized(new { ok = false, msg = "Błędne dane" });
+            }
+            userId        = Convert.ToInt64(authReader["id"]);
+            loggedUsername = authReader["username"]?.ToString() ?? username;
         }
 
-        var loggedUsername = dbReader["username"]?.ToString() ?? username;
-        var loggedUserId   = dbReader["id"]?.ToString() ?? "";
-        var loggedRole     = dbReader["Rola"]?.ToString() ?? "";
+        // Pobranie ról użytkownika jako osobnych wierszy dla prawidłowego działania [Authorize(Roles=...)].
+        var roles = new List<string>();
+        using (var roleCommand = connection.CreateCommand())
+        {
+            roleCommand.CommandText = @"
+SELECT p.Nazwa
+FROM Uzytkownik_Uprawnienia uu
+JOIN Uprawnienia p ON p.Id = uu.uprawnienie_id
+WHERE uu.uzytkownik_id = $userId;
+";
+            roleCommand.Parameters.AddWithValue("$userId", userId);
+            using var roleReader = roleCommand.ExecuteReader();
+            while (roleReader.Read())
+            {
+                var roleName = roleReader["Nazwa"]?.ToString();
+                if (!string.IsNullOrWhiteSpace(roleName))
+                    roles.Add(roleName);
+            }
+        }
 
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.Name, loggedUsername),
-            new Claim(ClaimTypes.NameIdentifier, loggedUserId),
-            new Claim(ClaimTypes.Role, loggedRole)
+            new Claim(ClaimTypes.NameIdentifier, userId.ToString()!)
         };
+        foreach (var role in roles)
+            claims.Add(new Claim(ClaimTypes.Role, role));
+
         var identity  = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
         var principal = new ClaimsPrincipal(identity);
         await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
 
-        _logger.LogInformation("[AdminAccess] Użytkownik '{Username}' (id={UserId}, rola={Role}) zalogował się z IP {RemoteIp}",
-            loggedUsername, loggedUserId, loggedRole, HttpContext.Connection.RemoteIpAddress);
+        var roleDisplay = string.Join(", ", roles);
+        _logger.LogInformation("[AdminAccess] Użytkownik '{Username}' (id={UserId}, role={Roles}) zalogował się z IP {RemoteIp}",
+            SL(loggedUsername), userId, SL(roleDisplay), HttpContext.Connection.RemoteIpAddress);
 
-        return Json(new { ok = true, username = loggedUsername, rola = loggedRole });
+        return Json(new { ok = true, username = loggedUsername, role = roleDisplay });
     }
 
     // =========================

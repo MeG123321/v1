@@ -27,6 +27,10 @@ public class UzytkownicyController : Controller
     /// <summary>Pełna ścieżka do pliku bazy danych SQLite.</summary>
     private string DbPath => Db.GetDbPath(_env);
 
+    /// <summary>Usuwa znaki nowej linii z wartości wejściowej, aby zapobiec fałszowaniu wpisów w logach.</summary>
+    private static string SL(string? value) =>
+        (value ?? "").Replace('\r', '_').Replace('\n', '_');
+
     /// <summary>
     /// Konwertuje liczbową wartość płci (0/1) na czytelny ciąg tekstowy.
     /// </summary>
@@ -85,7 +89,7 @@ public class UzytkownicyController : Controller
     public IActionResult AdminPanel(string? login = null, string? name = null, string? pesel = null)
     {
         _logger.LogInformation("[AdminAccess] '{User}' otworzył AdminPanel [login={Login}, name={Name}, pesel={Pesel}] IP={RemoteIp}",
-            User.Identity?.Name, login, name, pesel, HttpContext.Connection.RemoteIpAddress);
+            SL(User.Identity?.Name), SL(login), SL(name), SL(pesel), HttpContext.Connection.RemoteIpAddress);
 
         ViewBag.Login = login ?? "";
         ViewBag.Name  = name  ?? "";
@@ -156,7 +160,7 @@ ORDER BY u.id;
     public IActionResult UserDetails(long id)
     {
         _logger.LogInformation("[AdminAccess] '{User}' przejrzał szczegóły użytkownika id={TargetId} IP={RemoteIp}",
-            User.Identity?.Name, id, HttpContext.Connection.RemoteIpAddress);
+            SL(User.Identity?.Name), id, HttpContext.Connection.RemoteIpAddress);
 
         if (!System.IO.File.Exists(DbPath))
             return NotFound(new { msg = "Brak bazy", path = DbPath });
@@ -238,7 +242,7 @@ LIMIT 1;
         }
 
         _logger.LogInformation("[AdminAccess] '{User}' rejestruje nowego użytkownika login='{NewLogin}' IP={RemoteIp}",
-            User.Identity?.Name, dto.Username, HttpContext.Connection.RemoteIpAddress);
+            SL(User.Identity?.Name), SL(dto.Username), HttpContext.Connection.RemoteIpAddress);
 
         // Przycinamy białe znaki ze wszystkich pól tekstowych przed zapisem do bazy
         dto.Username     = (dto.Username     ?? "").Trim();
@@ -406,7 +410,7 @@ LIMIT 1;
         }
 
         _logger.LogInformation("[AdminAccess] '{User}' edytuje użytkownika id={TargetId} IP={RemoteIp}",
-            User.Identity?.Name, viewModel.Id, HttpContext.Connection.RemoteIpAddress);
+            SL(User.Identity?.Name), viewModel.Id, HttpContext.Connection.RemoteIpAddress);
         viewModel.Username     = (viewModel.Username     ?? "").Trim();
         viewModel.Password     = (viewModel.Password     ?? "").Trim();
         viewModel.FirstName    = (viewModel.FirstName    ?? "").Trim();
@@ -571,7 +575,7 @@ ORDER BY DataZapomnienia DESC;
     public IActionResult ForgetUser(long id, long adminId)
     {
         _logger.LogWarning("[AdminAccess] '{User}' wykonuje RODO-zapomnienie użytkownika id={TargetId} (adminId={AdminId}) IP={RemoteIp}",
-            User.Identity?.Name, id, adminId, HttpContext.Connection.RemoteIpAddress);
+            SL(User.Identity?.Name), id, adminId, HttpContext.Connection.RemoteIpAddress);
 
         if (!System.IO.File.Exists(DbPath))
             return NotFound(new { msg = "Brak bazy", path = DbPath });
