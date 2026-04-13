@@ -43,107 +43,127 @@
                     ← Wróć do szczegółów
                 </a>
 
-                <h2>Edycja użytkownika</h2>
+                <h2>Edycja użytkownika: @Model.FirstName @Model.LastName</h2>
 
-                <form asp-controller="Uzytkownicy" asp-action="EditUser" method="post" class="form-rejestracja">
-                    @Html.AntiForgeryToken()
+                <div class="search-bar">
+                    <form asp-controller="Uzytkownicy" asp-action="EditUser" method="post" class="form-rejestracja">
+                        @Html.AntiForgeryToken()
 
-                    <div asp-validation-summary="All" style="color:#ff6b6b; margin-bottom:10px;"></div>
+                        <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
 
-                    <input type="hidden" name="Id" value="@Model.Id" />
+                        <input type="hidden" asp-for="Id" />
 
-                    <div class="tabelka">
-                        <div>
-                            <label>Login (5-20 znaków)</label>
-                            <input type="text" name="Username" required minlength="5" maxlength="20" value="@Model.Username">
+                        <div class="tabelka">
+                            <div class="form-group">
+                                <label asp-for="Username">Login (5–20 znaków)</label>
+                                <input asp-for="Username" />
+                                <span asp-validation-for="Username" class="field-error"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="Password">Hasło (8–15 znaków)</label>
+                                <input asp-for="Password" type="password"
+                                       placeholder="Wprowadź nowe hasło lub aktualne" />
+                                <span asp-validation-for="Password" class="field-error"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="FirstName">Imię</label>
+                                <input asp-for="FirstName" />
+                                <span asp-validation-for="FirstName" class="field-error"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="LastName">Nazwisko</label>
+                                <input asp-for="LastName" />
+                                <span asp-validation-for="LastName" class="field-error"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="Email">Email</label>
+                                <input asp-for="Email" />
+                                <span asp-validation-for="Email" class="field-error"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="Pesel">PESEL</label>
+                                <input asp-for="Pesel" maxlength="11" inputmode="numeric" />
+                                <span asp-validation-for="Pesel" class="field-error"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="DataUrodzenia">Data urodzenia</label>
+                                <input asp-for="DataUrodzenia" type="date" />
+                                <span asp-validation-for="DataUrodzenia" class="field-error"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="NrTelefonu">Nr telefonu</label>
+                                <input asp-for="NrTelefonu" maxlength="9" inputmode="numeric" />
+                                <span asp-validation-for="NrTelefonu" class="field-error"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="Plec">Płeć</label>
+                                <select asp-for="Plec">
+                                    <option value="Kobieta">Kobieta</option>
+                                    <option value="Mężczyzna">Mężczyzna</option>
+                                </select>
+                                <span asp-validation-for="Plec" class="field-error"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="Status">Status</label>
+                                <select asp-for="Status">
+                                    <option value="Aktywny">Aktywny</option>
+                                    <option value="Nieaktywny">Nieaktywny</option>
+                                </select>
+                                <span asp-validation-for="Status" class="field-error"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="Miejscowosc">Miejscowość</label>
+                                <input asp-for="Miejscowosc" />
+                                <span asp-validation-for="Miejscowosc" class="field-error"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="KodPocztowy">Kod pocztowy</label>
+                                <input asp-for="KodPocztowy" placeholder="00-000" />
+                                <span asp-validation-for="KodPocztowy" class="field-error"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="Ulica">Ulica (opcjonalnie)</label>
+                                <input asp-for="Ulica" />
+                                <span asp-validation-for="Ulica" class="field-error"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="NrPosesji">Nr posesji</label>
+                                <input asp-for="NrPosesji" />
+                                <span asp-validation-for="NrPosesji" class="field-error"></span>
+                            </div>
+
+                            <div class="form-group">
+                                <label asp-for="NrLokalu">Nr lokalu (opcjonalnie)</label>
+                                <input asp-for="NrLokalu" />
+                                <span asp-validation-for="NrLokalu" class="field-error"></span>
+                            </div>
                         </div>
 
-                        <div>
-                            <label>Hasło</label>
-                            <input type="password" name="Password" required minlength="8" maxlength="15" placeholder="Wprowadź nowe hasło lub aktualne">
+                        <div class="btn-group" style="margin-top: 30px;">
+                            <button type="submit" class="btn-primary">Zapisz zmiany</button>
+                            <a class="btn-secondary"
+                               asp-controller="Uzytkownicy" asp-action="UserDetails" asp-route-id="@Model.Id"
+                               style="text-decoration:none; display:inline-block; text-align:center;">Anuluj</a>
                         </div>
-
-                        <div>
-                            <label>Imię</label>
-                            <input type="text" name="FirstName" required value="@Model.FirstName">
-                        </div>
-
-                        <div>
-                            <label>Nazwisko</label>
-                            <input type="text" name="LastName" required value="@Model.LastName">
-                        </div>
-
-                        <div>
-                            <label>Email</label>
-                            <input type="email" name="Email" required value="@Model.Email">
-                        </div>
-
-                        <div>
-                            <label>PESEL</label>
-                            <input type="text" name="Pesel" required maxlength="11" inputmode="numeric" pattern="\d{11}" value="@Model.Pesel">
-                        </div>
-
-                        <div>
-                            <label>Data urodzenia</label>
-                            <input type="date" name="DataUrodzenia" required value="@Model.DataUrodzenia">
-                        </div>
-
-                        <div>
-                            <label>Nr telefonu</label>
-                            <input type="text" name="NrTelefonu" required maxlength="9" inputmode="numeric" pattern="\d{9}" value="@Model.NrTelefonu">
-                        </div>
-
-                        <div>
-                            <label>Płeć</label>
-                            <select name="Plec" required>
-                                <option value="Kobieta" selected="@(Model.Plec == "Kobieta" ? "selected" : null)">Kobieta</option>
-                                <option value="Mężczyzna" selected="@(Model.Plec == "Mężczyzna" ? "selected" : null)">Mężczyzna</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label>Status</label>
-                            <select name="Status" required>
-                                <option value="Aktywny" selected="@(Model.Status == "Aktywny" ? "selected" : null)">Aktywny</option>
-                                <option value="Nieaktywny" selected="@(Model.Status == "Nieaktywny" ? "selected" : null)">Nieaktywny</option>
-                            </select>
-                        </div>
-
-                        <div>
-                            <label>Miejscowość</label>
-                            <input type="text" name="Miejscowosc" required value="@Model.Miejscowosc">
-                        </div>
-
-                        <div>
-                            <label>Kod pocztowy</label>
-                            <input type="text" name="KodPocztowy" required pattern="\d{2}-\d{3}" value="@Model.KodPocztowy">
-                        </div>
-
-                        <div>
-                            <label>Ulica (opcjonalnie)</label>
-                            <input type="text" name="Ulica" value="@Model.Ulica">
-                        </div>
-
-                        <div>
-                            <label>Nr posesji</label>
-                            <input type="text" name="NrPosesji" required value="@Model.NrPosesji">
-                        </div>
-
-                        <div>
-                            <label>Nr lokalu (opcjonalnie)</label>
-                            <input type="text" name="NrLokalu" value="@Model.NrLokalu">
-                        </div>
-                    </div>
-
-                    <div class="btn-group" style="margin-top: 30px;">
-                        <button type="submit" class="btn-primary">Zapisz</button>
-                        <a class="btn-secondary"
-                           asp-controller="Uzytkownicy" asp-action="UserDetails" asp-route-id="@Model.Id"
-                           style="text-decoration:none; display:inline-block; text-align:center;">Anuluj</a>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </section>
         </main>
     </div>
+
+    @await Html.PartialAsync("_ValidationScriptsPartial")
 </body>
 </html>
