@@ -1,4 +1,8 @@
 using System.Diagnostics;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Magazyn.Data;
 using Magazyn.Models;
@@ -11,10 +15,12 @@ namespace Magazyn.Controllers;
 public class HomeController : Controller
 {
     private readonly IWebHostEnvironment _env;
+    private readonly ILogger<HomeController> _logger;
 
-    public HomeController(IWebHostEnvironment env)
+    public HomeController(IWebHostEnvironment env, ILogger<HomeController> logger)
     {
         _env = env;
+        _logger = logger;
     }
 
     /// <summary>Pełna ścieżka do pliku bazy danych SQLite.</summary>
@@ -42,11 +48,12 @@ public class HomeController : Controller
     /// Weryfikuje dane logowania użytkownika w bazie danych.
     /// Sprawdza login i hasło (bez rozróżnienia wielkości liter dla loginu),
     /// pomijając konta oznaczone jako zapomniane (RODO).
+    /// Po pomyślnej weryfikacji wystawia cookie uwierzytelniające.
     /// </summary>
     /// <param name="username">Login użytkownika.</param>
     /// <param name="password">Hasło użytkownika.</param>
     [HttpPost]
-    public IActionResult Login(string username, string password)
+    public async Task<IActionResult> Login(string username, string password)
     {
         if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
             return BadRequest(new { ok = false, msg = "Brak loginu lub hasła" });
@@ -57,15 +64,20 @@ public class HomeController : Controller
         using var connection = Db.OpenConnection(DbPath);
         using var command = connection.CreateCommand();
 
-        // Szukamy aktywnego użytkownika o podanym loginie i haśle.
+        // Pobieramy id, username i role użytkownika w jednym zapytaniu.
         // LOWER(TRIM(...)) zapewnia odporność na różnice w wielkości liter i zbędne spacje.
         // COALESCE(czy_zapomniany,0) = 0 wyklucza konta usunięte zgodnie z RODO.
         command.CommandText = @"
-SELECT username
-FROM Uzytkownicy
-WHERE LOWER(TRIM(username)) = LOWER(TRIM($username))
-  AND TRIM(COALESCE(Password,'')) = TRIM($password)
-  AND COALESCE(czy_zapomniany,0) = 0
+SELECT u.id,
+       u.username,
+       COALESCE(GROUP_CONCAT(p.Nazwa, ', '), '') AS Rola
+FROM Uzytkownicy u
+LEFT JOIN Uzytkownik_Uprawnienia uu ON uu.uzytkownik_id = u.id
+LEFT JOIN Uprawnienia p ON p.Id = uu.uprawnienie_id
+WHERE LOWER(TRIM(u.username)) = LOWER(TRIM($username))
+  AND TRIM(COALESCE(u.Password,'')) = TRIM($password)
+  AND COALESCE(u.czy_zapomniany,0) = 0
+GROUP BY u.id
 LIMIT 1;
 ";
         command.Parameters.AddWithValue("$username", username.Trim());
@@ -73,9 +85,46 @@ LIMIT 1;
 
         using var dbReader = command.ExecuteReader();
         if (!dbReader.Read())
+        {
+            _logger.LogWarning("[AdminAccess] Nieudana próba logowania dla użytkownika '{Username}' z IP {RemoteIp}",
+                username, HttpContext.Connection.RemoteIpAddress);
             return Unauthorized(new { ok = false, msg = "Błędne dane" });
+        }
 
-        return Json(new { ok = true, username = dbReader["username"]?.ToString() });
+        var loggedUsername = dbReader["username"]?.ToString() ?? username;
+        var loggedUserId   = dbReader["id"]?.ToString() ?? "";
+        var loggedRole     = dbReader["Rola"]?.ToString() ?? "";
+
+        var claims = new List<Claim>
+        {
+            new Claim(ClaimTypes.Name, loggedUsername),
+            new Claim(ClaimTypes.NameIdentifier, loggedUserId),
+            new Claim(ClaimTypes.Role, loggedRole)
+        };
+        var identity  = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        var principal = new ClaimsPrincipal(identity);
+        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
+
+        _logger.LogInformation("[AdminAccess] Użytkownik '{Username}' (id={UserId}, rola={Role}) zalogował się z IP {RemoteIp}",
+            loggedUsername, loggedUserId, loggedRole, HttpContext.Connection.RemoteIpAddress);
+
+        return Json(new { ok = true, username = loggedUsername, rola = loggedRole });
+    }
+
+    // =========================
+    // WYLOGOWANIE
+    // =========================
+
+    /// <summary>
+    /// Wylogowuje zalogowanego użytkownika przez usunięcie cookie uwierzytelniającego.
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> Logout()
+    {
+        _logger.LogInformation("[AdminAccess] Użytkownik '{Username}' wylogował się z IP {RemoteIp}",
+            User.Identity?.Name ?? "nieznany", HttpContext.Connection.RemoteIpAddress);
+        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        return RedirectToAction(nameof(Index));
     }
 
     // =========================
@@ -90,6 +139,7 @@ LIMIT 1;
     /// <param name="login">Opcjonalny filtr na login (username).</param>
     /// <param name="name">Opcjonalny filtr na imię i nazwisko.</param>
     /// <param name="pesel">Opcjonalny filtr na PESEL.</param>
+    [Authorize]
     [HttpGet]
     public IActionResult ApiUsers(string? login = null, string? name = null, string? pesel = null)
     {
@@ -142,6 +192,7 @@ ORDER BY id;
     /// Używana przez panel edycji do wstępnego załadowania formularza przez AJAX.
     /// </summary>
     /// <param name="id">Identyfikator użytkownika w tabeli Uzytkownicy.</param>
+    [Authorize]
     [HttpGet]
     public IActionResult ApiUser(long id)
     {

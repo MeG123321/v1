@@ -99,7 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
       localStorage.removeItem("czyAdmin");
       localStorage.removeItem("rola");
-      window.location.href = homeUrl;
+      window.location.href = "/Home/Logout";
     });
   }
 

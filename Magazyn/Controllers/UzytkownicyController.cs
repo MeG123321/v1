@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.Sqlite;
 using System.Security.Cryptography;
@@ -11,13 +12,16 @@ namespace Magazyn.Controllers;
 /// Kontroler zarządzający użytkownikami systemu: rejestracja, edycja,
 /// przeglądanie, oraz obsługa prawa do bycia zapomnianym (RODO).
 /// </summary>
+[Authorize]
 public class UzytkownicyController : Controller
 {
     private readonly IWebHostEnvironment _env;
+    private readonly ILogger<UzytkownicyController> _logger;
 
-    public UzytkownicyController(IWebHostEnvironment env)
+    public UzytkownicyController(IWebHostEnvironment env, ILogger<UzytkownicyController> logger)
     {
         _env = env;
+        _logger = logger;
     }
 
     /// <summary>Pełna ścieżka do pliku bazy danych SQLite.</summary>
@@ -80,6 +84,9 @@ public class UzytkownicyController : Controller
     [HttpGet]
     public IActionResult AdminPanel(string? login = null, string? name = null, string? pesel = null)
     {
+        _logger.LogInformation("[AdminAccess] '{User}' otworzył AdminPanel [login={Login}, name={Name}, pesel={Pesel}] IP={RemoteIp}",
+            User.Identity?.Name, login, name, pesel, HttpContext.Connection.RemoteIpAddress);
+
         ViewBag.Login = login ?? "";
         ViewBag.Name  = name  ?? "";
         ViewBag.Pesel = pesel ?? "";
@@ -148,6 +155,9 @@ ORDER BY u.id;
     [HttpGet]
     public IActionResult UserDetails(long id)
     {
+        _logger.LogInformation("[AdminAccess] '{User}' przejrzał szczegóły użytkownika id={TargetId} IP={RemoteIp}",
+            User.Identity?.Name, id, HttpContext.Connection.RemoteIpAddress);
+
         if (!System.IO.File.Exists(DbPath))
             return NotFound(new { msg = "Brak bazy", path = DbPath });
 
@@ -226,6 +236,9 @@ LIMIT 1;
             ModelState.AddModelError("", $"Nie znaleziono bazy danych: {DbPath}");
             return View(dto);
         }
+
+        _logger.LogInformation("[AdminAccess] '{User}' rejestruje nowego użytkownika login='{NewLogin}' IP={RemoteIp}",
+            User.Identity?.Name, dto.Username, HttpContext.Connection.RemoteIpAddress);
 
         // Przycinamy białe znaki ze wszystkich pól tekstowych przed zapisem do bazy
         dto.Username     = (dto.Username     ?? "").Trim();
@@ -392,7 +405,8 @@ LIMIT 1;
             return View(viewModel);
         }
 
-        // Przycinamy białe znaki ze wszystkich pól tekstowych przed zapisem do bazy
+        _logger.LogInformation("[AdminAccess] '{User}' edytuje użytkownika id={TargetId} IP={RemoteIp}",
+            User.Identity?.Name, viewModel.Id, HttpContext.Connection.RemoteIpAddress);
         viewModel.Username     = (viewModel.Username     ?? "").Trim();
         viewModel.Password     = (viewModel.Password     ?? "").Trim();
         viewModel.FirstName    = (viewModel.FirstName    ?? "").Trim();
@@ -556,6 +570,9 @@ ORDER BY DataZapomnienia DESC;
     [ValidateAntiForgeryToken]
     public IActionResult ForgetUser(long id, long adminId)
     {
+        _logger.LogWarning("[AdminAccess] '{User}' wykonuje RODO-zapomnienie użytkownika id={TargetId} (adminId={AdminId}) IP={RemoteIp}",
+            User.Identity?.Name, id, adminId, HttpContext.Connection.RemoteIpAddress);
+
         if (!System.IO.File.Exists(DbPath))
             return NotFound(new { msg = "Brak bazy", path = DbPath });
 
