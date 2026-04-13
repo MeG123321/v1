@@ -1,13 +1,11 @@
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("[script.js] loaded"); // DEBUG
-
   const body = document.body;
   const adminUrl = body?.dataset?.adminUrl || null;
   const homeUrl = body?.dataset?.homeUrl || "/";
+  const loginUrl = body?.dataset?.loginUrl || "/Account/Login";
 
   function otworzOkno(idOkna) {
     const okno = document.getElementById(idOkna);
-    console.log("[script.js] open modal", idOkna, okno); // DEBUG
     if (okno) okno.style.display = "flex";
   }
 
@@ -19,7 +17,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // INDEX: przycisk "Zaloguj się"
   const btnLogin = document.getElementById("przycisk-zaloguj");
-  console.log("[script.js] btnLogin:", btnLogin); // DEBUG
   if (btnLogin) {
     btnLogin.addEventListener("click", (e) => {
       e.preventDefault();
@@ -52,26 +49,26 @@ document.addEventListener("DOMContentLoaded", () => {
       const token = document.querySelector('#formularz-logowania input[name="__RequestVerificationToken"]')?.value || "";
 
       try {
-        const res = await fetch("/Home/Login", {
+        const res = await fetch(loginUrl, {
           method: "POST",
           headers: { "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8" },
           body: new URLSearchParams({ username: user, password: pass, __RequestVerificationToken: token }).toString()
         });
 
-   if (!res.ok) {
-  let msg = "Błędne dane!";
-  try {
-    const data = await res.json();
-    if (data?.msg) msg = data.msg;
-  } catch { }
-  if (errorMsg) {
-    errorMsg.textContent = msg;
-    errorMsg.style.display = "block";
-  } else {
-    alert(msg);
-  }
-  return;
-}
+        if (!res.ok) {
+          let msg = "Błędne dane!";
+          try {
+            const data = await res.json();
+            if (data?.msg) msg = data.msg;
+          } catch { }
+          if (errorMsg) {
+            errorMsg.textContent = msg;
+            errorMsg.style.display = "block";
+          } else {
+            alert(msg);
+          }
+          return;
+        }
 
         const data = await res.json();
         if (data?.ok) {
@@ -101,7 +98,7 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
       localStorage.removeItem("czyAdmin");
       localStorage.removeItem("rola");
-      window.location.href = "/Home/Logout";
+      window.location.href = "/Account/Logout";
     });
   }
 

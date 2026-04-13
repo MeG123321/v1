@@ -211,6 +211,11 @@ LIMIT 1;
             Plec         = dbReader["Plec"] == DBNull.Value ? 0 : Convert.ToInt32(dbReader["Plec"]),
             Rola         = dbReader["Rola"]?.ToString(),
             DataUrodzenia = dbReader["DataUrodzenia"]?.ToString(),
+            NrTelefonu   = dbReader["NrTelefonu"]?.ToString(),
+            Miejscowosc  = dbReader["Miejscowosc"]?.ToString(),
+            KodPocztowy  = dbReader["KodPocztowy"]?.ToString(),
+            Ulica        = dbReader["Ulica"]?.ToString(),
+            NrPosesji    = dbReader["numer_posesji"]?.ToString(),
             NrLokalu     = dbReader["NrLokalu"]?.ToString(),
         };
 
@@ -331,6 +336,38 @@ VALUES
             insertCommand.Parameters.AddWithValue("$nrPosesji",    dto.NrPosesji);
             insertCommand.Parameters.AddWithValue("$status",       StatusToInt(dto.Status));
             insertCommand.ExecuteNonQuery();
+        }
+
+        // Przypisanie roli (uprawnienia) nowemu użytkownikowi
+        if (!string.IsNullOrWhiteSpace(dto.Rola))
+        {
+            // Pobierz ID nowo dodanego użytkownika
+            long newUserId;
+            using (var lastIdCommand = connection.CreateCommand())
+            {
+                lastIdCommand.CommandText = "SELECT last_insert_rowid();";
+                newUserId = Convert.ToInt64(lastIdCommand.ExecuteScalar());
+            }
+
+            // Znajdź ID uprawnienia po nazwie
+            using (var roleIdCommand = connection.CreateCommand())
+            {
+                roleIdCommand.CommandText = @"SELECT Id FROM Uprawnienia WHERE TRIM(Nazwa) = TRIM($nazwaRoli) LIMIT 1;";
+                roleIdCommand.Parameters.AddWithValue("$nazwaRoli", dto.Rola.Trim());
+                var roleIdScalar = roleIdCommand.ExecuteScalar();
+                if (roleIdScalar != null)
+                {
+                    var roleId = Convert.ToInt64(roleIdScalar);
+                    using var insertRoleCommand = connection.CreateCommand();
+                    insertRoleCommand.CommandText = @"
+INSERT OR IGNORE INTO Uzytkownik_Uprawnienia (uprawnienie_id, uzytkownik_id)
+VALUES ($roleId, $userId);
+";
+                    insertRoleCommand.Parameters.AddWithValue("$roleId", roleId);
+                    insertRoleCommand.Parameters.AddWithValue("$userId", newUserId);
+                    insertRoleCommand.ExecuteNonQuery();
+                }
+            }
         }
 
         return RedirectToAction(nameof(AdminPanel));

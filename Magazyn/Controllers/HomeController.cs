@@ -1,7 +1,4 @@
 using System.Diagnostics;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Magazyn.Data;
@@ -10,7 +7,8 @@ using Magazyn.Models;
 namespace Magazyn.Controllers;
 
 /// <summary>
-/// Kontroler główny obsługujący stronę startową, logowanie oraz podgląd użytkowników przez API.
+/// Kontroler główny obsługujący stronę startową oraz API podglądu użytkowników.
+/// Logowanie i wylogowanie zostały przeniesione do <see cref="AccountController"/>.
 /// </summary>
 public class HomeController : Controller
 {
@@ -27,17 +25,9 @@ public class HomeController : Controller
     private string DbPath => Db.GetDbPath(_env);
 
     /// <summary>
-    /// Usuwa znaki nowej linii z wartości wejściowej, aby zapobiec fałszowaniu wpisów w logach.
-    /// </summary>
-    private static string SL(string? value) =>
-        (value ?? "").Replace('\r', '_').Replace('\n', '_');
-
-    /// <summary>
     /// Konwertuje wartość kolumny Status z bazy danych (INT lub DBNull)
     /// na czytelny ciąg tekstowy: "Aktywny" lub "Nieaktywny".
     /// </summary>
-    /// <param name="dbValue">Wartość odczytana z kolumny Status (może być DBNull).</param>
-    /// <returns>"Aktywny" gdy Status = 1, w przeciwnym razie "Nieaktywny".</returns>
     private static string StatusToText(object dbValue)
     {
         if (dbValue == DBNull.Value) return "Nieaktywny";
@@ -45,113 +35,6 @@ public class HomeController : Controller
     }
 
     public IActionResult Index() => View();
-
-    // =========================
-    // LOGOWANIE
-    // =========================
-
-    /// <summary>
-    /// Weryfikuje dane logowania użytkownika w bazie danych.
-    /// Sprawdza login i hasło (bez rozróżnienia wielkości liter dla loginu),
-    /// pomijając konta oznaczone jako zapomniane (RODO).
-    /// Po pomyślnej weryfikacji wystawia cookie uwierzytelniające.
-    /// </summary>
-    /// <param name="username">Login użytkownika.</param>
-    /// <param name="password">Hasło użytkownika.</param>
-    [HttpPost]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Login(string username, string password)
-    {
-        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
-            return BadRequest(new { ok = false, msg = "Brak loginu lub hasła" });
-
-        if (!System.IO.File.Exists(DbPath))
-            return StatusCode(500, new { ok = false, msg = "Brak bazy", path = DbPath });
-
-        using var connection = Db.OpenConnection(DbPath);
-
-        // Weryfikacja danych logowania i pobranie id użytkownika.
-        // LOWER(TRIM(...)) zapewnia odporność na różnice w wielkości liter i zbędne spacje.
-        // COALESCE(czy_zapomniany,0) = 0 wyklucza konta usunięte zgodnie z RODO.
-        long? userId;
-        string? loggedUsername;
-        using (var authCommand = connection.CreateCommand())
-        {
-            authCommand.CommandText = @"
-SELECT id, username
-FROM Uzytkownicy
-WHERE LOWER(TRIM(username)) = LOWER(TRIM($username))
-  AND TRIM(COALESCE(Password,'')) = TRIM($password)
-  AND COALESCE(czy_zapomniany,0) = 0
-LIMIT 1;
-";
-            authCommand.Parameters.AddWithValue("$username", username.Trim());
-            authCommand.Parameters.AddWithValue("$password", password.Trim());
-            using var authReader = authCommand.ExecuteReader();
-            if (!authReader.Read())
-            {
-                _logger.LogWarning("[AdminAccess] Nieudana próba logowania dla użytkownika '{Username}' z IP {RemoteIp}",
-                    SL(username), HttpContext.Connection.RemoteIpAddress);
-                return Unauthorized(new { ok = false, msg = "Błędne dane" });
-            }
-            userId        = Convert.ToInt64(authReader["id"]);
-            loggedUsername = authReader["username"]?.ToString() ?? username;
-        }
-
-        // Pobranie ról użytkownika jako osobnych wierszy dla prawidłowego działania [Authorize(Roles=...)].
-        var roles = new List<string>();
-        using (var roleCommand = connection.CreateCommand())
-        {
-            roleCommand.CommandText = @"
-SELECT p.Nazwa
-FROM Uzytkownik_Uprawnienia uu
-JOIN Uprawnienia p ON p.Id = uu.uprawnienie_id
-WHERE uu.uzytkownik_id = $userId;
-";
-            roleCommand.Parameters.AddWithValue("$userId", userId);
-            using var roleReader = roleCommand.ExecuteReader();
-            while (roleReader.Read())
-            {
-                var roleName = roleReader["Nazwa"]?.ToString();
-                if (!string.IsNullOrWhiteSpace(roleName))
-                    roles.Add(roleName);
-            }
-        }
-
-        var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.Name, loggedUsername),
-            new Claim(ClaimTypes.NameIdentifier, userId.ToString()!)
-        };
-        foreach (var role in roles)
-            claims.Add(new Claim(ClaimTypes.Role, role));
-
-        var identity  = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-        var principal = new ClaimsPrincipal(identity);
-        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
-
-        var roleDisplay = string.Join(", ", roles);
-        _logger.LogInformation("[AdminAccess] Użytkownik '{Username}' (id={UserId}, role={Roles}) zalogował się z IP {RemoteIp}",
-            SL(loggedUsername), userId, SL(roleDisplay), HttpContext.Connection.RemoteIpAddress);
-
-        return Json(new { ok = true, username = loggedUsername, role = roleDisplay });
-    }
-
-    // =========================
-    // WYLOGOWANIE
-    // =========================
-
-    /// <summary>
-    /// Wylogowuje zalogowanego użytkownika przez usunięcie cookie uwierzytelniającego.
-    /// </summary>
-    [HttpGet]
-    public async Task<IActionResult> Logout()
-    {
-        _logger.LogInformation("[AdminAccess] Użytkownik '{Username}' wylogował się z IP {RemoteIp}",
-            User.Identity?.Name ?? "nieznany", HttpContext.Connection.RemoteIpAddress);
-        await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        return RedirectToAction(nameof(Index));
-    }
 
     // =========================
     // API: lista userów

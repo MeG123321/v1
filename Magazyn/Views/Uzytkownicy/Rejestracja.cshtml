@@ -45,107 +45,120 @@
                     <form asp-controller="Uzytkownicy" asp-action="Rejestracja" method="post" class="form-rejestracja">
                         @Html.AntiForgeryToken()
 
-                        <div asp-validation-summary="All" style="color:#ff6b6b; margin-bottom:10px;"></div>
+                        <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
 
                         <div class="tabelka">
-                            <div>
-                                <label>Login (5-20 znaków)</label>
-                                <input type="text" name="Username" required minlength="5" maxlength="20"
-                                       value="@Model?.Username" placeholder="np. mkowalski">
+                            <div class="form-group">
+                                <label asp-for="Username">Login (5–20 znaków)</label>
+                                <input asp-for="Username" placeholder="np. mkowalski" />
+                                <span asp-validation-for="Username" class="field-error"></span>
                             </div>
 
-                            <div>
-                                <label>Hasło</label>
-                                <input type="password"
-                                       name="Password"
-                                       required minlength="8" maxlength="15"
+                            <div class="form-group">
+                                <label asp-for="Password">Hasło (8–15 znaków)</label>
+                                <input asp-for="Password" type="password"
                                        pattern="^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[-,!*#$&amp;]).{8,15}$"
-                                       title="Hasło 8-15 znaków. Musi zawierać: 1 wielką literę, 1 małą literę, 1 cyfrę i 1 znak specjalny z: -, , !, *, #, $, &"
-                                       placeholder="np. Abcdef1!">
+                                       title="Hasło 8–15 znaków: 1 wielka, 1 mała litera, 1 cyfra i 1 znak specjalny (-, !, *, #, $, &)"
+                                       placeholder="np. Abcdef1!" />
+                                <span asp-validation-for="Password" class="field-error"></span>
                             </div>
 
-                            <div>
-                                <label>Imię</label>
-                                <input type="text" name="FirstName" required value="@Model?.FirstName" placeholder="np. Marek">
+                            <div class="form-group">
+                                <label asp-for="FirstName">Imię</label>
+                                <input asp-for="FirstName" placeholder="np. Marek" />
+                                <span asp-validation-for="FirstName" class="field-error"></span>
                             </div>
 
-                            <div>
-                                <label>Nazwisko</label>
-                                <input type="text" name="LastName" required value="@Model?.LastName" placeholder="np. Kowalski">
+                            <div class="form-group">
+                                <label asp-for="LastName">Nazwisko</label>
+                                <input asp-for="LastName" placeholder="np. Kowalski" />
+                                <span asp-validation-for="LastName" class="field-error"></span>
                             </div>
 
-                            <div>
-                                <label>Email</label>
-                                <input type="email" name="Email" required value="@Model?.Email" placeholder="np. jan.kowalski@gmail.com">
+                            <div class="form-group">
+                                <label asp-for="Email">Email</label>
+                                <input asp-for="Email" placeholder="np. jan.kowalski@gmail.com" />
+                                <span asp-validation-for="Email" class="field-error"></span>
                             </div>
 
-                            <div>
-                                <label>PESEL</label>
-                                <input type="text" name="Pesel" required maxlength="11" inputmode="numeric" pattern="\d{11}"
-                                       value="@Model?.Pesel" placeholder="11 cyfr (bez spacji i myślników)">
+                            <div class="form-group">
+                                <label asp-for="Pesel">PESEL</label>
+                                <input asp-for="Pesel" maxlength="11" inputmode="numeric" placeholder="11 cyfr" />
+                                <span asp-validation-for="Pesel" class="field-error"></span>
                             </div>
 
-                            <div>
-                                <label>Data urodzenia</label>
-                                <input type="date" name="DataUrodzenia" required value="@Model?.DataUrodzenia">
+                            <div class="form-group">
+                                <label asp-for="DataUrodzenia">Data urodzenia</label>
+                                <input asp-for="DataUrodzenia" type="date" />
+                                <span asp-validation-for="DataUrodzenia" class="field-error"></span>
                             </div>
 
-                            <div>
-                                <label>Nr telefonu</label>
-                                <input type="text" name="NrTelefonu" required maxlength="9" inputmode="numeric" pattern="\d{9}"
-                                       value="@Model?.NrTelefonu" placeholder="9 cyfr">
+                            <div class="form-group">
+                                <label asp-for="NrTelefonu">Nr telefonu</label>
+                                <input asp-for="NrTelefonu" maxlength="9" inputmode="numeric" placeholder="9 cyfr" />
+                                <span asp-validation-for="NrTelefonu" class="field-error"></span>
                             </div>
 
-                            <div>
-                                <label>Płeć</label>
-                                <select name="Plec" required>
+                            <div class="form-group">
+                                <label asp-for="Plec">Płeć</label>
+                                <select asp-for="Plec">
                                     <option value="">Wybierz...</option>
-                                    <option value="Kobieta" selected="@(Model?.Plec == "Kobieta" ? "selected" : null)">Kobieta</option>
-                                    <option value="Mężczyzna" selected="@(Model?.Plec == "Mężczyzna" ? "selected" : null)">Mężczyzna</option>
+                                    <option value="Kobieta">Kobieta</option>
+                                    <option value="Mężczyzna">Mężczyzna</option>
                                 </select>
+                                <span asp-validation-for="Plec" class="field-error"></span>
                             </div>
 
-                            <div>
-                                <label>Status</label>
-                                <select name="Status" required>
-                                    <option value="Aktywny" selected="@(string.IsNullOrEmpty(Model?.Status) || Model?.Status == "Aktywny" ? "selected" : null)">Aktywny</option>
-                                    <option value="Nieaktywny" selected="@(Model?.Status == "Nieaktywny" ? "selected" : null)">Nieaktywny</option>
+                            <div class="form-group">
+                                <label asp-for="Status">Status</label>
+                                <select asp-for="Status">
+                                    <option value="Aktywny">Aktywny</option>
+                                    <option value="Nieaktywny">Nieaktywny</option>
                                 </select>
+                                <span asp-validation-for="Status" class="field-error"></span>
                             </div>
 
-                            <div>
-                                <label>Rola</label>
-                                <select name="Rola" required>
-                                    <option value="Użytkownik" selected="@(string.IsNullOrEmpty(Model?.Rola) || Model?.Rola == "Użytkownik" ? "selected" : null)">Użytkownik</option>
-                                    <option value="Moderator" selected="@(Model?.Rola == "Moderator" ? "selected" : null)">Moderator</option>
-                                    <option value="Admin" selected="@(Model?.Rola == "Admin" ? "selected" : null)">Admin</option>
+                            <div class="form-group">
+                                <label asp-for="Rola">Rola</label>
+                                <select asp-for="Rola">
+                                    <option value="">Wybierz...</option>
+                                    <option value="Administrator">Administrator</option>
+                                    <option value="Kierownik magazynu">Kierownik magazynu</option>
+                                    <option value="Kierownik sprzedazy">Kierownik sprzedaży</option>
+                                    <option value="Sprzedawca">Sprzedawca</option>
+                                    <option value="Pracownik magazynu">Pracownik magazynu</option>
                                 </select>
+                                <span asp-validation-for="Rola" class="field-error"></span>
                             </div>
 
-                            <div>
-                                <label>Miejscowość</label>
-                                <input type="text" name="Miejscowosc" required value="@Model?.Miejscowosc" placeholder="np. Warszawa">
+                            <div class="form-group">
+                                <label asp-for="Miejscowosc">Miejscowość</label>
+                                <input asp-for="Miejscowosc" placeholder="np. Warszawa" />
+                                <span asp-validation-for="Miejscowosc" class="field-error"></span>
                             </div>
 
-                            <div>
-                                <label>Kod pocztowy</label>
-                                <input type="text" name="KodPocztowy" required pattern="\d{2}-\d{3}"
-                                       value="@Model?.KodPocztowy" placeholder="00-000">
+                            <div class="form-group">
+                                <label asp-for="KodPocztowy">Kod pocztowy</label>
+                                <input asp-for="KodPocztowy" placeholder="00-000" />
+                                <span asp-validation-for="KodPocztowy" class="field-error"></span>
                             </div>
 
-                            <div>
-                                <label>Ulica (opcjonalnie)</label>
-                                <input type="text" name="Ulica" value="@Model?.Ulica" placeholder="np. Marszałkowska">
+                            <div class="form-group">
+                                <label asp-for="Ulica">Ulica (opcjonalnie)</label>
+                                <input asp-for="Ulica" placeholder="np. Marszałkowska" />
+                                <span asp-validation-for="Ulica" class="field-error"></span>
                             </div>
 
-                            <div>
-                                <label>Nr posesji</label>
-                                <input type="text" name="NrPosesji" required value="@Model?.NrPosesji" placeholder="np. 12A">
+                            <div class="form-group">
+                                <label asp-for="NrPosesji">Nr posesji</label>
+                                <input asp-for="NrPosesji" placeholder="np. 12A" />
+                                <span asp-validation-for="NrPosesji" class="field-error"></span>
                             </div>
 
-                            <div>
-                                <label>Nr lokalu (opcjonalnie)</label>
-                                <input type="text" name="NrLokalu" value="@Model?.NrLokalu" placeholder="np. 5">
+                            <div class="form-group">
+                                <label asp-for="NrLokalu">Nr lokalu (opcjonalnie)</label>
+                                <input asp-for="NrLokalu" placeholder="np. 5" />
+                                <span asp-validation-for="NrLokalu" class="field-error"></span>
                             </div>
                         </div>
 
@@ -159,5 +172,7 @@
             </section>
         </main>
     </div>
+
+    @await Html.PartialAsync("_ValidationScriptsPartial")
 </body>
 </html>
