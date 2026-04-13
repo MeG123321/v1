@@ -58,7 +58,7 @@
                                 <label asp-for="Password">Hasło (8–15 znaków)</label>
                                 <input asp-for="Password" type="password"
                                        pattern="^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[-,!*#$&amp;]).{8,15}$"
-                                       title="Hasło 8–15 znaków: 1 wielka, 1 mała litera, 1 cyfra i 1 znak specjalny (-, ,!, *, #, $, &)"
+                                       title="Hasło 8–15 znaków: 1 wielka, 1 mała litera, 1 cyfra i 1 znak specjalny (-, !, *, #, $, &)"
                                        placeholder="np. Abcdef1!" />
                                 <span asp-validation-for="Password" class="field-error"></span>
                             </div>
