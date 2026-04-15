@@ -127,18 +127,27 @@
                             <input type="hidden" name="id" value="@Model.Id" />
 
                             <div class="role-grid">
-                                <div>
-                                    <label>Wybierz rolę</label>
-                                    <select name="rola" required>
-                                        
-                                        <option value="Administrator">Administrator</option>
-                                        <option value="Kierownik magazynu">Kierownik magazynu</option>
-                                        <option value="Kierownik sprzedaży">Kierownik sprzedaży</option>
-                                        <option value="Sprzedawca">Sprzedawca</option>
-                                        <option value="Pracownik magazynu">Pracownik magazynu</option>
-                                    </select>
-                                    <div class="note">Po zapisaniu wrócisz do szczegółów użytkownika.</div>
-                                </div>
+                                @{
+                                    var dostepneRole = new (string Value, string Label)[]
+                                    {
+                                        ("Administrator",       "Administrator"),
+                                        ("Pracownik magazynu",  "Pracownik magazynu"),
+                                        ("Sprzedawca",          "Sprzedawca"),
+                                        ("Kierownik magazynu",  "Kierownik magazynu"),
+                                        ("Kierownik sprzedazy", "Kierownik sprzedaży")
+                                    };
+                                }
+                                @foreach (var r in dostepneRole)
+                                {
+                                    <div>
+                                        <label>
+                                            <input type="checkbox" name="rola" value="@r.Value"
+                                                   @(Model.RoleList.Contains(r.Value) ? "checked" : "") />
+                                            @r.Label
+                                        </label>
+                                    </div>
+                                }
+                                <div class="note">Zaznacz jedną lub więcej ról. Niezaznaczone role zostaną usunięte.</div>
                             </div>
 
                             <div class="role-actions">
