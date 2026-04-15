@@ -47,6 +47,7 @@
 
                         <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
 
+                        <h3 class="form-section-title">Dane pracownika</h3>
                         <div class="tabelka">
                             <div class="form-group">
                                 <label asp-for="Username">Login (5–20 znaków)</label>
@@ -55,11 +56,8 @@
                             </div>
 
                             <div class="form-group">
-                                <label asp-for="Password">Hasło (8–15 znaków)</label>
-                                <input asp-for="Password" type="password"
-                                       pattern="^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[-,!*#$&amp;]).{8,15}$"
-                                       title="Hasło 8–15 znaków: 1 wielka, 1 mała litera, 1 cyfra i 1 znak specjalny (-, !, *, #, $, &)"
-                                       placeholder="np. Abcdef1!" />
+                                <label asp-for="Password">Hasło</label>
+                                <input asp-for="Password" type="password" placeholder="np. Abcdef1!" />
                                 <span asp-validation-for="Password" class="field-error"></span>
                             </div>
 
@@ -110,7 +108,7 @@
                             </div>
 
                             <div class="form-group">
-                                <label asp-for="Status">Status</label>
+                                <label asp-for="Status">Status konta</label>
                                 <select asp-for="Status">
                                     <option value="Aktywny">Aktywny</option>
                                     <option value="Nieaktywny">Nieaktywny</option>
@@ -119,7 +117,7 @@
                             </div>
 
                             <div class="form-group">
-                                <label asp-for="Rola">Rola</label>
+                                <label asp-for="Rola">Rola w systemie</label>
                                 <select asp-for="Rola">
                                     <option value="">Wybierz...</option>
                                     <option value="Administrator">Administrator</option>
@@ -130,7 +128,10 @@
                                 </select>
                                 <span asp-validation-for="Rola" class="field-error"></span>
                             </div>
+                        </div>
 
+                        <h3 class="form-section-title">Adres zamieszkania</h3>
+                        <div class="tabelka">
                             <div class="form-group">
                                 <label asp-for="Miejscowosc">Miejscowość</label>
                                 <input asp-for="Miejscowosc" placeholder="np. Warszawa" />
@@ -162,10 +163,9 @@
                             </div>
                         </div>
 
-                        <div class="btn-group" style="margin-top: 30px;">
-                            <button type="submit" class="btn-primary">Zarejestruj pracownika</button>
-                            <a class="btn-secondary" asp-controller="Uzytkownicy" asp-action="AdminPanel"
-                               style="text-decoration:none; display:inline-block; text-align:center;">Anuluj</a>
+                        <div class="btn-group-final">
+                            <button type="submit" class="btn-primary-large">Zarejestruj pracownika</button>
+                            <a asp-controller="Uzytkownicy" asp-action="AdminPanel" class="btn-cancel">Anuluj</a>
                         </div>
                     </form>
                 </div>
@@ -173,6 +173,8 @@
         </main>
     </div>
 
-    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/jquery.validate.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
 </body>
 </html>

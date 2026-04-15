@@ -7,27 +7,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Magazyn GiTA – Logowanie</title>
+    <title>Magazyn GiTA – Strona główna</title>
 
     <link rel="stylesheet" href="~/css/style.css" />
-
-    <!-- wspólny JS: modal logowania + backend /Home/Login + guard/wyloguj -->
-    <script defer src="~/js/script.js"></script>
 </head>
 
-<body data-admin-url='@Url.Action("AdminPanel", "Uzytkownicy")' data-home-url='@Url.Action("Index", "Home")' data-login-url='@Url.Action("Login", "Account")'>
+<body data-home-url='@Url.Action("Index", "Home")'>
     <div class="Wrapper">
         <aside class="panelbok">
             <div class="logo"><h1>Magazyn GiTA</h1></div>
             <nav class="gitanav">
                 <p>Przejdź</p>
-                <button id="przycisk-zaloguj" class="przycisk-menu przycisk-wyrozniony">Zaloguj się</button>
+
+                <!-- ZAMIANA: zamiast modala logowania przechodzimy na osobną stronę -->
+                <a class="przycisk-menu przycisk-wyrozniony"
+                   asp-controller="Account" asp-action="Login">
+                    Zaloguj się
+                </a>
             </nav>
         </aside>
 
         <main class="main">
             <header class="header">
                 <div class="info">
+                    <a asp-controller="Home" asp-action="Index">Strona Główna</a>
+
+                    <!-- opcjonalnie: link do panelu (i tak będzie chroniony przez [Authorize]) -->
                     <a asp-controller="Uzytkownicy" asp-action="AdminPanel">Panel</a>
                 </div>
             </header>
@@ -36,27 +41,11 @@
                 <h1>Magazyn GiTA</h1>
                 <p>System korzysta z bazy: <strong>wwwroot/magazyn.db</strong></p>
 
-                <!-- już nie ładujemy bazy w przeglądarce, więc nie pokazujemy "Ładowanie..." -->
-                <div style="color: #57ab5a; font-size: 12px;">Połączenie z bazą realizuje backend (ASP.NET + SQLite).</div>
+                <div style="color: #57ab5a; font-size: 12px;">
+                    Połączenie z bazą realizuje backend (ASP.NET + SQLite).
+                </div>
             </section>
         </main>
-    </div>
-
-    <!-- Modal logowania (obsługiwany w script.js) -->
-    <div id="okno-logowania" class="tlo-okienka" style="display:none;">
-        <div class="ramka-okienka">
-            <span class="zamknij-x" id="zamknij-logowanie">&times;</span>
-            <h2 style="margin-top:0; color: white;">Logowanie</h2>
-
-            <form id="formularz-logowania">
-                @Html.AntiForgeryToken()
-                <input type="text" id="input-login" placeholder="Login" required>
-                <input type="password" id="input-haslo" placeholder="Hasło" required>
-                <button type="submit" class="przycisk-wyslij" style="margin-top:20px;">Wejdź</button>
-            </form>
-
-            <p id="error-msg" style="color: #ff6b6b; font-size: 12px; display: none;">Błędne dane!</p>
-        </div>
     </div>
 </body>
 </html>

@@ -1,0 +1,71 @@
+@model Magazyn.Models.LoginViewModel
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magazyn GiTA – Logowanie</title>
+    <link rel="stylesheet" href="~/css/style.css" />
+</head>
+<body data-home-url='@Url.Action("Index","Home")'>
+    <div class="Wrapper">
+        <aside class="panelbok">
+            <div class="logo"><h1>Magazyn GiTA</h1></div>
+            <nav class="gitanav">
+                <p>Wejście do systemu</p>
+                <a class="przycisk-menu" asp-controller="Home" asp-action="Index">← Strona główna</a>
+            </nav>
+        </aside>
+
+        <main class="main">
+            <header class="header">
+                <div class="info">
+                    <a asp-controller="Home" asp-action="Index">Strona Główna</a>
+                </div>
+            </header>
+
+            <section class="zaw">
+                <h2>Logowanie</h2>
+
+                <form asp-controller="Account" asp-action="Login" method="post" class="form-rejestracja">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+
+                    <div class="tabelka">
+                        <div class="form-group">
+                            <label asp-for="Email">E-mail</label>
+                            <input asp-for="Email" placeholder="np. jan.kowalski@gmail.com" />
+                            <span asp-validation-for="Email" class="field-error"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label asp-for="Password">Hasło</label>
+                            <input asp-for="Password" type="password" placeholder="Hasło" />
+                            <span asp-validation-for="Password" class="field-error"></span>
+                        </div>
+
+                        <div class="form-group">
+                            <label>
+                                <input asp-for="RememberMe" type="checkbox" />
+                                Zapamiętaj mnie
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="btn-group" style="margin-top: 30px;">
+                        <button type="submit" class="btn-primary">Zaloguj</button>
+                        <a class="btn-secondary" asp-controller="Home" asp-action="Index"
+                           style="text-decoration:none; display:inline-block; text-align:center;">Anuluj</a>
+                    </div>
+                </form>
+            </section>
+        </main>
+    </div>
+
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+</body>
+</html>

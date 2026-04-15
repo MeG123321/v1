@@ -157,7 +157,7 @@
                         <div>
                             <div class="name-line">
                                 <h2 style="margin:0;">@Model.FirstName @Model.LastName</h2>
-                                
+
                                 @* POPRAWKA WYŚWIETLANIA STATUSU *@
                                 <span class="status-pill @(active ? "" : "off")">
                                     @(string.IsNullOrWhiteSpace(currentStatus) ? "Status: Nieokreślony" : $"Status: {currentStatus}")
@@ -180,15 +180,15 @@
                             Edytuj
                         </a>
 
+                        @* RODO: zapomnij użytkownika (bez adminId w formularzu) *@
                         <form class="inline-form"
                               asp-controller="Uzytkownicy"
                               asp-action="ForgetUserFromDetails"
                               asp-route-id="@Model.Id"
-                              method="post">
+                              method="post"
+                              onsubmit="return confirm('Na pewno zapomnieć użytkownika? Tej operacji nie da się cofnąć.');">
                             @Html.AntiForgeryToken()
-                            <input type="hidden" name="adminId" value="1" />
-                            <button type="submit" class="btn-secondary"
-                                    onclick="return confirm('Na pewno zapomnieć użytkownika?');">
+                            <button type="submit" class="btn-primary">
                                 Zapomnij użytkownika
                             </button>
                         </form>
@@ -233,9 +233,10 @@
                                 <div>
                                     <label style="color:#fff; font-weight:700;">Wybierz rolę</label>
                                     <select name="rola" required style="width:100%; padding:10px; border-radius:10px; margin-top:6px;">
-                                        <option value="">Wybierz...</option>
-                                        <option value="Admin">Admin</option>
+                                        
+                                        <option value="Administrator">Administrator</option>
                                         <option value="Kierownik magazynu">Kierownik magazynu</option>
+                                        <option value="Kierownik sprzedaży">Kierownik sprzedaży</option>
                                         <option value="Sprzedawca">Sprzedawca</option>
                                         <option value="Pracownik magazynu">Pracownik magazynu</option>
                                     </select>
