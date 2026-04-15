@@ -316,10 +316,23 @@ td {
     border: 1px solid rgba(0,0,0,.08);
 }
 
-.avatar span { font-size: 28px; color: #ff7a00; font-weight: 800; line-height: 1; }
+.avatar span {
+    font-size: 28px;
+    color: #ff7a00;
+    font-weight: 800;
+    line-height: 1;
+}
 
-.name-line { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.name-line h2 { margin: 0; }
+.name-line {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.name-line h2 {
+    margin: 0;
+}
 
 .status-pill {
     display: inline-block;
@@ -338,13 +351,34 @@ td {
     border-color: rgba(180, 35, 24, 0.2);
 }
 
-.subline { opacity: .85; margin-top: 4px; font-size: 13px; }
-.subline-item { margin-right: 14px; }
+.subline {
+    opacity: .85;
+    margin-top: 4px;
+    font-size: 13px;
+}
 
-.keyval th { width: 240px; opacity: .85; text-align: left; padding-right: 12px; white-space: nowrap; }
-.keyval td { word-break: break-word; }
+.subline-item {
+    margin-right: 14px;
+}
 
-.action-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.keyval th {
+    width: 240px;
+    opacity: .85;
+    text-align: left;
+    padding-right: 12px;
+    white-space: nowrap;
+}
+
+.keyval td {
+    word-break: break-word;
+}
+
+.action-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
 
 .role-fallback {
     display: none;
@@ -357,8 +391,13 @@ td {
     z-index: 9999;
 }
 
-.role-fallback:target { display: flex; }
-.role-fallback .role-box { width: min(620px, 95vw); }
+.role-fallback:target {
+    display: flex;
+}
+
+.role-fallback .role-box {
+    width: min(620px, 95vw);
+}
 
 .role-box {
     background: #0f0f10;
@@ -367,9 +406,22 @@ td {
     border: 1px solid rgba(255,255,255,.12);
 }
 
-.role-box h3 { margin: 0 0 10px 0; color: #fff; }
-.role-box label { color: #fff; font-weight: 700; }
-.role-box select { width: 100%; padding: 10px; border-radius: 10px; margin-top: 6px; }
+.role-box h3 {
+    margin: 0 0 10px 0;
+    color: #fff;
+}
+
+.role-box label {
+    color: #fff;
+    font-weight: 700;
+}
+
+.role-box select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+    margin-top: 6px;
+}
 
 .role-grid {
     display: grid;
@@ -401,4 +453,6 @@ td {
     color: #fff;
 }
 
-.inline-form { display: inline; }
+.inline-form {
+    display: inline;
+}
