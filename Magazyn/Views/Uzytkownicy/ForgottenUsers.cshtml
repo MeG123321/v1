@@ -43,7 +43,7 @@
                 <div class="search-bar">
                     <form method="get" asp-controller="Uzytkownicy" asp-action="ForgottenUsers">
                         <div class="tabelka">
-                            <div style="grid-column: span 2;">
+                            <div class="col-span-2">
                                 <label for="fname">Imię i nazwisko (po zapomnieniu)</label>
                                 <input type="text" id="fname" name="fname" value="@ViewBag.Fname" placeholder="np. Abc Xyz">
                             </div>
@@ -74,7 +74,7 @@
                             @if (Model == null || Model.Count == 0)
                             {
                                 <tr>
-                                    <td colspan="4" style="color:#ff6b6b; font-weight:700;">NIE ZNALEZIONO</td>
+                                    <td colspan="4" class="no-results">NIE ZNALEZIONO</td>
                                 </tr>
                             }
                             else
