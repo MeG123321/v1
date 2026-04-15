@@ -128,22 +128,22 @@
 
                             <div class="role-grid">
                                 @{
-                                    var dostepneRole = new[]
+                                    var dostepneRole = new (string Value, string Label)[]
                                     {
-                                        "Administrator",
-                                        "Pracownik magazynu",
-                                        "Sprzedawca",
-                                        "Kierownik magazynu",
-                                        "Kierownik sprzedazy"
+                                        ("Administrator",       "Administrator"),
+                                        ("Pracownik magazynu",  "Pracownik magazynu"),
+                                        ("Sprzedawca",          "Sprzedawca"),
+                                        ("Kierownik magazynu",  "Kierownik magazynu"),
+                                        ("Kierownik sprzedazy", "Kierownik sprzedaży")
                                     };
                                 }
                                 @foreach (var r in dostepneRole)
                                 {
                                     <div>
                                         <label>
-                                            <input type="checkbox" name="rola" value="@r"
-                                                   @(Model.RoleList.Contains(r) ? "checked" : "") />
-                                            @r
+                                            <input type="checkbox" name="rola" value="@r.Value"
+                                                   @(Model.RoleList.Contains(r.Value) ? "checked" : "") />
+                                            @r.Label
                                         </label>
                                     </div>
                                 }

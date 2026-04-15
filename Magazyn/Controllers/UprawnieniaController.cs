@@ -204,7 +204,7 @@ ORDER BY u.LastName, u.firstName, u.username;
             .ToArray() ?? Array.Empty<string>();
 
         _logger.LogInformation("[AdminAccess] '{User}' nadaje role [{Role}] użytkownikowi id={TargetId} IP={RemoteIp}",
-            SL(User.Identity?.Name), string.Join(", ", selectedRoles.Select(SL)), id, HttpContext.Connection.RemoteIpAddress);
+            SL(User.Identity?.Name), SL(string.Join(", ", selectedRoles)), id, HttpContext.Connection.RemoteIpAddress);
 
         if (!System.IO.File.Exists(DbPath))
             return StatusCode(500, new { msg = "Brak bazy", path = DbPath });

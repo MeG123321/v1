@@ -4,13 +4,13 @@
     var selected = (string[])(ViewBag.SelectedRoles ?? Array.Empty<string>());
     bool IsChecked(string r) => selected.Contains(r);
 
-    var allRoles = new[]
+    var allRoles = new (string Value, string Label)[]
     {
-        "Administrator",
-        "Pracownik magazynu",
-        "Sprzedawca",
-        "Kierownik magazynu",
-        "Kierownik sprzedazy"
+        ("Administrator",       "Administrator"),
+        ("Pracownik magazynu",  "Pracownik magazynu"),
+        ("Sprzedawca",          "Sprzedawca"),
+        ("Kierownik magazynu",  "Kierownik magazynu"),
+        ("Kierownik sprzedazy", "Kierownik sprzedaży")
     };
 }
 
@@ -59,8 +59,8 @@
                             {
                                 <div>
                                     <label>
-                                        <input type="checkbox" name="rola" value="@rola" @(IsChecked(rola) ? "checked" : "") />
-                                        @rola
+                                        <input type="checkbox" name="rola" value="@rola.Value" @(IsChecked(rola.Value) ? "checked" : "") />
+                                        @rola.Label
                                     </label>
                                 </div>
                             }
