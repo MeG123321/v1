@@ -158,12 +158,41 @@ button {
 .btn-primary {
     background-color: var(--accent-blue);
     color: white;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
 }
 
 .btn-secondary {
     background-color: transparent;
     color: var(--text-main);
     border: 1px solid var(--border-color);
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+}
+
+.back-link {
+    display: inline-block;
+    margin-bottom: 14px;
+}
+
+.mt-30 {
+    margin-top: 30px;
+}
+
+.db-info-note {
+    color: var(--status-green);
+    font-size: 12px;
+}
+
+.no-results {
+    color: var(--error-red);
+    font-weight: 700;
+}
+
+.col-span-2 {
+    grid-column: span 2;
 }
 
 /* =========================
@@ -251,15 +280,179 @@ td {
     font-size: 14px;
 }
 
-.status-pill {
-    color: var(--status-green);
-    background: rgba(87, 171, 90, 0.1);
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 12px;
-}
-
 .action-link {
     color: var(--accent-blue);
     text-decoration: none;
+}
+
+/* ========================= 
+   DETAILS PAGE
+========================= */
+
+.details-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+.details-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 260px;
+}
+
+.avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: #f4f4f4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(0,0,0,.08);
+}
+
+.avatar span {
+    font-size: 28px;
+    color: #ff7a00;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.name-line {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.name-line h2 {
+    margin: 0;
+}
+
+.status-pill {
+    display: inline-block;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: 12px;
+    border: 1px solid rgba(0,0,0,.12);
+    background: #f6fff2;
+    color: #2e7d32;
+}
+
+.status-pill.off {
+    background: #fff3f3;
+    color: #b42318;
+    border-color: rgba(180, 35, 24, 0.2);
+}
+
+.subline {
+    opacity: .85;
+    margin-top: 4px;
+    font-size: 13px;
+}
+
+.subline-item {
+    margin-right: 14px;
+}
+
+.keyval th {
+    width: 240px;
+    opacity: .85;
+    text-align: left;
+    padding-right: 12px;
+    white-space: nowrap;
+}
+
+.keyval td {
+    word-break: break-word;
+}
+
+.action-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.role-fallback {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.55);
+    align-items: center;
+    justify-content: center;
+    padding: 18px;
+    z-index: 9999;
+}
+
+.role-fallback:target {
+    display: flex;
+}
+
+.role-fallback .role-box {
+    width: min(620px, 95vw);
+}
+
+.role-box {
+    background: #0f0f10;
+    border-radius: 14px;
+    padding: 18px;
+    border: 1px solid rgba(255,255,255,.12);
+}
+
+.role-box h3 {
+    margin: 0 0 10px 0;
+    color: #fff;
+}
+
+.role-box label {
+    color: #fff;
+    font-weight: 700;
+}
+
+.role-box select {
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+    margin-top: 6px;
+}
+
+.role-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+
+.role-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 14px;
+    flex-wrap: wrap;
+}
+
+.close-x {
+    float: right;
+    color: #fff;
+    text-decoration: none;
+    font-size: 28px;
+    line-height: 1;
+    margin-top: -2px;
+}
+
+.note {
+    font-size: 12px;
+    opacity: .85;
+    margin-top: 6px;
+    color: #fff;
+}
+
+.inline-form {
+    display: inline;
 }

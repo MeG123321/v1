@@ -39,7 +39,7 @@
             </header>
 
             <section class="zaw">
-                <a asp-controller="Uprawnienia" asp-action="Uprawnienia" style="display:inline-block; margin-bottom:14px;">
+                <a asp-controller="Uprawnienia" asp-action="Uprawnienia" class="back-link">
                     ← Wróć do ról
                 </a>
 
@@ -62,7 +62,7 @@
                             @if (Model == null || Model.Count == 0)
                             {
                                 <tr>
-                                    <td colspan="7" style="color:#ff6b6b; font-weight:700;">Brak użytkowników z tą rolą</td>
+                                    <td colspan="7" class="no-results">Brak użytkowników z tą rolą</td>
                                 </tr>
                             }
                             else
@@ -80,8 +80,7 @@
                                             <a class="btn-secondary"
                                                asp-controller="Uzytkownicy"
                                                asp-action="UserDetails"
-                                               asp-route-id="@u.Id"
-                                               style="text-decoration:none; display:inline-block; text-align:center;">
+                                               asp-route-id="@u.Id">
                                                 Szczegóły
                                             </a>
                                         </td>

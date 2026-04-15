@@ -16,107 +16,6 @@
 
     <link rel="stylesheet" href="~/css/style.css" />
     <script defer src="~/js/script.js"></script>
-
-    <style>
-        .details-top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            flex-wrap: wrap;
-            margin-bottom: 16px;
-        }
-        .details-left {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            min-width: 260px;
-        }
-        .avatar {
-            width: 72px;
-            height: 72px;
-            border-radius: 50%;
-            background: #f4f4f4;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid rgba(0,0,0,.08);
-        }
-        .avatar span { font-size: 28px; color: #ff7a00; font-weight: 800; line-height: 1; }
-
-        .name-line { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-
-        .status-pill {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 999px;
-            font-weight: 800;
-            font-size: 12px;
-            border: 1px solid rgba(0,0,0,.12);
-            background: #f6fff2;
-            color: #2e7d32;
-        }
-        .status-pill.off { 
-            background: #fff3f3; 
-            color: #b42318; 
-            border-color: rgba(180, 35, 24, 0.2);
-        }
-        .subline { opacity: .85; margin-top: 4px; font-size: 13px; }
-
-        .keyval th { width: 240px; opacity: .85; text-align: left; padding-right: 12px; white-space: nowrap; }
-        .keyval td { word-break: break-word; }
-
-        .action-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-
-        .role-fallback {
-            display:none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,.55);
-            align-items: center;
-            justify-content: center;
-            padding: 18px;
-            z-index: 9999;
-        }
-        .role-fallback:target { display:flex; }
-        .role-fallback .role-box { width: min(620px, 95vw); }
-
-        .role-box {
-            background: #0f0f10;
-            border-radius: 14px;
-            padding: 18px;
-            border: 1px solid rgba(255,255,255,.12);
-        }
-        .role-box h3 { margin: 0 0 10px 0; color: #fff; }
-        .role-grid {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 12px;
-        }
-        .role-actions {
-            display:flex;
-            gap: 10px;
-            justify-content:flex-end;
-            margin-top: 14px;
-            flex-wrap: wrap;
-        }
-        .close-x {
-            float:right;
-            color:#fff;
-            text-decoration:none;
-            font-size: 28px;
-            line-height: 1;
-            margin-top: -2px;
-        }
-        .note {
-            font-size: 12px;
-            opacity:.85;
-            margin-top: 6px;
-            color:#fff;
-        }
-
-        .inline-form { display:inline; }
-    </style>
 </head>
 
 <body data-home-url='@Url.Action("Index", "Home")'>
@@ -144,7 +43,7 @@
             </header>
 
             <section class="zaw">
-                <a asp-controller="Uzytkownicy" asp-action="AdminPanel" style="display:inline-block; margin-bottom:14px;">
+                <a asp-controller="Uzytkownicy" asp-action="AdminPanel" class="back-link">
                     ← Wróć do listy pracowników
                 </a>
 
@@ -156,7 +55,7 @@
 
                         <div>
                             <div class="name-line">
-                                <h2 style="margin:0;">@Model.FirstName @Model.LastName</h2>
+                                <h2>@Model.FirstName @Model.LastName</h2>
 
                                 @* POPRAWKA WYŚWIETLANIA STATUSU *@
                                 <span class="status-pill @(active ? "" : "off")">
@@ -165,7 +64,7 @@
                             </div>
 
                             <div class="subline">
-                                <span style="margin-right:14px;">Login: <strong>@(Model.Username ?? "-")</strong></span>
+                                <span class="subline-item">Login: <strong>@(Model.Username ?? "-")</strong></span>
                                 <span>Rola: <strong>@(Model.Rola ?? "-")</strong></span>
                             </div>
                         </div>
@@ -175,8 +74,7 @@
                         <a class="btn-primary"
                            asp-controller="Uzytkownicy"
                            asp-action="EditUser"
-                           asp-route-id="@Model.Id"
-                           style="text-decoration:none; display:inline-block; text-align:center;">
+                           asp-route-id="@Model.Id">
                             Edytuj
                         </a>
 
@@ -194,8 +92,7 @@
                         </form>
 
                         <a class="btn-primary"
-                           href="#role-popup"
-                           style="text-decoration:none; display:inline-block; text-align:center;">
+                           href="#role-popup">
                             Nadaj uprawnienia
                         </a>
                     </div>
@@ -231,8 +128,8 @@
 
                             <div class="role-grid">
                                 <div>
-                                    <label style="color:#fff; font-weight:700;">Wybierz rolę</label>
-                                    <select name="rola" required style="width:100%; padding:10px; border-radius:10px; margin-top:6px;">
+                                    <label>Wybierz rolę</label>
+                                    <select name="rola" required>
                                         
                                         <option value="Administrator">Administrator</option>
                                         <option value="Kierownik magazynu">Kierownik magazynu</option>
@@ -245,7 +142,7 @@
                             </div>
 
                             <div class="role-actions">
-                                <a class="btn-secondary" href="#" style="text-decoration:none; display:inline-block; text-align:center;">
+                                <a class="btn-secondary" href="#">
                                     Anuluj
                                 </a>
                                 <button type="submit" class="btn-primary">Zapisz</button>

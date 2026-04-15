@@ -39,7 +39,7 @@
             </header>
 
             <section class="zaw">
-                <a asp-controller="Uzytkownicy" asp-action="UserDetails" asp-route-id="@Model.Id" style="display:inline-block; margin-bottom:14px;">
+                <a asp-controller="Uzytkownicy" asp-action="UserDetails" asp-route-id="@Model.Id" class="back-link">
                     ← Wróć do szczegółów
                 </a>
 
@@ -161,11 +161,10 @@
                             </div>
                         </div>
 
-                        <div class="btn-group" style="margin-top: 30px;">
+                        <div class="btn-group mt-30">
                             <button type="submit" class="btn-primary">Zapisz zmiany</button>
                             <a class="btn-secondary"
-                               asp-controller="Uzytkownicy" asp-action="UserDetails" asp-route-id="@Model.Id"
-                               style="text-decoration:none; display:inline-block; text-align:center;">Anuluj</a>
+                               asp-controller="Uzytkownicy" asp-action="UserDetails" asp-route-id="@Model.Id">Anuluj</a>
                         </div>
                     </form>
                 </div>
