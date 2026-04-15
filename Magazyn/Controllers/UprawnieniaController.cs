@@ -7,7 +7,7 @@ namespace Magazyn.Controllers;
 
 /// <summary>
 /// Kontroler zarządzający uprawnieniami (rolami) użytkowników.
-/// Umożliwia podgląd użytkowników przypisanych do danej roli oraz nadawanie ról.
+/// Umożliwia podgląd użytkowników przypisanych do danych ról oraz nadawanie ról.
 /// </summary>
 [Authorize]
 public class UprawnieniaController : Controller
@@ -29,19 +29,91 @@ public class UprawnieniaController : Controller
         (value ?? "").Replace('\r', '_').Replace('\n', '_');
 
     // ============================================
-    // UPRAWNIENIA - lista ról
+    // NADAJ UPRAWNIENIA - lista użytkowników z filtrem ról
     // ============================================
+
+    /// <summary>
+    /// Wyświetla listę wszystkich użytkowników z możliwością filtrowania po zaznaczonych rolach.
+    /// Jeśli żadna rola nie jest zaznaczona, wyświetlani są wszyscy użytkownicy.
+    /// </summary>
+    /// <param name="rola">Tablica nazw ról wybranych jako filtr (z checkboxów).</param>
     [HttpGet]
-    public IActionResult Uprawnienia() => View();
+    public IActionResult Uprawnienia(string[]? rola = null)
+    {
+        var selectedRoles = rola?
+            .Where(r => !string.IsNullOrWhiteSpace(r))
+            .Select(r => r.Trim())
+            .ToArray() ?? Array.Empty<string>();
+
+        ViewBag.SelectedRoles = selectedRoles;
+
+        var userList = new List<UserListRowDto>();
+        if (!System.IO.File.Exists(DbPath))
+            return View(userList);
+
+        using var connection = Db.OpenConnection(DbPath);
+        using var command = connection.CreateCommand();
+
+        var sql = @"
+SELECT u.id,
+       u.username,
+       u.firstName,
+       u.LastName,
+       u.Email,
+       u.pesel,
+       CASE WHEN u.Status = 1 THEN 'Aktywny' ELSE 'Nieaktywny' END AS Status,
+       COALESCE(GROUP_CONCAT(p.Nazwa, ', '), '-') AS Rola
+FROM Uzytkownicy u
+LEFT JOIN Uzytkownik_Uprawnienia uu ON uu.uzytkownik_id = u.id
+LEFT JOIN Uprawnienia p ON p.Id = uu.uprawnienie_id
+WHERE COALESCE(u.czy_zapomniany,0) = 0";
+
+        if (selectedRoles.Length > 0)
+        {
+            // Filtruj użytkowników posiadających co najmniej jedną z zaznaczonych ról
+            var placeholders = string.Join(",", selectedRoles.Select((_, i) => $"$r{i}"));
+            sql += $@"
+  AND u.id IN (
+    SELECT uu2.uzytkownik_id
+    FROM Uzytkownik_Uprawnienia uu2
+    JOIN Uprawnienia p2 ON p2.Id = uu2.uprawnienie_id
+    WHERE TRIM(p2.Nazwa) IN ({placeholders})
+  )";
+            for (int i = 0; i < selectedRoles.Length; i++)
+                command.Parameters.AddWithValue($"$r{i}", selectedRoles[i]);
+        }
+
+        sql += @"
+GROUP BY u.id, u.username, u.firstName, u.LastName, u.Email, u.pesel
+ORDER BY u.id;";
+
+        command.CommandText = sql;
+
+        using var dbReader = command.ExecuteReader();
+        while (dbReader.Read())
+        {
+            userList.Add(new UserListRowDto
+            {
+                Id        = Convert.ToInt64(dbReader["id"]),
+                Username  = dbReader["username"]?.ToString(),
+                FirstName = dbReader["firstName"]?.ToString(),
+                LastName  = dbReader["LastName"]?.ToString(),
+                Email     = dbReader["Email"]?.ToString(),
+                Pesel     = dbReader["pesel"]?.ToString(),
+                Status    = dbReader["Status"]?.ToString(),
+                Rola      = dbReader["Rola"]?.ToString()
+            });
+        }
+
+        return View(userList);
+    }
 
     // ============================================
-    // USERS BY ROLE
+    // USERS BY ROLE (zachowane dla kompatybilności)
     // ============================================
 
     /// <summary>
     /// Zwraca listę aktywnych użytkowników przypisanych do wskazanej roli (uprawnienia).
-    /// Najpierw wyszukuje identyfikator roli w tabeli Uprawnienia, a następnie
-    /// pobiera powiązanych użytkowników przez tabelę pośrednią Uzytkownik_Uprawnienia.
     /// </summary>
     /// <param name="rola">Nazwa roli (wartość kolumny Nazwa z tabeli Uprawnienia).</param>
     [HttpGet]
@@ -57,7 +129,6 @@ public class UprawnieniaController : Controller
 
         using var connection = Db.OpenConnection(DbPath);
 
-        // Krok 1: pobierz identyfikator roli z tabeli Uprawnienia
         long roleId;
         using (var command = connection.CreateCommand())
         {
@@ -69,7 +140,6 @@ public class UprawnieniaController : Controller
             roleId = Convert.ToInt64(roleIdScalar);
         }
 
-        // Krok 2: pobierz wszystkich nieaktywnych (niezapomnianych) użytkowników z daną rolą
         var userList = new List<UserListRowDto>();
         using (var command = connection.CreateCommand())
         {
@@ -117,40 +187,31 @@ ORDER BY u.LastName, u.firstName, u.username;
     // ============================================
 
     /// <summary>
-    /// Nadaje użytkownikowi wskazaną rolę (uprawnienie).
-    /// Najpierw usuwa wszystkie dotychczasowe role użytkownika,
-    /// a następnie wstawia nową – każdy użytkownik może mieć tylko jedną rolę.
+    /// Nadaje użytkownikowi wybrane role (uprawnienia).
+    /// Usuwa wszystkie dotychczasowe role użytkownika i wstawia zaznaczone.
+    /// Użytkownik może posiadać wiele ról jednocześnie.
     /// </summary>
     /// <param name="id">Identyfikator użytkownika.</param>
-    /// <param name="rola">Nazwa roli do nadania.</param>
+    /// <param name="rola">Tablica nazw ról do nadania (z checkboxów).</param>
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public IActionResult SetRole(long id, string rola)
+    public IActionResult SetRole(long id, string[]? rola = null)
     {
-        _logger.LogInformation("[AdminAccess] '{User}' nadaje rolę '{Rola}' użytkownikowi id={TargetId} IP={RemoteIp}",
-            SL(User.Identity?.Name), SL(rola), id, HttpContext.Connection.RemoteIpAddress);
+        var selectedRoles = rola?
+            .Where(r => !string.IsNullOrWhiteSpace(r))
+            .Select(r => r.Trim())
+            .Distinct()
+            .ToArray() ?? Array.Empty<string>();
 
-        if (string.IsNullOrWhiteSpace(rola))
-            return BadRequest(new { msg = "Brak roli" });
+        _logger.LogInformation("[AdminAccess] '{User}' nadaje role [{Role}] użytkownikowi id={TargetId} IP={RemoteIp}",
+            SL(User.Identity?.Name), string.Join(", ", selectedRoles.Select(SL)), id, HttpContext.Connection.RemoteIpAddress);
 
         if (!System.IO.File.Exists(DbPath))
             return StatusCode(500, new { msg = "Brak bazy", path = DbPath });
 
         using var connection = Db.OpenConnection(DbPath);
 
-        // Krok 1: pobierz identyfikator wybranej roli
-        long permissionId;
-        using (var command = connection.CreateCommand())
-        {
-            command.CommandText = @"SELECT Id FROM Uprawnienia WHERE TRIM(Nazwa) = TRIM($nazwaRoli) LIMIT 1;";
-            command.Parameters.AddWithValue("$nazwaRoli", rola.Trim());
-            var permissionIdScalar = command.ExecuteScalar();
-            if (permissionIdScalar == null)
-                return BadRequest(new { msg = "Nie ma takiego uprawnienia w tabeli Uprawnienia" });
-            permissionId = Convert.ToInt64(permissionIdScalar);
-        }
-
-        // Krok 2: usuń wszystkie poprzednie role użytkownika
+        // Krok 1: usuń wszystkie poprzednie role użytkownika
         using (var deleteCommand = connection.CreateCommand())
         {
             deleteCommand.CommandText = @"DELETE FROM Uzytkownik_Uprawnienia WHERE uzytkownik_id = $uzytkownikId;";
@@ -158,16 +219,33 @@ ORDER BY u.LastName, u.firstName, u.username;
             deleteCommand.ExecuteNonQuery();
         }
 
-        // Krok 3: wstaw nową rolę
-        using (var insertCommand = connection.CreateCommand())
+        // Krok 2: wstaw każdą z wybranych ról
+        foreach (var roleName in selectedRoles)
         {
-            insertCommand.CommandText = @"
-INSERT INTO Uzytkownik_Uprawnienia (uprawnienie_id, uzytkownik_id)
+            long permissionId;
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = @"SELECT Id FROM Uprawnienia WHERE TRIM(Nazwa) = TRIM($nazwaRoli) LIMIT 1;";
+                command.Parameters.AddWithValue("$nazwaRoli", roleName);
+                var scalar = command.ExecuteScalar();
+                if (scalar == null)
+                {
+                    _logger.LogWarning("[AdminAccess] Nieznana rola '{Rola}' pominięta przy nadawaniu użytkownikowi id={TargetId}", SL(roleName), id);
+                    continue;
+                }
+                permissionId = Convert.ToInt64(scalar);
+            }
+
+            using (var insertCommand = connection.CreateCommand())
+            {
+                insertCommand.CommandText = @"
+INSERT OR IGNORE INTO Uzytkownik_Uprawnienia (uprawnienie_id, uzytkownik_id)
 VALUES ($permissionId, $uzytkownikId);
 ";
-            insertCommand.Parameters.AddWithValue("$permissionId", permissionId);
-            insertCommand.Parameters.AddWithValue("$uzytkownikId", id);
-            insertCommand.ExecuteNonQuery();
+                insertCommand.Parameters.AddWithValue("$permissionId", permissionId);
+                insertCommand.Parameters.AddWithValue("$uzytkownikId", id);
+                insertCommand.ExecuteNonQuery();
+            }
         }
 
         return RedirectToAction("UserDetails", "Uzytkownicy", new { id });

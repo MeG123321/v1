@@ -13,6 +13,7 @@ public class UserDetailsDto
     public int Plec { get; set; }
     public string? Status { get; set; }
     public string? Rola { get; set; }
+    public List<string> RoleList { get; set; } = new();
     public string? Miejscowosc { get; set; }
     public string? KodPocztowy { get; set; }
     public string? Ulica { get; set; }

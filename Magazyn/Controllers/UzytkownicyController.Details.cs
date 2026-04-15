@@ -74,6 +74,16 @@ LIMIT 1;
             Rola = dbReader["Rola"]?.ToString(),
         };
 
+        // Populate the list of currently assigned roles for checkbox rendering
+        var rolaString = userDetails.Rola ?? "";
+        if (rolaString != "-" && !string.IsNullOrWhiteSpace(rolaString))
+        {
+            userDetails.RoleList = rolaString
+                .Split(", ", StringSplitOptions.RemoveEmptyEntries)
+                .Select(r => r.Trim())
+                .ToList();
+        }
+
         return View(userDetails);
     }
 }
