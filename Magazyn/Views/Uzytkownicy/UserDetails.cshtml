@@ -1,0 +1,163 @@
+@model Magazyn.Models.Dtos.UserDetailsDto
+@{
+    Layout = null;
+
+    // Pobieramy status i czyścimy go
+    var currentStatus = Model.Status?.Trim() ?? "";
+    var active = string.Equals(currentStatus, "Aktywny", StringComparison.OrdinalIgnoreCase);
+    
+    // Logika biznesowa: jeśli użytkownik jest zapomniany, blokujemy akcje
+    // Zakładamy, że w DTO masz pole IsForgotten (dodane w poprzednim kroku)
+}
+
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magazyn GiTA - Szczegóły pracownika</title>
+
+    <link rel="stylesheet" href="~/css/style.css" />
+    <script defer src="~/js/script.js"></script>
+</head>
+
+<body data-home-url='@Url.Action("Index", "Home")'>
+    <div class="Wrapper">
+        <aside class="panelbok">
+            <div class="logo"><h1>Magazyn GiTA</h1></div>
+            <nav class="gitanav">
+                <p>Zarządzanie użytkownikami</p>
+                <ul>
+                    <li><a asp-controller="Uzytkownicy" asp-action="AdminPanel">Przegląd personelu</a></li>
+                    <li><a asp-controller="Uzytkownicy" asp-action="Rejestracja">Rejestracja pracownika</a></li>
+                    <li><a asp-controller="Uzytkownicy" asp-action="ForgottenUsers">Użytkownicy zapomniani (RODO)</a></li>
+                    <li><a asp-controller="Uprawnienia" asp-action="Uprawnienia">Nadaj Uprawnienia</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main">
+            <header class="header">
+                <div class="info">
+                    <a href="#" id="akcja-wyloguj">Wyloguj</a>
+                    <a href="#">Konto</a>
+                    <a asp-controller="Home" asp-action="Index">Strona Główna</a>
+                </div>
+            </header>
+
+            <section class="zaw">
+                @* Dynamiczny powrót: jeśli zapomniany, wróć do listy RODO, jeśli nie - do personelu *@
+                <a asp-controller="Uzytkownicy" asp-action="@(Model.IsForgotten ? "ForgottenUsers" : "AdminPanel")" class="back-link">
+                    ← Wróć do listy @(Model.IsForgotten ? "zapomnianych" : "pracowników")
+                </a>
+
+                <div class="details-top">
+                    <div class="details-left">
+                        <div class="avatar" aria-label="avatar">
+                            <span>👤</span>
+                        </div>
+
+                        <div>
+                            <div class="name-line">
+                                <h2>@Model.FirstName @Model.LastName</h2>
+
+                                <span class="status-pill @(active ? "" : "off")">
+                                    @if (Model.IsForgotten) {
+                                        @:Status: Zanonimizowany (RODO)
+                                    } else {
+                                        @(string.IsNullOrWhiteSpace(currentStatus) ? "Status: Nieokreślony" : $"Status: {currentStatus}")
+                                    }
+                                </span>
+                            </div>
+
+                            <div class="subline">
+                                <span class="subline-item">Login: <strong>@(Model.Username ?? "-")</strong></span>
+                                <span>Rola: <strong>@(Model.Rola ?? "-")</strong></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    @* SEKCJA PRZYCISKÓW - UKRYWANA DLA RODO *@
+                    <div class="action-row">
+                        @if (!Model.IsForgotten)
+                        {
+                            <a class="btn-secondary" asp-controller="Uzytkownicy" asp-action="EditUser" asp-route-id="@Model.Id">
+                                Edytuj
+                            </a>
+
+                            <form class="inline-form" asp-controller="Uzytkownicy" asp-action="ForgetUserFromDetails" asp-route-id="@Model.Id" method="post"
+                                  onsubmit="return confirm('Na pewno zapomnieć użytkownika? Tej operacji nie da się cofnąć.');">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn-secondary">Zapomnij użytkownika</button>
+                            </form>
+
+                            <a class="btn-secondary" href="#role-popup">Nadaj uprawnienia</a>
+                        }
+                        else
+                        {
+                            <span class="status-pill off" style="border: 1px dashed #ccc;">Tryb tylko do odczytu</span>
+                        }
+                    </div>
+                </div>
+
+                <div class="tabelka-wyniki">
+                    <table class="keyval">
+                        <tbody>
+                            <tr><th>ID</th><td>@Model.Id</td></tr>
+                            <tr><th>Email</th><td>@(string.IsNullOrWhiteSpace(Model.Email) ? "-" : Model.Email)</td></tr>
+                            <tr><th>PESEL</th><td>@(string.IsNullOrWhiteSpace(Model.Pesel) ? "-" : Model.Pesel)</td></tr>
+                            <tr><th>Data urodzenia</th><td>@(string.IsNullOrWhiteSpace(Model.DataUrodzenia) ? "-" : Model.DataUrodzenia)</td></tr>
+                            <tr><th>Nr telefonu</th><td>@(string.IsNullOrWhiteSpace(Model.NrTelefonu) ? "-" : Model.NrTelefonu)</td></tr>
+                            <tr><th>Płeć</th><td>@((Convert.ToInt32(Model.Plec) == 1) ? "Mężczyzna" : "Kobieta")</td></tr>
+                            <tr><th>Miejscowość</th><td>@(string.IsNullOrWhiteSpace(Model.Miejscowosc) ? "-" : Model.Miejscowosc)</td></tr>
+                            <tr><th>Kod pocztowy</th><td>@(string.IsNullOrWhiteSpace(Model.KodPocztowy) ? "-" : Model.KodPocztowy)</td></tr>
+                            <tr><th>Ulica</th><td>@(string.IsNullOrWhiteSpace(Model.Ulica) ? "-" : Model.Ulica)</td></tr>
+                            <tr><th>Nr posesji</th><td>@(string.IsNullOrWhiteSpace(Model.NrPosesji) ? "-" : Model.NrPosesji)</td></tr>
+                            <tr><th>Nr lokalu</th><td>@(string.IsNullOrWhiteSpace(Model.NrLokalu) ? "-" : Model.NrLokalu)</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                @* Popup renderowany tylko dla aktywnych użytkowników *@
+                @if (!Model.IsForgotten)
+                {
+                    <div id="role-popup" class="popup-overlay">
+                        <div class="search-bar popup-content">
+                            <div><h2>Nadaj uprawnienia</h2></div>
+                            <form asp-controller="Uprawnienia" asp-action="SetRole" method="post">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@Model.Id" />
+                                <div class="role-grid">
+                                    @{
+                                        var dostepneRole = new (string Value, string Label)[]
+                                        {
+                                            ("Administrator", "Administrator"),
+                                            ("Pracownik magazynu", "Pracownik magazynu"),
+                                            ("Sprzedawca", "Sprzedawca"),
+                                            ("Kierownik magazynu", "Kierownik magazynu"),
+                                            ("Kierownik sprzedazy", "Kierownik sprzedaży")
+                                        };
+                                    }
+                                    @foreach (var r in dostepneRole)
+                                    {
+                                        <label class="role-btn">
+                                            <input type="checkbox" name="rola" value="@r.Value"
+                                                   @(Model.RoleList.Contains(r.Value) ? "checked" : "") />
+                                            @r.Label
+                                        </label>
+                                    }
+                                </div>
+                                <p class="db-info-note">Kliknij w listę powyżej, aby przełączyć uprawnienia.</p>
+                                <div class="action-row">
+                                    <a class="btn-secondary" href="#">Anuluj</a>
+                                    <button type="submit" class="btn-primary">Zapisz uprawnienia</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                }
+            </section>
+        </main>
+    </div>
+</body>
+</html>

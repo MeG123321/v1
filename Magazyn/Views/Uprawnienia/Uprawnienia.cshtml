@@ -1,0 +1,183 @@
+@model List<Magazyn.Models.Dtos.UserListRowDto>
+@{
+    Layout = null;
+    
+    // Lista ról - WAŻNE: Pierwszy parametr musi być IDENTYCZNY z nazwą w bazie danych (tabela Uprawnienia)
+    var allRoles = new (string Value, string Label)[]
+    {
+        ("Administrator",       "Administrator"),
+        ("Pracownik magazynu",  "Pracownik magazynu"),
+        ("Sprzedawca",          "Sprzedawca"),
+        ("Kierownik magazynu",  "Kierownik magazynu"),
+        ("Kierownik sprzedazy", "Kierownik sprzedaży")
+    };
+
+    var selectedFilters = (string[])(ViewBag.SelectedRoles ?? Array.Empty<string>());
+}
+
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magazyn GiTA - Lista Uprawnień</title>
+    <link rel="stylesheet" href="~/css/style.css" />
+    <style>
+        /* Styl zapewniający, że zaznaczone role będą od razu podświetlone na zielono */
+        .role-btn:has(input:checked) {
+            background-color: #28a745 !important;
+            color: white !important;
+            border-color: #1e7e34 !important;
+        }
+        /* Dla starszych przeglądarek, jeśli nie wspierają :has */
+        .role-btn input:checked + span {
+            background-color: #28a745 !important;
+            color: white !important;
+        }
+    </style>
+</head>
+
+<body data-home-url='@Url.Action("Index", "Home")'>
+    <div class="Wrapper">
+        <aside class="panelbok">
+            <div class="logo"><h1>Magazyn GiTA</h1></div>
+            <nav class="gitanav">
+                <p>Zarządzanie użytkownikami</p>
+                <ul>
+                    <li><a asp-controller="Uzytkownicy" asp-action="AdminPanel">Przegląd personelu</a></li>
+                    <li><a asp-controller="Uzytkownicy" asp-action="Rejestracja">Rejestracja pracownika</a></li>
+                    <li><a asp-controller="Uzytkownicy" asp-action="ForgottenUsers">Użytkownicy zapomniani (RODO)</a></li>
+                    <li><a asp-controller="Uprawnienia" asp-action="Uprawnienia" class="active">Lista Uprawnień</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main">
+            <header class="header">
+                <div class="info">
+                    <a href="#" id="akcja-wyloguj">Wyloguj</a>
+                    <a href="#">Konto</a>
+                    <a asp-controller="Home" asp-action="Index">Strona Główna</a>
+                </div>
+            </header>
+
+            <section class="zaw">
+                <h2>Lista Uprawnień</h2>
+
+                @* SEKCJA FILTRÓW *@
+                <div class="search-bar">
+                    <form method="get" id="filterForm" asp-controller="Uprawnienia" asp-action="Uprawnienia">
+                        <label style="display:block; margin-bottom: 15px; font-weight: bold; color: var(--accent-blue);">
+                            Filtruj użytkowników (wybierz role):
+                        </label>
+                        
+                        <div class="role-grid horizontal">
+                            @foreach (var rola in allRoles)
+                            {
+                                <label class="role-btn">
+                                    <input type="checkbox" name="rola" value="@rola.Value" 
+                                           onchange="this.form.submit()"
+                                           @(selectedFilters.Contains(rola.Value) ? "checked" : "") />
+                                    @rola.Label
+                                </label>
+                            }
+                        </div>
+
+                        <div class="btn-group" style="margin-top: 20px;">
+                            <a class="btn-primary" asp-controller="Uprawnienia" asp-action="Uprawnienia">Wyczyść filtry</a>
+                        </div>
+                    </form>
+                </div>
+
+                @* TABELA ZYNIKÓW *@
+                <div class="tabelka-wyniki">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Login</th>
+                                <th>Imię</th>
+                                <th>Nazwisko</th>
+                                <th>Obecne Uprawnienia</th>
+                                <th>Status</th>
+                                <th>Akcje</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model == null || !Model.Any())
+                            {
+                                <tr>
+                                    <td colspan="6" class="no-results" style="text-align: center; padding: 40px;">
+                                        Brak użytkowników.
+                                    </td>
+                                </tr>
+                            }
+                            else
+                            {
+                                foreach (var u in Model)
+                                {
+                                    <tr>
+                                        <td><strong>@u.Username</strong></td>
+                                        <td>@u.FirstName</td>
+                                        <td>@u.LastName</td>
+                                        <td style="color: var(--accent-blue); font-size: 13px; font-weight: bold;">@u.Rola</td>
+                                        <td>@u.Status</td>
+                                        <td>
+                                            <a class="btn-primary" href="#popup-@u.Id">Zmień Uprawnienia</a>
+                                            <a class="btn-secondary" asp-controller="Uzytkownicy" asp-action="UserDetails" asp-route-id="@u.Id">Szczegóły</a>
+                                        </td>
+                                    </tr>
+
+                                    @* POPUP INDYWIDUALNY *@
+                                    <div id="popup-@u.Id" class="popup-overlay">
+                                        <div class="search-bar popup-content">
+                                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                                                <h2 style="margin:0;">Zarządzaj rolami: @u.FirstName @u.LastName</h2>
+                                                <a href="#" class="close-x">&times;</a>
+                                            </div>
+
+                                            <form asp-controller="Uprawnienia" asp-action="SetRole" method="post">
+                                                @Html.AntiForgeryToken()
+                                                <input type="hidden" name="id" value="@u.Id" />
+
+                                                <div class="role-grid">
+                                                    @foreach (var r in allRoles)
+                                                    {
+                                                        @* LOGIKA SPRAWDZANIA BAZY *@
+                                                        bool maRole = false;
+                                                        if (!string.IsNullOrWhiteSpace(u.Rola) && u.Rola != "-")
+                                                        {
+                                                            // Rozbijamy string z bazy i czyścimy spacje, potem porównujemy z listą allRoles
+                                                            maRole = u.Rola.Split(',')
+                                                                           .Select(x => x.Trim())
+                                                                           .Any(x => x.Equals(r.Value, StringComparison.OrdinalIgnoreCase));
+                                                        }
+
+                                                        <label class="role-btn">
+                                                            <input type="checkbox" name="rola" value="@r.Value" 
+                                                                   @(maRole ? "checked" : "") />
+                                                            @r.Label
+                                                        </label>
+                                                    }
+                                                </div>
+
+                                                <p class="db-info-note" style="margin-top: 20px;">
+                                                    Aktualne role są podświetlone. Zaznacz nowe i kliknij Zapisz.
+                                                </p>
+
+                                                <div class="btn-group" style="justify-content: flex-end; margin-top: 20px;">
+                                                    <a class="btn-secondary" href="#">Anuluj</a>
+                                                    <button type="submit" class="btn-primary">Zapisz uprawnienia</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+</html>
