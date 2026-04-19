@@ -10,7 +10,7 @@ namespace Magazyn.Controllers;
 
 /// <summary>
 /// Kontroler obsługujący logowanie i wylogowanie użytkownika.
-/// Logowanie: Email + Password (Username jest tylko nazwą użytkownika).
+/// Logowanie: Login + Password zgodnie z LG_UC1.
 /// </summary>
 public class AccountController : Controller
 {
@@ -41,14 +41,13 @@ public class AccountController : Controller
     }
 
     /// <summary>
-    /// Weryfikuje dane logowania użytkownika w bazie danych (Email + Password).
-    /// Po pomyślnej weryfikacji wystawia cookie uwierzytelniające.
-    /// Na razie pomijamy role/uprawnienia.
+    /// Weryfikuje dane logowania użytkownika w bazie danych (Login + Password).
     /// </summary>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(LoginViewModel model)
     {
+        // Sprawdzenie czy wszystkie wymagane pola zostały uzupełnione (LG_UC1 Przebieg główny pkt 6)
         if (!ModelState.IsValid)
             return View(model);
 
@@ -58,47 +57,52 @@ public class AccountController : Controller
             return View(model);
         }
 
-        var email = (model.Email ?? "").Trim();
+        var login = (model.Login ?? "").Trim();
         var password = (model.Password ?? "").Trim();
 
         using var connection = Db.OpenConnection(DbPath);
 
         long userId;
         string username;
+        string userEmail;
 
         using (var authCommand = connection.CreateCommand())
         {
+            // Weryfikacja istnienia użytkownika i poprawności hasła (LG_UC1 pkt 7 i 8)
+            // Używamy kolumny 'username' jako loginu wejściowego
             authCommand.CommandText = @"
-SELECT id, username
+SELECT id, username, Email
 FROM Uzytkownicy
-WHERE LOWER(TRIM(Email)) = LOWER(TRIM($email))
+WHERE LOWER(TRIM(username)) = LOWER(TRIM($login))
   AND TRIM(COALESCE(Password,'')) = TRIM($password)
   AND COALESCE(czy_zapomniany,0) = 0
 LIMIT 1;
 ";
-            authCommand.Parameters.AddWithValue("$email", email);
+            authCommand.Parameters.AddWithValue("$login", login);
             authCommand.Parameters.AddWithValue("$password", password);
 
             using var r = authCommand.ExecuteReader();
             if (!r.Read())
             {
-                _logger.LogWarning("[Auth] Nieudane logowanie email='{Email}' IP={RemoteIp}",
-                    SL(email), HttpContext.Connection.RemoteIpAddress);
+                // Scenariusz alternatywny B: Niepoprawne dane logowania
+                _logger.LogWarning("[Auth] Nieudane logowanie login='{Login}' IP={RemoteIp}",
+                    SL(login), HttpContext.Connection.RemoteIpAddress);
 
-                ModelState.AddModelError("", "Błędny e-mail lub hasło");
+                ModelState.AddModelError("", "Niepoprawny login lub hasło");
                 return View(model);
             }
 
             userId = Convert.ToInt64(r["id"]);
-            username = r["username"]?.ToString() ?? email;
+            username = r["username"]?.ToString() ?? login;
+            userEmail = r["Email"]?.ToString() ?? "";
         }
 
-        // Bez uprawnień/rol na razie:
+        // Tworzenie sesji użytkownika (LG_UC1 pkt 11)
         var claims = new List<Claim>
         {
             new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
             new Claim(ClaimTypes.Name, username),
-            new Claim(ClaimTypes.Email, email)
+            new Claim(ClaimTypes.Email, userEmail)
         };
 
         var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -108,19 +112,21 @@ LIMIT 1;
         {
             IsPersistent = model.RememberMe
         };
+        
         if (model.RememberMe)
             props.ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7);
 
         await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, props);
 
-        _logger.LogInformation("[Auth] Zalogowano user='{Username}' id={UserId} email='{Email}' IP={RemoteIp}",
-            SL(username), userId, SL(email), HttpContext.Connection.RemoteIpAddress);
+        _logger.LogInformation("[Auth] Zalogowano user='{Username}' id={UserId} IP={RemoteIp}",
+            SL(username), userId, HttpContext.Connection.RemoteIpAddress);
 
+        // System wyświetla główny widok aplikacji (LG_UC1 pkt 14)
         return RedirectToAction("AdminPanel", "Uzytkownicy");
     }
 
     // =========================
-    // WYLOGOWANIE
+    // WYLOGOWANIE (LG_UC2)
     // =========================
 
     [HttpGet]
@@ -130,6 +136,8 @@ LIMIT 1;
             User.Identity?.Name ?? "nieznany", HttpContext.Connection.RemoteIpAddress);
 
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+        
+        // Powrót do ekranu startowego/logowania (LG_UC2 pkt 5)
         return RedirectToAction("Index", "Home");
     }
 }
