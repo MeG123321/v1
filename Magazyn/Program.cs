@@ -1,39 +1,43 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// 1. Dodanie obsługi Kontrolerów i Widoków
 builder.Services.AddControllersWithViews();
 
-builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme)
+// 2. Konfiguracja Autentykacji (Ciasteczka)
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
+        options.Cookie.Name = "Magazyn.AuthCookie"; // Jawna nazwa ciasteczka
         options.LoginPath = "/Account/Login";
         options.AccessDeniedPath = "/Account/Login";
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
         options.SlidingExpiration = true;
         options.Cookie.HttpOnly = true;
+        
+        // Ustawienie polityki bezpieczeństwa ciasteczka
         options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
-            ? Microsoft.AspNetCore.Http.CookieSecurePolicy.SameAsRequest
-            : Microsoft.AspNetCore.Http.CookieSecurePolicy.Always;
+            ? CookieSecurePolicy.SameAsRequest
+            : CookieSecurePolicy.Always;
     });
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// 3. Konfiguracja potoku obsługi żądań (Pipeline)
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
-
 app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseAuthentication();
-
+// KLUCZOWA KOLEJNOŚĆ: Najpierw Authentication, potem Authorization
+app.UseAuthentication(); 
 app.UseAuthorization();
 
 app.MapStaticAssets();
@@ -42,6 +46,5 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
-
 
 app.Run();

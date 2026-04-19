@@ -1,12 +1,14 @@
 using Microsoft.AspNetCore.Mvc;
 using Magazyn.Data;
 using Magazyn.Models.Dtos;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Magazyn.Controllers;
 
 public partial class UzytkownicyController : Controller
 {
-
+    // ZMIANA: Dodano rolę Kierownik sprzedazy
+    [Authorize(Roles = "Administrator,Kierownik sprzedazy, Kierownik magazynu")]
     [HttpGet]
     public IActionResult AdminPanel(string? login = null, string? name = null, string? pesel = null)
     {

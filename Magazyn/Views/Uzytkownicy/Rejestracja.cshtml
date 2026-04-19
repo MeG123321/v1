@@ -11,6 +11,28 @@
     <title>Magazyn GiTA - Rejestracja Pracownika</title>
 
     <link rel="stylesheet" href="~/css/style.css" />
+    <style>
+        /* Styl ujednolicający przycisk wyloguj w menu bocznym */
+        .logout-btn-link {
+            background: none;
+            border: none;
+            color: inherit;
+            font: inherit;
+            cursor: pointer;
+            padding: 10px 15px;
+            width: 100%;
+            text-align: left;
+            display: block;
+            outline: none;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+        .logout-btn-link:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.1);
+            border-left: 3px solid #007bff;
+        }
+    </style>
     <script defer src="~/js/script.js"></script>
 </head>
 
@@ -23,8 +45,15 @@
                 <ul>
                     <li><a asp-controller="Uzytkownicy" asp-action="AdminPanel">Przegląd personelu</a></li>
                     <li><a asp-controller="Uzytkownicy" asp-action="Rejestracja" class="active">Rejestracja pracownika</a></li>
-                    <li><a asp-controller="Uzytkownicy" asp-action="ForgottenUsers">Użytkownicy zapomniani (RODO)</a></li>
+                    
+                    @if (User.IsInRole("Administrator"))
+                    {
+                        <li><a asp-controller="Uzytkownicy" asp-action="ForgottenUsers">Użytkownicy zapomniani (RODO)</a></li>
+                    }
+                    
                     <li><a asp-controller="Uprawnienia" asp-action="Uprawnienia">Lista Uprawnień</a></li>
+                    
+                    @* ZMIENIONY LOGOUT *@
                     <li><partial name="_LogoutLink" /></li>
                 </ul>
             </nav>
@@ -33,6 +62,7 @@
         <main class="main">
             <header class="header">
                 <div class="info">
+                    @* ZMIENIONY LOGOUT *@
                     <a href="#" id="akcja-wyloguj">Wyloguj</a>
                     <a href="#">Konto</a>
                     <a asp-controller="Home" asp-action="Index">Strona Główna</a>
