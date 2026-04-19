@@ -24,7 +24,7 @@
         <main class="main">
             <header class="header">
                 <div class="info">
-                    <a asp-controller="Home" asp-action="Index">Strona Główna</a>
+                    <a asp-controller="Home" asp-action="Index">Strona Główna</a> / Logowanie
                 </div>
             </header>
 
@@ -33,27 +33,33 @@
 
                 <form asp-controller="Account" asp-action="Login" method="post" class="form-rejestracja">
                     @Html.AntiForgeryToken()
+                    
+                    @* Wyświetlanie ogólnych błędów logowania (np. "Niepoprawny login lub hasło") *@
                     <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
 
                     <div class="tabelka">
                         <div class="form-group">
-                            <label asp-for="Login">Login</label>
-                            <input asp-for="Login" placeholder="np. JKowalski" />
+                            <label asp-for="Login"></label>
+                            <input asp-for="Login" placeholder="np. JKowalski" class="form-control" />
                             <span asp-validation-for="Login" class="field-error"></span>
                         </div>
 
                         <div class="form-group">
-                            <label asp-for="Password">Hasło</label>
-                            <input asp-for="Password" type="password" placeholder="Hasło" />
+                            <label asp-for="Password"></label>
+                            <input asp-for="Password" type="password" placeholder="Hasło" class="form-control" />
                             <span asp-validation-for="Password" class="field-error"></span>
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group checkbox-group">
                             <label>
-                                <input asp-for="RememberMe" type="checkbox" />
-                                Zapamiętaj mnie
+                                <input asp-for="RememberMe" /> @Html.DisplayNameFor(m => m.RememberMe)
                             </label>
                         </div>
+                    </div>
+
+                    @* Link do odzyskiwania hasła - zgodny z LG_UC1 punkt 3 *@
+                    <div class="forgot-password-link">
+                        <a asp-controller="Account" asp-action="ForgotPassword">Odzyskaj hasło</a>
                     </div>
 
                     <div class="btn-group mt-30">
@@ -65,6 +71,7 @@
         </main>
     </div>
 
+    @* Skrypty do walidacji po stronie klienta (bez przeładowania strony) *@
     @await Html.PartialAsync("_ValidationScriptsPartial")
 </body>
 </html>

@@ -1,16 +1,19 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Magazyn.Models;
-
-public class LoginViewModel
+namespace Magazyn.Models
 {
-    [Required(ErrorMessage = "Login jest wymagany")]
-    [Login(ErrorMessage = "Nieprawidłowy format adresu e-mail")]
-    public string Login { get; set; } = string.Empty;
+    public class LoginViewModel
+    {
+        [Required(ErrorMessage = "Login jest wymagany")]
+        [Display(Name = "Login")]
+        public string Login { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Hasło jest wymagane")]
-    [DataType(DataType.Password)]
-    public string Password { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Hasło jest wymagane")]
+        [DataType(DataType.Password)]
+        [Display(Name = "Hasło")]
+        public string Password { get; set; } = string.Empty;
 
-    public bool RememberMe { get; set; }
+        [Display(Name = "Zapamiętaj mnie")]
+        public bool RememberMe { get; set; }
+    }
 }
