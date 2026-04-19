@@ -77,58 +77,38 @@
                         </div>
                     </div>
 
-                    @* ... (poprzedni kod sekcji action-row) ... *@
+                   @* SEKCJA PRZYCISKÓW AKCJI - LG_UC5, Edycja, RODO *@
 <div class="action-row">
     @if (!Model.IsForgotten)
     {
+        @* 1. Edycja danych *@
         <a class="btn-secondary" asp-controller="Uzytkownicy" asp-action="EditUser" asp-route-id="@Model.Id">
             Edytuj
         </a>
 
-        @* NOWY PRZYCISK: LG_UC5 Automatyczne generowanie hasła *@
+        @* 2. LG_UC5: Automatyczne generowanie hasła *@
         <form class="inline-form" asp-controller="Uzytkownicy" asp-action="GeneratePassword" asp-route-id="@Model.Id" method="post"
               onsubmit="return confirm('Czy na pewno chcesz wygenerować nowe hasło dla tego użytkownika? Stare hasło przestanie działać.');">
             @Html.AntiForgeryToken()
             <button type="submit" class="btn-secondary">Generuj hasło</button>
         </form>
 
+        @* 3. Nadawanie uprawnień (wywołuje popup na dole strony) *@
+        <a class="btn-secondary" href="#role-popup">Nadaj uprawnienia</a>
+
+        @* 4. Funkcja zapominania (RODO) *@
         <form class="inline-form" asp-controller="Uzytkownicy" asp-action="ForgetUserFromDetails" asp-route-id="@Model.Id" method="post"
               onsubmit="return confirm('Na pewno zapomnieć użytkownika? Tej operacji nie da się cofnąć.');">
             @Html.AntiForgeryToken()
             <button type="submit" class="btn-secondary">Zapomnij użytkownika</button>
         </form>
-
-        <a class="btn-secondary" href="#role-popup">Nadaj uprawnienia</a>
     }
     else
     {
-        <span class="status-pill off" style="border: 1px dashed #ccc;">Tryb tylko do odczytu</span>
+        @* Widok dla użytkownika zanonimizowanego *@
+        <span class="status-pill off" style="border: 1px dashed #ccc;">Tryb tylko do odczytu (Dane zanonimizowane)</span>
     }
 </div>
-
-                    @* SEKCJA PRZYCISKÓW - UKRYWANA DLA RODO *@
-                    <div class="action-row">
-                        @if (!Model.IsForgotten)
-                        {
-                            <a class="btn-secondary" asp-controller="Uzytkownicy" asp-action="EditUser" asp-route-id="@Model.Id">
-                                Edytuj
-                            </a>
-
-                            <form class="inline-form" asp-controller="Uzytkownicy" asp-action="ForgetUserFromDetails" asp-route-id="@Model.Id" method="post"
-                                  onsubmit="return confirm('Na pewno zapomnieć użytkownika? Tej operacji nie da się cofnąć.');">
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="btn-secondary">Zapomnij użytkownika</button>
-                            </form>
-
-                            <a class="btn-secondary" href="#role-popup">Nadaj uprawnienia</a>
-                        }
-                        else
-                        {
-                            <span class="status-pill off" style="border: 1px dashed #ccc;">Tryb tylko do odczytu</span>
-                        }
-                    </div>
-                </div>
-
                 <div class="tabelka-wyniki">
                     <table class="keyval">
                         <tbody>

@@ -142,4 +142,5 @@ public class UprawnieniaController : Controller
 
         return RedirectToAction("UserDetails", "Uzytkownicy", new { id });
     }
+    
 }
