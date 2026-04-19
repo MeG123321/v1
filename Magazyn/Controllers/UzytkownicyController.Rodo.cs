@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Magazyn.Data;
 using Magazyn.Models.Dtos;
+using Magazyn.Security;
 using System.Security.Claims;
 using System.Security.Cryptography;
 
@@ -9,59 +10,59 @@ namespace Magazyn.Controllers;
 public partial class UzytkownicyController : Controller
 {
     [HttpGet]
-public IActionResult ForgottenUsers(string? fname = null, long? adminId = null)
-{
-    ViewBag.Fname = fname ?? "";
-    ViewBag.AdminId = adminId?.ToString() ?? "";
-
-    var forgottenList = new List<ForgottenRowDto>();
-
-    if (!System.IO.File.Exists(DbPath))
-        return View(forgottenList);
-
-    using var connection = Db.OpenConnection(DbPath);
-    using var command = connection.CreateCommand();
-
-    // SQL z użyciem JOIN: u to użytkownik zapomniany, a to administrator
-    command.CommandText = @"
-        SELECT
-            u.id,
-            u.firstName,
-            u.LastName,
-            u.DataZapomnienia,
-            u.ZapomnialUserId,
-            (a.firstName || ' ' || a.LastName) AS AdminFullName
-        FROM Uzytkownicy u
-        LEFT JOIN Uzytkownicy a ON u.ZapomnialUserId = a.id
-        WHERE u.czy_zapomniany = 1
-          AND ($fname = '' OR $fname IS NULL OR (u.firstName || ' ' || u.LastName) LIKE '%' || $fname || '%')
-          AND ($adminId IS NULL OR u.ZapomnialUserId = $adminId)
-        ORDER BY u.DataZapomnienia DESC;";
-
-    command.Parameters.AddWithValue("$fname", string.IsNullOrWhiteSpace(fname) ? "" : fname.Trim());
-    command.Parameters.AddWithValue("$adminId", adminId.HasValue ? adminId.Value : DBNull.Value);
-
-    using var dbReader = command.ExecuteReader();
-    while (dbReader.Read())
+    public IActionResult ForgottenUsers(string? fname = null, long? adminId = null)
     {
-        var fName = dbReader.IsDBNull(1) ? "" : dbReader.GetString(1);
-        var lName = dbReader.IsDBNull(2) ? "" : dbReader.GetString(2);
-        
-        // Sprawdzamy, czy udało się znaleźć admina w bazie
-        var adminName = dbReader.IsDBNull(5) ? "Nieznany admin" : dbReader.GetString(5);
+        ViewBag.Fname = fname ?? "";
+        ViewBag.AdminId = adminId?.ToString() ?? "";
 
-        forgottenList.Add(new ForgottenRowDto
+        var forgottenList = new List<ForgottenRowDto>();
+
+        if (!System.IO.File.Exists(DbPath))
+            return View(forgottenList);
+
+        using var connection = Db.OpenConnection(DbPath);
+        using var command = connection.CreateCommand();
+
+        // SQL z użyciem JOIN: u to użytkownik zapomniany, a to administrator
+        command.CommandText = @"
+            SELECT
+                u.id,
+                u.firstName,
+                u.LastName,
+                u.DataZapomnienia,
+                u.ZapomnialUserId,
+                (a.firstName || ' ' || a.LastName) AS AdminFullName
+            FROM Uzytkownicy u
+            LEFT JOIN Uzytkownicy a ON u.ZapomnialUserId = a.id
+            WHERE u.czy_zapomniany = 1
+              AND ($fname = '' OR $fname IS NULL OR (u.firstName || ' ' || u.LastName) LIKE '%' || $fname || '%')
+              AND ($adminId IS NULL OR u.ZapomnialUserId = $adminId)
+            ORDER BY u.DataZapomnienia DESC;";
+
+        command.Parameters.AddWithValue("$fname", string.IsNullOrWhiteSpace(fname) ? "" : fname.Trim());
+        command.Parameters.AddWithValue("$adminId", adminId.HasValue ? adminId.Value : DBNull.Value);
+
+        using var dbReader = command.ExecuteReader();
+        while (dbReader.Read())
         {
-            Id = dbReader.GetInt64(0),
-            FullNameAfterForget = $"{fName} {lName}".Trim(),
-            DataZapomnienia = dbReader.IsDBNull(3) ? "" : dbReader.GetString(3),
-            ZapomnialUserId = dbReader.IsDBNull(4) ? "" : dbReader.GetInt64(4).ToString(),
-            AdminName = adminName // Przypisujemy nazwę zamiast samego ID
-        });
-    }
+            var fName = dbReader.IsDBNull(1) ? "" : dbReader.GetString(1);
+            var lName = dbReader.IsDBNull(2) ? "" : dbReader.GetString(2);
 
-    return View(forgottenList);
-}
+            // Sprawdzamy, czy udało się znaleźć admina w bazie
+            var adminName = dbReader.IsDBNull(5) ? "Nieznany admin" : dbReader.GetString(5);
+
+            forgottenList.Add(new ForgottenRowDto
+            {
+                Id = dbReader.GetInt64(0),
+                FullNameAfterForget = $"{fName} {lName}".Trim(),
+                DataZapomnienia = dbReader.IsDBNull(3) ? "" : dbReader.GetString(3),
+                ZapomnialUserId = dbReader.IsDBNull(4) ? "" : dbReader.GetInt64(4).ToString(),
+                AdminName = adminName
+            });
+        }
+
+        return View(forgottenList);
+    }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
@@ -70,7 +71,7 @@ public IActionResult ForgottenUsers(string? fname = null, long? adminId = null)
         var actionResult = ForgetUser(id);
         if (actionResult is OkObjectResult)
             return RedirectToAction(nameof(AdminPanel));
-        
+
         return actionResult;
     }
 
@@ -99,15 +100,6 @@ public IActionResult ForgottenUsers(string? fname = null, long? adminId = null)
             return char.ToUpper(charBuffer[0]) + new string(charBuffer, 1, length - 1);
         }
 
-        static string RandomToken(int length)
-        {
-            const string tokenAlphabet = "abcdefghijklmnopqrstuvwxyz0123456789";
-            var charBuffer = new char[length];
-            for (int i = 0; i < length; i++)
-                charBuffer[i] = tokenAlphabet[SecureRandomInt(tokenAlphabet.Length)];
-            return new string(charBuffer);
-        }
-
         // --- LOSOWANIE DANYCH (Imię, Nazwisko, Płeć, Data, PESEL) ---
         int anonymizedGender = SecureRandomInt(2); // 0=K, 1=M
         int birthYear = 1955 + SecureRandomInt(50);
@@ -124,17 +116,17 @@ public IActionResult ForgottenUsers(string? fname = null, long? adminId = null)
         using var command = connection.CreateCommand();
         command.CommandText = @"
             UPDATE Uzytkownicy
-            SET czy_zapomniany = 1,                 -- Mechanizm listy zapomnianych
+            SET czy_zapomniany = 1,
                 DataZapomnienia = datetime('now'),
                 ZapomnialUserId = $adminId,
-                firstName       = $firstName,       -- 1. Imię
-                LastName        = $lastName,        -- 2. Nazwisko
-                pesel           = $pesel,           -- 3. PESEL
-                DataUrodzenia   = $dataUrodzenia,   -- 4. Data urodzenia
-                Plec            = $plec,            -- 5. Płeć
-                username        = $username,        -- Zmiana loginu (bezpieczeństwo)
-                Password        = $password,        -- Blokada konta
-                Status          = 'Nieaktywny'      -- Wyłączenie konta
+                firstName       = $firstName,
+                LastName        = $lastName,
+                pesel           = $pesel,
+                DataUrodzenia   = $dataUrodzenia,
+                Plec            = $plec,
+                username        = $username,
+                Password        = $password,
+                Status          = 'Nieaktywny'
             WHERE id = $id;";
 
         command.Parameters.AddWithValue("$id", id);
@@ -144,8 +136,9 @@ public IActionResult ForgottenUsers(string? fname = null, long? adminId = null)
         command.Parameters.AddWithValue("$pesel", anonymizedPesel);
         command.Parameters.AddWithValue("$dataUrodzenia", anonymizedBirthDate);
         command.Parameters.AddWithValue("$plec", anonymizedGender);
-        command.Parameters.AddWithValue("$username", "del_" + RandomToken(8));
-        command.Parameters.AddWithValue("$password", "RODO_" + RandomToken(12));
+
+        command.Parameters.AddWithValue("$username", "del_" + PasswordGenerator.RandomToken(8));
+        command.Parameters.AddWithValue("$password", PasswordGenerator.GenerateRodoPassword(12));
 
         var affectedRows = command.ExecuteNonQuery();
         if (affectedRows == 0) return NotFound(new { msg = "Użytkownik nie istnieje" });

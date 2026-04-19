@@ -48,6 +48,7 @@
                     <li><a asp-controller="Uzytkownicy" asp-action="Rejestracja">Rejestracja pracownika</a></li>
                     <li><a asp-controller="Uzytkownicy" asp-action="ForgottenUsers">Użytkownicy zapomniani (RODO)</a></li>
                     <li><a asp-controller="Uprawnienia" asp-action="Uprawnienia" class="active">Lista Uprawnień</a></li>
+                    <li><partial name="_LogoutLink" /></li>
                 </ul>
             </nav>
         </aside>
@@ -122,7 +123,7 @@
                                         <td style="color: var(--accent-blue); font-size: 13px; font-weight: bold;">@u.Rola</td>
                                         <td>@u.Status</td>
                                         <td>
-                                            <a class="btn-primary" href="#popup-@u.Id">Zmień Uprawnienia</a>
+                                            <a class="btn-secondary" href="#popup-@u.Id">Zmień Uprawnienia</a>
                                             <a class="btn-secondary" asp-controller="Uzytkownicy" asp-action="UserDetails" asp-route-id="@u.Id">Szczegóły</a>
                                         </td>
                                     </tr>

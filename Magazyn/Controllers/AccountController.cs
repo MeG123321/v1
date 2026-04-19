@@ -2,20 +2,20 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Data.Sqlite;
 using Magazyn.Data;
 using Magazyn.Models;
+using System.Net;
+using System.Net.Mail;
+using Magazyn.Security;
 
 namespace Magazyn.Controllers;
 
-/// <summary>
-/// Kontroler obsługujący logowanie i wylogowanie użytkownika.
-/// Logowanie: Login + Password zgodnie z LG_UC1.
-/// </summary>
 public class AccountController : Controller
 {
     private readonly IWebHostEnvironment _env;
     private readonly ILogger<AccountController> _logger;
+    private const int MaxFailedAttempts = 3;
+    private const int LockoutMinutes = 15;
 
     public AccountController(IWebHostEnvironment env, ILogger<AccountController> logger)
     {
@@ -23,121 +23,251 @@ public class AccountController : Controller
         _logger = logger;
     }
 
-    /// <summary>Pełna ścieżka do pliku bazy danych SQLite.</summary>
     private string DbPath => Db.GetDbPath(_env);
+    private static string SL(string? value) => (value ?? "").Replace('\r', '_').Replace('\n', '_');
 
-    /// <summary>Usuwa znaki nowej linii z wartości wejściowej, aby zapobiec fałszowaniu wpisów w logach.</summary>
-    private static string SL(string? value) =>
-        (value ?? "").Replace('\r', '_').Replace('\n', '_');
-
-    // =========================
-    // LOGOWANIE (STRONA)
-    // =========================
-
+    // ==========================================
+    // LG_UC1: LOGOWANIE
+    // ==========================================
     [HttpGet]
-    public IActionResult Login()
-    {
-        return View(new LoginViewModel());
-    }
+    public IActionResult Login() => View(new LoginViewModel());
 
-    /// <summary>
-    /// Weryfikuje dane logowania użytkownika w bazie danych (Login + Password).
-    /// </summary>
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Login(LoginViewModel model)
     {
-        // Sprawdzenie czy wszystkie wymagane pola zostały uzupełnione (LG_UC1 Przebieg główny pkt 6)
-        if (!ModelState.IsValid)
-            return View(model);
-
-        if (!System.IO.File.Exists(DbPath))
-        {
-            ModelState.AddModelError("", $"Brak bazy danych: {DbPath}");
-            return View(model);
-        }
-
-        var login = (model.Login ?? "").Trim();
-        var password = (model.Password ?? "").Trim();
+        if (!ModelState.IsValid) return View(model);
 
         using var connection = Db.OpenConnection(DbPath);
+        UserAuthDto? user = GetUserForAuth(connection, model.Username);
 
-        long userId;
-        string username;
-        string userEmail;
-
-        using (var authCommand = connection.CreateCommand())
+        if (user == null)
         {
-            // Weryfikacja istnienia użytkownika i poprawności hasła (LG_UC1 pkt 7 i 8)
-            // Używamy kolumny 'username' jako loginu wejściowego
-            authCommand.CommandText = @"
-SELECT id, username, Email
-FROM Uzytkownicy
-WHERE LOWER(TRIM(username)) = LOWER(TRIM($login))
-  AND TRIM(COALESCE(Password,'')) = TRIM($password)
-  AND COALESCE(czy_zapomniany,0) = 0
-LIMIT 1;
-";
-            authCommand.Parameters.AddWithValue("$login", login);
-            authCommand.Parameters.AddWithValue("$password", password);
-
-            using var r = authCommand.ExecuteReader();
-            if (!r.Read())
-            {
-                // Scenariusz alternatywny B: Niepoprawne dane logowania
-                _logger.LogWarning("[Auth] Nieudane logowanie login='{Login}' IP={RemoteIp}",
-                    SL(login), HttpContext.Connection.RemoteIpAddress);
-
-                ModelState.AddModelError("", "Niepoprawny login lub hasło");
-                return View(model);
-            }
-
-            userId = Convert.ToInt64(r["id"]);
-            username = r["username"]?.ToString() ?? login;
-            userEmail = r["Email"]?.ToString() ?? "";
+            ModelState.AddModelError("", "Niepoprawny login lub hasło");
+            return View(model);
         }
 
-        // Tworzenie sesji użytkownika (LG_UC1 pkt 11)
-        var claims = new List<Claim>
+        if (user.BlokadaDo.HasValue && user.BlokadaDo.Value > DateTime.Now)
         {
-            new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-            new Claim(ClaimTypes.Name, username),
-            new Claim(ClaimTypes.Email, userEmail)
-        };
+            ModelState.AddModelError("", $"Konto zablokowane do godziny: {user.BlokadaDo.Value:HH:mm}");
+            return View(model);
+        }
 
-        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-        var principal = new ClaimsPrincipal(identity);
-
-        var props = new AuthenticationProperties
+        if (user.Password != model.Password) 
         {
-            IsPersistent = model.RememberMe
-        };
-        
-        if (model.RememberMe)
-            props.ExpiresUtc = DateTimeOffset.UtcNow.AddDays(7);
+            HandleFailedLogin(connection, user);
+            ModelState.AddModelError("", "Niepoprawny login lub hasło");
+            return View(model);
+        }
 
-        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal, props);
+        ResetLoginAttempts(connection, user.Id);
+        var roles = GetUserRoles(connection, user.Id);
+        await SignInUser(user, roles, model.RememberMe);
 
-        _logger.LogInformation("[Auth] Zalogowano user='{Username}' id={UserId} IP={RemoteIp}",
-            SL(username), userId, HttpContext.Connection.RemoteIpAddress);
+        if (user.CzyHasloTymczasowe)
+            return RedirectToAction("ChangePassword");
 
-        // System wyświetla główny widok aplikacji (LG_UC1 pkt 14)
         return RedirectToAction("AdminPanel", "Uzytkownicy");
     }
 
-    // =========================
-    // WYLOGOWANIE (LG_UC2)
-    // =========================
-
-    [HttpGet]
+    // ==========================================
+    // LG_UC2: WYLOGOWANIE
+    // ==========================================
+    [HttpPost]
+    [ValidateAntiForgeryToken]
     public async Task<IActionResult> Logout()
     {
-        _logger.LogInformation("[Auth] Użytkownik '{Username}' wylogował się z IP {RemoteIp}",
-            User.Identity?.Name ?? "nieznany", HttpContext.Connection.RemoteIpAddress);
-
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        
-        // Powrót do ekranu startowego/logowania (LG_UC2 pkt 5)
-        return RedirectToAction("Index", "Home");
+        return RedirectToAction("Login");
     }
+
+    // ==========================================
+    // LG_UC3: ODZYSKIWANIE HASŁA
+    // ==========================================
+    [HttpGet]
+    public IActionResult RecoverPassword() => View();
+
+[HttpPost]
+[ValidateAntiForgeryToken]
+public IActionResult RecoverPassword(RecoverPasswordViewModel model)
+{
+    if (!ModelState.IsValid) return View(model);
+
+    using var connection = Db.OpenConnection(DbPath);
+    using var checkCmd = connection.CreateCommand();
+    // Pobieramy ID i Email, żeby mieć pewność, dokąd wysłać wiadomość
+    checkCmd.CommandText = "SELECT id, Email FROM Uzytkownicy WHERE username = $user AND Email = $email AND czy_zapomniany = 0 LIMIT 1";
+    checkCmd.Parameters.AddWithValue("$user", model.Username);
+    checkCmd.Parameters.AddWithValue("$email", model.Email);
+
+    using var reader = checkCmd.ExecuteReader();
+    if (!reader.Read())
+    {
+        ModelState.AddModelError("", "Niepoprawne dane. Login lub e-mail są nieprawidłowe.");
+        return View(model);
+    }
+
+    long userId = Convert.ToInt64(reader["id"]);
+    string userEmail = reader["Email"].ToString()!;
+    reader.Close(); // Zamykamy reader przed kolejnym zapytaniem
+
+    // Generujemy hasło
+    string temporaryPassword = PasswordGenerator.Generate(10);
+
+    // Aktualizacja bazy danych
+    using var updateCmd = connection.CreateCommand();
+    updateCmd.CommandText = "UPDATE Uzytkownicy SET Password = $pass, czy_haslo_tymczasowe = 1, liczba_blednych_logowan = 0, blokada_do = NULL WHERE id = $id";
+    updateCmd.Parameters.AddWithValue("$pass", temporaryPassword);
+    updateCmd.Parameters.AddWithValue("$id", userId);
+    updateCmd.ExecuteNonQuery();
+
+    // --- WYSYŁKA E-MAIL ---
+    bool mailSent = SendEmail(userEmail, temporaryPassword);
+
+    if (mailSent)
+    {
+        TempData["SuccessMessage"] = "Nowe hasło tymczasowe zostało wysłane na Twój adres e-mail.";
+    }
+    else
+    {
+        // Jeśli mail nie wyjdzie, pokazujemy hasło na ekranie (opcja ratunkowa)
+        TempData["SuccessMessage"] = $"[BŁĄD WYSYŁKI] Twoje hasło tymczasowe to: {temporaryPassword}";
+    }
+
+    return View();
+}
+
+// Nowa metoda pomocnicza do wysyłki
+private bool SendEmail(string targetEmail, string password)
+{
+    try
+    {
+        // Konfiguracja serwera (użyj swoich danych lub Mailtrapa)
+        var smtpClient = new SmtpClient("smtp.gmail.com") 
+        {
+            Port = 587,
+            Credentials = new NetworkCredential("TWOJ_EMAIL@gmail.com", "TWOJE_HASLO_APLIKACJI"),
+            EnableSsl = true,
+        };
+
+        var mailMessage = new MailMessage
+        {
+            From = new MailAddress("TWOJ_EMAIL@gmail.com", "Magazyn GiTA"),
+            Subject = "Odzyskiwanie hasła",
+            
+            // TUTAJ ZMIENIŁEM TREŚĆ:
+            Body = $"nowe hasło: {password}", 
+            
+            IsBodyHtml = false, // Ustawiamy na false, bo to zwykły tekst, a nie HTML
+        };
+
+        mailMessage.To.Add(targetEmail);
+        smtpClient.Send(mailMessage);
+        return true;
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Błąd wysyłki e-mail");
+        return false;
+    }
+}
+
+    // ==========================================
+    // LG_UC4: ZMIANA HASŁA (WYMAGANA)
+    // ==========================================
+    [HttpGet]
+    public IActionResult ChangePassword() => View();
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult ChangePassword(ChangePasswordViewModel model)
+    {
+        if (!ModelState.IsValid) return View(model);
+
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (userIdClaim == null) return RedirectToAction("Login");
+
+        using var connection = Db.OpenConnection(DbPath);
+        using var cmd = connection.CreateCommand();
+        cmd.CommandText = "UPDATE Uzytkownicy SET Password = $pass, czy_haslo_tymczasowe = 0 WHERE id = $id";
+        cmd.Parameters.AddWithValue("$pass", model.NewPassword);
+        cmd.Parameters.AddWithValue("$id", userIdClaim.Value);
+        cmd.ExecuteNonQuery();
+
+        return RedirectToAction("AdminPanel", "Uzytkownicy");
+    }
+
+    // ==========================================
+    // METODY POMOCNICZE
+    // ==========================================
+    private UserAuthDto? GetUserForAuth(System.Data.IDbConnection conn, string login)
+    {
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT id, username, Email, Password, liczba_blednych_logowan, blokada_do, czy_haslo_tymczasowe FROM Uzytkownicy WHERE LOWER(username) = LOWER($login) AND czy_zapomniany = 0 LIMIT 1";
+        var p = cmd.CreateParameter(); p.ParameterName = "$login"; p.Value = login.Trim(); cmd.Parameters.Add(p);
+        using var r = cmd.ExecuteReader();
+        if (!r.Read()) return null;
+        return new UserAuthDto {
+            Id = Convert.ToInt64(r["id"]),
+            Username = r["username"].ToString()!,
+            Email = r["Email"].ToString()!,
+            Password = r["Password"].ToString()!,
+            LiczbaBledow = Convert.ToInt32(r["liczba_blednych_logowan"]),
+            BlokadaDo = r["blokada_do"] is DBNull ? null : DateTime.Parse(r["blokada_do"].ToString()!),
+            CzyHasloTymczasowe = Convert.ToInt32(r["czy_haslo_tymczasowe"]) == 1
+        };
+    }
+
+    private void HandleFailedLogin(System.Data.IDbConnection conn, UserAuthDto user)
+    {
+        int newCount = user.LiczbaBledow + 1;
+        object lockoutTime = newCount >= MaxFailedAttempts ? DateTime.Now.AddMinutes(LockoutMinutes).ToString("yyyy-MM-dd HH:mm:ss") : DBNull.Value;
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "UPDATE Uzytkownicy SET liczba_blednych_logowan = $cnt, blokada_do = $lock WHERE id = $id";
+        var p1 = cmd.CreateParameter(); p1.ParameterName = "$cnt"; p1.Value = newCount; cmd.Parameters.Add(p1);
+        var p2 = cmd.CreateParameter(); p2.ParameterName = "$lock"; p2.Value = lockoutTime; cmd.Parameters.Add(p2);
+        var p3 = cmd.CreateParameter(); p3.ParameterName = "$id"; p3.Value = user.Id; cmd.Parameters.Add(p3);
+        cmd.ExecuteNonQuery();
+    }
+
+    private void ResetLoginAttempts(System.Data.IDbConnection conn, long userId)
+    {
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "UPDATE Uzytkownicy SET liczba_blednych_logowan = 0, blokada_do = NULL WHERE id = $id";
+        var p = cmd.CreateParameter(); p.ParameterName = "$id"; p.Value = userId; cmd.Parameters.Add(p);
+        cmd.ExecuteNonQuery();
+    }
+
+    private List<string> GetUserRoles(System.Data.IDbConnection conn, long userId)
+    {
+        var roles = new List<string>();
+        using var cmd = conn.CreateCommand();
+        cmd.CommandText = "SELECT p.Nazwa FROM Uprawnienia p JOIN Uzytkownik_Uprawnienia uu ON p.Id = uu.uprawnienie_id WHERE uu.uzytkownik_id = $id";
+        var p = cmd.CreateParameter(); p.ParameterName = "$id"; p.Value = userId; cmd.Parameters.Add(p);
+        using var r = cmd.ExecuteReader();
+        while (r.Read()) roles.Add(r.GetString(0));
+        return roles;
+    }
+
+    private async Task SignInUser(UserAuthDto user, List<string> roles, bool isPersistent)
+    {
+        var claims = new List<Claim> {
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(ClaimTypes.Name, user.Username),
+            new Claim(ClaimTypes.Email, user.Email)
+        };
+        foreach (var role in roles) claims.Add(new Claim(ClaimTypes.Role, role));
+        var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity), new AuthenticationProperties { IsPersistent = isPersistent });
+    }
+}
+
+public class UserAuthDto {
+    public long Id { get; set; }
+    public string Username { get; set; } = "";
+    public string Email { get; set; } = "";
+    public string Password { get; set; } = "";
+    public int LiczbaBledow { get; set; }
+    public DateTime? BlokadaDo { get; set; }
+    public bool CzyHasloTymczasowe { get; set; }
 }

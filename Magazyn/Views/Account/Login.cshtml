@@ -24,7 +24,7 @@
         <main class="main">
             <header class="header">
                 <div class="info">
-                    <a asp-controller="Home" asp-action="Index">Strona Główna</a> / Logowanie
+                    <a asp-controller="Home" asp-action="Index">Strona Główna</a>
                 </div>
             </header>
 
@@ -33,33 +33,29 @@
 
                 <form asp-controller="Account" asp-action="Login" method="post" class="form-rejestracja">
                     @Html.AntiForgeryToken()
-                    
-                    @* Wyświetlanie ogólnych błędów logowania (np. "Niepoprawny login lub hasło") *@
-                    <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+                    <div asp-validation-summary="ModelOnly" class="validation-summary" style="color: red; margin-bottom: 15px;"></div>
 
                     <div class="tabelka">
                         <div class="form-group">
-                            <label asp-for="Login"></label>
-                            <input asp-for="Login" placeholder="np. JKowalski" class="form-control" />
-                            <span asp-validation-for="Login" class="field-error"></span>
+                            <label asp-for="Username">Login</label>
+                            <input asp-for="Username" placeholder="Wprowadź swój login" autofocus />
+                            <span asp-validation-for="Username" class="field-error"></span>
                         </div>
 
                         <div class="form-group">
-                            <label asp-for="Password"></label>
-                            <input asp-for="Password" type="password" placeholder="Hasło" class="form-control" />
+                            <label asp-for="Password">Hasło</label>
+                            <input asp-for="Password" type="password" placeholder="Hasło" />
                             <span asp-validation-for="Password" class="field-error"></span>
                         </div>
 
-                        <div class="form-group checkbox-group">
+                        <div class="form-group" style="display: flex; justify-content: space-between; align-items: center;">
                             <label>
-                                <input asp-for="RememberMe" /> @Html.DisplayNameFor(m => m.RememberMe)
+                                <input asp-for="RememberMe" type="checkbox" />
+                                Zapamiętaj mnie
                             </label>
+                            @* LG_UC1 Punkt 3: Opcja odzyskania hasła *@
+                            <a asp-action="RecoverPassword" style="font-size: 0.9em; color: #666;">Odzyskaj hasło</a>
                         </div>
-                    </div>
-
-                    @* Link do odzyskiwania hasła - zgodny z LG_UC1 punkt 3 *@
-                    <div class="forgot-password-link">
-                        <a asp-controller="Account" asp-action="ForgotPassword">Odzyskaj hasło</a>
                     </div>
 
                     <div class="btn-group mt-30">
@@ -71,7 +67,6 @@
         </main>
     </div>
 
-    @* Skrypty do walidacji po stronie klienta (bez przeładowania strony) *@
     @await Html.PartialAsync("_ValidationScriptsPartial")
 </body>
 </html>

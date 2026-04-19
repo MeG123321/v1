@@ -52,9 +52,7 @@ public class UserRegistrationDto
     [StringLength(30)]
     public string Status { get; set; } = "";
 
-    [Required(ErrorMessage = "Rola jest wymagana")]
-    [StringLength(30)]
-    public string Rola { get; set; } = "";
+    public string? Rola { get; set; }
 
     [Required(ErrorMessage = "Data urodzenia jest wymagana")]
     [DataType(DataType.Date)]

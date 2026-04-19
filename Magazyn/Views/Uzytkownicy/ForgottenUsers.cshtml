@@ -24,6 +24,7 @@
                     <li><a asp-controller="Uzytkownicy" asp-action="Rejestracja">Rejestracja pracownika</a></li>
                     <li><a asp-controller="Uzytkownicy" asp-action="ForgottenUsers" class="active">Użytkownicy zapomniani (RODO)</a></li>
                     <li><a asp-controller="Uprawnienia" asp-action="Uprawnienia">Lista Uprawnień</a></li>
+                    <li><partial name="_LogoutLink" /></li>
                 </ul>
             </nav>
         </aside>
@@ -69,6 +70,7 @@
         <th>Data zapomnienia</th>
         @* ZMIENIONY NAGŁÓWEK *@
         <th>Administrator wykonujący</th>
+        <th>Akcje</th>
     </tr>
 </thead>
 <tbody>
