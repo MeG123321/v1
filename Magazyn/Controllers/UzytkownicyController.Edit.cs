@@ -1,11 +1,14 @@
 using Microsoft.AspNetCore.Mvc;
 using Magazyn.Data;
 using Magazyn.Models;
+using Microsoft.Extensions.Logging;
+using System;
 
 namespace Magazyn.Controllers;
 
 public partial class UzytkownicyController : Controller
 {
+    // GET: /Uzytkownicy/EditUser/5
     [HttpGet("/Uzytkownicy/EditUser/{id:long}")]
     public IActionResult EditUser(long id)
     {
@@ -22,13 +25,13 @@ public partial class UzytkownicyController : Controller
         using var command = connection.CreateCommand();
 
         command.CommandText = @"
-SELECT id, username, firstName, LastName, pesel, Status, Plec, DataUrodzenia,
-       Email, NrTelefonu,
-       Miejscowosc, KodPocztowy, numer_posesji, Ulica, NrLokalu
-FROM Uzytkownicy
-WHERE id = $id
-LIMIT 1;
-";
+            SELECT id, username, firstName, LastName, pesel, Status, Plec, DataUrodzenia,
+                   Email, NrTelefonu,
+                   Miejscowosc, KodPocztowy, numer_posesji, Ulica, NrLokalu
+            FROM Uzytkownicy
+            WHERE id = $id
+            LIMIT 1;";
+        
         command.Parameters.AddWithValue("$id", id);
 
         using var dbReader = command.ExecuteReader();
@@ -44,10 +47,7 @@ LIMIT 1;
         {
             Id = Convert.ToInt64(dbReader["id"]),
             Username = dbReader["username"]?.ToString() ?? "",
-
-            // WAŻNE: nie wypełniamy hasła z bazy (dla bezpieczeństwa i żeby nie nadpisywać)
-            Password = "",
-
+            Password = "", // Hasło zostaje puste w widoku
             FirstName = dbReader["firstName"]?.ToString() ?? "",
             LastName = dbReader["LastName"]?.ToString() ?? "",
             Pesel = dbReader["pesel"]?.ToString() ?? "",
@@ -66,10 +66,15 @@ LIMIT 1;
         return View(viewModel);
     }
 
-    [HttpPost("/Uzytkownicy/EditUser")]
+    // POST: /Uzytkownicy/EditUser/5
+    // DODANO {id:long} do trasy, aby uniknąć błędu 405
+    [HttpPost("/Uzytkownicy/EditUser/{id:long}")]
     [ValidateAntiForgeryToken]
-    public IActionResult EditUser(UserVm viewModel)
+    public IActionResult EditUser(long id, UserVm viewModel)
     {
+        // Zabezpieczenie: ID z URL musi trafić do modelu
+        viewModel.Id = id;
+
         if (!ModelState.IsValid)
             return View(viewModel);
 
@@ -79,16 +84,15 @@ LIMIT 1;
             return View(viewModel);
         }
 
-        _logger.LogInformation("[AdminAccess] '{User}' edytuje użytkownika id={TargetId} IP={RemoteIp}",
+        _logger.LogInformation("[AdminAccess] '{User}' zapisuje edycję użytkownika id={TargetId} IP={RemoteIp}",
             SL(User.Identity?.Name), viewModel.Id, HttpContext.Connection.RemoteIpAddress);
 
+        // Czyszczenie danych wejściowych
         viewModel.Username = (viewModel.Username ?? "").Trim();
-        viewModel.Password = (viewModel.Password ?? "").Trim(); // może być puste => nie zmieniamy
+        viewModel.Password = (viewModel.Password ?? "").Trim();
         viewModel.FirstName = (viewModel.FirstName ?? "").Trim();
         viewModel.LastName = (viewModel.LastName ?? "").Trim();
         viewModel.Pesel = (viewModel.Pesel ?? "").Trim();
-        viewModel.Status = (viewModel.Status ?? "").Trim();
-        viewModel.Plec = (viewModel.Plec ?? "").Trim();
         viewModel.Email = (viewModel.Email ?? "").Trim();
         viewModel.NrTelefonu = (viewModel.NrTelefonu ?? "").Trim();
         viewModel.Miejscowosc = (viewModel.Miejscowosc ?? "").Trim();
@@ -102,75 +106,72 @@ LIMIT 1;
         using var connection = Db.OpenConnection(DbPath);
         using var command = connection.CreateCommand();
 
-        // Jeśli hasło puste -> nie aktualizujemy Password
+        // Jeśli hasło jest puste, nie dodajemy go do zapytania UPDATE
         var updatePasswordSql = string.IsNullOrWhiteSpace(viewModel.Password)
             ? ""
             : ", Password = $password";
 
         command.CommandText = $@"
-UPDATE Uzytkownicy
-SET username      = $username
-    {updatePasswordSql},
-    firstName     = $firstName,
-    LastName      = $lastName,
-    pesel         = $pesel,
-    Status        = $status,
-    Plec          = $plec,
-    DataUrodzenia = $dataUrodzenia,
-    Email         = $email,
-    NrTelefonu    = $nrTelefonu,
-    Miejscowosc   = $miejscowosc,
-    KodPocztowy   = $kodPocztowy,
-    numer_posesji = $nrPosesji,
-    Ulica         = $ulica,
-    NrLokalu      = $nrLokalu
-WHERE id = $id;
-";
+            UPDATE Uzytkownicy
+            SET username      = $username
+                {updatePasswordSql},
+                firstName     = $firstName,
+                LastName      = $lastName,
+                pesel         = $pesel,
+                Status        = $status,
+                Plec          = $plec,
+                DataUrodzenia = $dataUrodzenia,
+                Email         = $email,
+                NrTelefonu    = $nrTelefonu,
+                Miejscowosc   = $miejscowosc,
+                KodPocztowy   = $kodPocztowy,
+                numer_posesji = $nrPosesji,
+                Ulica         = $ulica,
+                NrLokalu      = $nrLokalu
+            WHERE id = $id;";
 
         command.Parameters.AddWithValue("$id", viewModel.Id);
         command.Parameters.AddWithValue("$username", viewModel.Username);
 
+        // Jeśli hasło nie jest puste, zahashuj je (lub dodaj czyste, jeśli nie masz metody)
         if (!string.IsNullOrWhiteSpace(viewModel.Password))
+        {
+            // Jeśli masz metodę HashujHaslo w tym kontrolerze, użyj jej tutaj:
+            // command.Parameters.AddWithValue("$password", HashujHaslo(viewModel.Password));
             command.Parameters.AddWithValue("$password", viewModel.Password);
+        }
 
         command.Parameters.AddWithValue("$firstName", viewModel.FirstName);
         command.Parameters.AddWithValue("$lastName", viewModel.LastName);
         command.Parameters.AddWithValue("$pesel", viewModel.Pesel);
         command.Parameters.AddWithValue("$status", StatusToInt(viewModel.Status));
         command.Parameters.AddWithValue("$plec", PlecToInt(viewModel.Plec));
-
-        command.Parameters.AddWithValue("$dataUrodzenia",
-            string.IsNullOrWhiteSpace(dataUrodzeniaStr) ? DBNull.Value : dataUrodzeniaStr);
-
+        command.Parameters.AddWithValue("$dataUrodzenia", string.IsNullOrWhiteSpace(dataUrodzeniaStr) ? DBNull.Value : dataUrodzeniaStr);
         command.Parameters.AddWithValue("$email", viewModel.Email);
         command.Parameters.AddWithValue("$nrTelefonu", viewModel.NrTelefonu);
         command.Parameters.AddWithValue("$miejscowosc", viewModel.Miejscowosc);
         command.Parameters.AddWithValue("$kodPocztowy", viewModel.KodPocztowy);
         command.Parameters.AddWithValue("$nrPosesji", viewModel.NrPosesji);
-
-        command.Parameters.AddWithValue("$ulica",
-            string.IsNullOrWhiteSpace(viewModel.Ulica) ? DBNull.Value : viewModel.Ulica);
-
-        command.Parameters.AddWithValue("$nrLokalu",
-            string.IsNullOrWhiteSpace(viewModel.NrLokalu) ? DBNull.Value : viewModel.NrLokalu);
+        command.Parameters.AddWithValue("$ulica", string.IsNullOrWhiteSpace(viewModel.Ulica) ? DBNull.Value : viewModel.Ulica);
+        command.Parameters.AddWithValue("$nrLokalu", string.IsNullOrWhiteSpace(viewModel.NrLokalu) ? DBNull.Value : viewModel.NrLokalu);
 
         try
         {
             var affectedRows = command.ExecuteNonQuery();
             if (affectedRows == 0)
             {
-                ModelState.AddModelError("", "Nie znaleziono użytkownika.");
+                ModelState.AddModelError("", "Błąd: Nie zaktualizowano żadnego rekordu.");
                 return View(viewModel);
             }
         }
-        catch (Microsoft.Data.Sqlite.SqliteException ex)
+        catch (Exception ex)
         {
-            // Tu zobaczysz dokładną przyczynę (UNIQUE, NOT NULL itd.)
-            _logger.LogError(ex, "Błąd SQLite przy zapisie edycji usera id={TargetId}", viewModel.Id);
-            ModelState.AddModelError("", $"Błąd zapisu do bazy: {ex.SqliteErrorCode} - {ex.Message}");
+            _logger.LogError(ex, "Błąd bazy przy edycji usera id={Id}", viewModel.Id);
+            ModelState.AddModelError("", "Wystąpił błąd podczas zapisu do bazy danych.");
             return View(viewModel);
         }
 
-        return RedirectToAction(nameof(UserDetails), new { id = viewModel.Id });
+        // Przekierowanie do szczegółów użytkownika po udanym zapisie
+        return RedirectToAction("UserDetails", new { id = viewModel.Id });
     }
 }

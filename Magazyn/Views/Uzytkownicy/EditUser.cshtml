@@ -11,28 +11,6 @@
     <title>Magazyn GiTA - Edycja pracownika</title>
 
     <link rel="stylesheet" href="~/css/style.css" />
-    <style>
-        /* Styl ujednolicający przycisk wyloguj w menu bocznym */
-        .logout-btn-link {
-            background: none;
-            border: none;
-            color: inherit;
-            font: inherit;
-            cursor: pointer;
-            padding: 10px 15px;
-            width: 100%;
-            text-align: left;
-            display: block;
-            outline: none;
-            transition: all 0.3s;
-            border-left: 3px solid transparent;
-        }
-        .logout-btn-link:hover {
-            color: #fff;
-            background: rgba(255,255,255,0.1);
-            border-left: 3px solid #007bff;
-        }
-    </style>
     <script defer src="~/js/script.js"></script>
 </head>
 
@@ -53,7 +31,6 @@
                     
                     <li><a asp-controller="Uprawnienia" asp-action="Uprawnienia">Lista Uprawnień</a></li>
                     
-                    @* ZMIENIONY LOGOUT *@
                     <li><partial name="_LogoutLink" /></li>
                 </ul>
             </nav>
@@ -62,7 +39,6 @@
         <main class="main">
             <header class="header">
                 <div class="info">
-                    @* ZMIENIONY LOGOUT *@
                     <a href="#" id="akcja-wyloguj">Wyloguj</a>
                     <a href="#">Konto</a>
                     <a asp-controller="Home" asp-action="Index">Strona Główna</a>
@@ -88,7 +64,6 @@
 
                         <input type="hidden" asp-for="Id" />
 
-                        @* --- SEKCJA 1: DANE OSOBOWE --- *@
                         <h3 class="form-section-title">Dane pracownika</h3>
                         <div class="tabelka">
                             <div class="form-group">
@@ -98,12 +73,11 @@
                             </div>
 
                             <div class="form-group">
-                                <label asp-for="Password">Hasło</label>
+                                <label asp-for="Password">Nowe hasło</label>
                                 <input asp-for="Password"
                                        type="password"
-                                       value=""
                                        autocomplete="new-password"
-                                       placeholder="Zostaw puste, jeśli nie zmieniasz" />
+                                       placeholder="Zostaw puste, jeśli bez zmian" />
                                 <span asp-validation-for="Password" class="field-error"></span>
                             </div>
 
@@ -163,7 +137,6 @@
                             </div>
                         </div>
 
-                        @* --- SEKCJA 2: ADRES --- *@
                         <h3 class="form-section-title">Adres zamieszkania</h3>
                         <div class="tabelka">
                             <div class="form-group">

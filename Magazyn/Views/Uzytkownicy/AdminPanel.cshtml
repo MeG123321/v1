@@ -56,6 +56,30 @@
             </header>
             <section class="zaw">
                 <h2>Baza pracowników - Magazyn GiTA</h2>
+
+ <section class="zaw">
+                <h2>Wyszukaj Użytkownika</h2>
+
+                <div class="search-bar">
+                    <form method="get" asp-controller="Uzytkownicy" asp-action="ForgottenUsers">
+                        <div class="tabelka">
+                            <div class="col-span-2">
+                                <label for="fname">Imię i nazwisko</label>
+                                <input type="text" id="fname" name="fname" value="@ViewBag.Fname" placeholder="np. Abc Xyz">
+                            </div>
+                            <div>
+                                <label for="adminId">Login</label>
+                                <input type="text" id="login" name="login" value="@ViewBag.login" placeholder="np. jkowalski">
+                            </div>
+                        </div>
+
+                        <div class="btn-group">
+                            <button type="submit" class="btn-primary">Wyszukaj</button>
+                            <a asp-controller="Uzytkownicy" asp-action="ForgottenUsers" class="btn-secondary">Wyczyść</a>
+                        </div>
+                    </form>
+                </div>
+
                 <div class="tabelka-wyniki">
                     <table>
                         <thead>
