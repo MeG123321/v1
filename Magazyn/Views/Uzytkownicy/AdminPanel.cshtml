@@ -15,20 +15,6 @@
     <meta charset="UTF-8">
     <title>Magazyn GiTA - Przegląd personelu</title>
     <link rel="stylesheet" href="~/css/style.css" />
-    <style>
-        .logout-btn-link {
-            background: none;
-            border: none;
-            color: inherit;
-            font: inherit;
-            cursor: pointer;
-            padding: 0;
-            width: 100%;
-            text-align: left;
-            display: block;
-            outline: none;
-        }
-    </style>
     <script defer src="~/js/script.js"></script>
 </head>
 
@@ -37,34 +23,11 @@
 
     @if (isAdminOrManager)
     {
-        <aside class="panelbok">
-            <div class="logo"><h1>Magazyn GiTA</h1></div>
-
-            <nav class="gitanav">
-                <p>Zarządzanie użytkownikami</p>
-                <ul>
-                    <li><a asp-controller="Uzytkownicy" asp-action="AdminPanel" class="active">Przegląd personelu</a></li>
-                    <li><a asp-controller="Uzytkownicy" asp-action="Rejestracja">Rejestracja pracownika</a></li>
-
-                    @if (User.IsInRole("Administrator"))
-                    {
-                        <li><a asp-controller="Uzytkownicy" asp-action="ForgottenUsers">Użytkownicy zapomniani (RODO)</a></li>
-                    }
-
-                    <li><a asp-controller="Uprawnienia" asp-action="Uprawnienia">Lista Uprawnień</a></li>
-                    <li><partial name="_LogoutLink" /></li>
-                </ul>
-            </nav>
-        </aside>
+        <partial name="_Sidebar" />
     }
 
     <main class="main">
-        <header class="header">
-            <div class="info">
-                <a href="#" id="akcja-wyloguj">Wyloguj</a>
-                <a asp-controller="Home" asp-action="Index">Strona Główna</a>
-            </div>
-        </header>
+        <partial name="_TopNavbar" />
 
         @if (isAdminOrManager)
         {
