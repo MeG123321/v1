@@ -16,10 +16,28 @@
 
 <body data-home-url='@Url.Action("Index", "Home")'>
     <div class="Wrapper">
-        <partial name="_Sidebar" />
+        <aside class="panelbok">
+            <div class="logo"><h1>Magazyn GiTA</h1></div>
+            <nav class="gitanav">
+                <p>Zarządzanie użytkownikami</p>
+                <ul>
+                    <li><a asp-controller="Uzytkownicy" asp-action="AdminPanel" class="active">Przegląd personelu</a></li>
+                    <li><a asp-controller="Uzytkownicy" asp-action="Rejestracja">Rejestracja pracownika</a></li>
+                    <li><a asp-controller="Uzytkownicy" asp-action="ForgottenUsers">Użytkownicy zapomniani (RODO)</a></li>
+                    <li><a asp-controller="Uprawnienia" asp-action="Uprawnienia">Nadaj Uprawnienia</a></li>
+                    <li><partial name="_LogoutLink" /></li>
+                </ul>
+            </nav>
+        </aside>
 
         <main class="main">
-            <partial name="_TopNavbar" />
+            <header class="header">
+                <div class="info">
+                    <a href="#" id="akcja-wyloguj">Wyloguj</a>
+                    <a href="#">Konto</a>
+                    <a asp-controller="Home" asp-action="Index">Strona Główna</a>
+                </div>
+            </header>
 
             <section class="zaw">
                 <a asp-controller="Uzytkownicy" asp-action="UserDetails" asp-route-id="@Model.Id" class="back-link">
@@ -31,7 +49,6 @@
                 <div class="search-bar">
                     <form asp-controller="Uzytkownicy"
                           asp-action="EditUser"
-                          asp-route-id="@Model.Id"
                           method="post"
                           class="form-rejestracja">
                         @Html.AntiForgeryToken()
@@ -40,6 +57,7 @@
 
                         <input type="hidden" asp-for="Id" />
 
+                        @* --- SEKCJA 1: DANE OSOBOWE --- *@
                         <h3 class="form-section-title">Dane pracownika</h3>
                         <div class="tabelka">
                             <div class="form-group">
@@ -49,11 +67,12 @@
                             </div>
 
                             <div class="form-group">
-                                <label asp-for="Password">Nowe hasło</label>
+                                <label asp-for="Password">Hasło</label>
                                 <input asp-for="Password"
                                        type="password"
+                                       value=""
                                        autocomplete="new-password"
-                                       placeholder="Zostaw puste, jeśli bez zmian" />
+                                       placeholder="Zostaw puste, jeśli nie zmieniasz" />
                                 <span asp-validation-for="Password" class="field-error"></span>
                             </div>
 
@@ -113,6 +132,7 @@
                             </div>
                         </div>
 
+                        @* --- SEKCJA 2: ADRES --- *@
                         <h3 class="form-section-title">Adres zamieszkania</h3>
                         <div class="tabelka">
                             <div class="form-group">

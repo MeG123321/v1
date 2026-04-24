@@ -94,33 +94,12 @@ body {
     align-items: center;
 }
 
-.info a, .info button {
-    margin-left: 15px;
-}
-
 .info {
     font-size: 13px;
     color: var(--accent-blue);
     font-weight: bold;
 }
 
-.logout-btn-link {
-    background: none;
-    border: none;
-    color: var(--accent-blue);
-    font: inherit;
-    font-size: 13px;
-    font-weight: bold;
-    cursor: pointer;
-    padding: 0;
-    display: inline;
-    outline: none;
-    text-decoration: none;
-}
-
-.logout-btn-link:hover {
-    filter: brightness(1.2);
-}
 .zaw {
     padding: 40px;
 }

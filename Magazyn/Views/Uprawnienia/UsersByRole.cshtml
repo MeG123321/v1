@@ -16,10 +16,27 @@
 
 <body data-home-url='@Url.Action("Index", "Home")'>
     <div class="Wrapper">
-        <partial name="_Sidebar" />
+        <aside class="panelbok">
+            <div class="logo"><h1>Magazyn GiTA</h1></div>
+            <nav class="gitanav">
+                <p>Zarządzanie użytkownikami</p>
+                <ul>
+                    <li><a asp-controller="Uzytkownicy" asp-action="AdminPanel">Przegląd personelu</a></li>
+                    <li><a asp-controller="Uzytkownicy" asp-action="Rejestracja">Rejestracja pracownika</a></li>
+                    <li><a asp-controller="Uzytkownicy" asp-action="ForgottenUsers">Użytkownicy zapomniani (RODO)</a></li>
+                    <li><a asp-controller="Uprawnienia" asp-action="Uprawnienia" class="active">Nadaj Uprawnienia</a></li>
+                </ul>
+            </nav>
+        </aside>
 
         <main class="main">
-            <partial name="_TopNavbar" />
+            <header class="header">
+                <div class="info">
+                    <a href="#" id="akcja-wyloguj">Wyloguj</a>
+                    <a href="#">Konto</a>
+                    <a asp-controller="Home" asp-action="Index">Strona Główna</a>
+                </div>
+            </header>
 
             <section class="zaw">
                 <a asp-controller="Uprawnienia" asp-action="Uprawnienia" class="back-link">
