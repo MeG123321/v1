@@ -1,43 +1,39 @@
-using Microsoft.AspNetCore.Authentication.Cookies;
-
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Dodanie obsługi Kontrolerów i Widoków
+// Add services to the container.
 builder.Services.AddControllersWithViews();
 
-// 2. Konfiguracja Autentykacji (Ciasteczka)
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {
-        options.Cookie.Name = "Magazyn.AuthCookie"; // Jawna nazwa ciasteczka
         options.LoginPath = "/Account/Login";
         options.AccessDeniedPath = "/Account/Login";
         options.ExpireTimeSpan = TimeSpan.FromHours(8);
         options.SlidingExpiration = true;
         options.Cookie.HttpOnly = true;
-        
-        // Ustawienie polityki bezpieczeństwa ciasteczka
         options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
-            ? CookieSecurePolicy.SameAsRequest
-            : CookieSecurePolicy.Always;
+            ? Microsoft.AspNetCore.Http.CookieSecurePolicy.SameAsRequest
+            : Microsoft.AspNetCore.Http.CookieSecurePolicy.Always;
     });
 
 var app = builder.Build();
 
-// 3. Konfiguracja potoku obsługi żądań (Pipeline)
+// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
+    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
 app.UseHttpsRedirection();
+
 app.UseStaticFiles();
 
 app.UseRouting();
 
-// KLUCZOWA KOLEJNOŚĆ: Najpierw Authentication, potem Authorization
-app.UseAuthentication(); 
+app.UseAuthentication();
+
 app.UseAuthorization();
 
 app.MapStaticAssets();
@@ -47,4 +43,11 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
+
 app.Run();
+
+
+builder.Services.AddHttpClient("Mailtrap", client =>
+{
+    client.BaseAddress = new Uri("https://send.api.mailtrap.io/");
+});

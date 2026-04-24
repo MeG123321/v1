@@ -1,8 +1,7 @@
 @model List<Magazyn.Models.Dtos.ForgottenRowDto>
-@{
-    Layout = null;
+@{ 
+    Layout = null; var isAdminOrManager = User.IsInRole("Administrator");
 }
-
 <!DOCTYPE html>
 <html lang="pl">
 <head>

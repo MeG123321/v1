@@ -1,108 +1,205 @@
 @model List<Magazyn.Models.Dtos.UserListRowDto>
 @{
     Layout = null;
-    var allRoles = new[] { "Administrator", "Pracownik magazynu", "Sprzedawca", "Kierownik magazynu", "Kierownik sprzedazy" };
+
+    var allRoles = new (string Value, string Label)[]
+    {
+        ("Administrator",       "Administrator"),
+        ("Pracownik magazynu",  "Pracownik magazynu"),
+        ("Sprzedawca",          "Sprzedawca"),
+        ("Kierownik magazynu",  "Kierownik magazynu"),
+        ("Kierownik sprzedazy", "Kierownik sprzedaży")
+    };
+
+    var selectedFilters = (string[])(ViewBag.SelectedRoles ?? Array.Empty<string>());
+    var isAdmin = User.IsInRole("Administrator");
 }
+
 <!DOCTYPE html>
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Magazyn GiTA - Lista Uprawnień</title>
     <link rel="stylesheet" href="~/css/style.css" />
+
     <style>
-        .alert { padding: 15px; background: #d1ecf1; color: #0c5460; margin-bottom: 20px; border-radius: 4px; border: 1px solid #bee5eb; font-weight: bold; }
-        .role-btn:has(input:checked) { background-color: #28a745 !important; color: white !important; }
-        .logout-btn-link { background: none; border: none; color: inherit; font: inherit; cursor: pointer; padding: 0; width: 100%; text-align: left; display: block; outline: none; }
+        /* Style filtrów i przycisków */
+        .role-btn:has(input:checked), .modal-role-btn:has(input:checked) {
+            background-color: #28a745 !important;
+            color: white !important;
+            border-color: #1e7e34 !important;
+        }
+
+        .alert-info-gita {
+            background-color: #d1ecf1; color: #0c5460; padding: 15px;
+            margin-bottom: 20px; border-radius: 4px; font-weight: bold; border: 1px solid #bee5eb;
+        }
+
+        /* STYLE MODALA (Okienka ze screena) */
+        .modal-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center;
+        }
+        .modal-content {
+            background: #1a202c; color: white; padding: 30px; border-radius: 8px;
+            width: 450px; border: 1px solid #2d3748; box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        .modal-header { font-size: 1.2rem; font-weight: bold; margin-bottom: 20px; }
+        .modal-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 25px; }
+        .modal-role-btn {
+            display: block; padding: 10px; border: 1px solid #4a5568; border-radius: 5px;
+            cursor: pointer; text-align: left; transition: 0.2s; background: transparent;
+        }
+        .modal-role-btn input { display: none; }
+        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; }
+        .btn-save { background: #3182ce; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; }
+        .btn-cancel { background: transparent; color: white; padding: 10px 20px; border: 1px solid #4a5568; border-radius: 5px; cursor: pointer; }
     </style>
 </head>
-<body>
-    <div class="Wrapper">
-        <aside class="panelbok">
-            <div class="logo"><h1>Magazyn GiTA</h1></div>
-            <nav class="gitanav">
-                <p>Zarządzanie użytkownikami</p>
-                <ul>
-                    <li><a asp-controller="Uzytkownicy" asp-action="AdminPanel">Przegląd personelu</a></li>
-                    <li><a asp-controller="Uzytkownicy" asp-action="Rejestracja">Rejestracja pracownika</a></li>
-                    @if (User.IsInRole("Administrator"))
+
+<body data-home-url='@Url.Action("Index", "Home")'>
+<div class="Wrapper">
+
+    <aside class="panelbok">
+        <div class="logo"><h1>Magazyn GiTA</h1></div>
+        <nav class="gitanav">
+            <p>Zarządzanie użytkownikami</p>
+            <ul>
+                <li><a asp-controller="Uzytkownicy" asp-action="AdminPanel">Przegląd personelu</a></li>
+                <li><a asp-controller="Uzytkownicy" asp-action="Rejestracja">Rejestracja pracownika</a></li>
+                @if (isAdmin) { <li><a asp-controller="Uzytkownicy" asp-action="ForgottenUsers">Użytkownicy zapomniani (RODO)</a></li> }
+                <li><a asp-controller="Uprawnienia" asp-action="Uprawnienia" class="active">Lista Uprawnień</a></li>
+                <li><partial name="_LogoutLink" /></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <main class="main">
+        <header class="header">
+            <div class="info">
+                <a href="#" id="akcja-wyloguj">Wyloguj</a>
+                <a asp-controller="Home" asp-action="Index">Strona Główna</a>
+            </div>
+        </header>
+
+        <section class="zaw">
+            <h2>Lista Uprawnień</h2>
+
+            @if (TempData["Message"] != null)
+            {
+                <div class="alert-info-gita">@TempData["Message"]</div>
+            }
+
+            <div class="search-bar">
+                <form method="get" asp-controller="Uprawnienia" asp-action="Uprawnienia">
+                    <label style="display:block; margin-bottom:15px; font-weight:bold;">Filtruj użytkowników (role):</label>
+                    <div class="role-grid horizontal">
+                        @foreach (var rola in allRoles)
+                        {
+                            <label class="role-btn">
+                                <input type="checkbox" name="rola" value="@rola.Value" onchange="this.form.submit()"
+                                       @(selectedFilters.Contains(rola.Value) ? "checked" : "") />
+                                @rola.Label
+                            </label>
+                        }
+                    </div>
+                    <div class="btn-group" style="margin-top:20px;">
+                        <a class="btn-primary" asp-controller="Uprawnienia" asp-action="Uprawnienia">Wyczyść filtry</a>
+                    </div>
+                </form>
+            </div>
+
+            <div class="tabelka-wyniki">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Login</th><th>Imię</th><th>Nazwisko</th><th>Uprawnienia</th><th>Status</th><th>Akcje</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @if (Model == null || !Model.Any())
                     {
-                        <li><a asp-controller="Uzytkownicy" asp-action="ForgottenUsers">Użytkownicy zapomniani (RODO)</a></li>
+                        <tr><td colspan="6" style="text-align:center; padding:40px;">Brak użytkowników</td></tr>
                     }
-                    <li><a asp-controller="Uprawnienia" asp-action="Uprawnienia" class="active">Lista Uprawnień</a></li>
-
-                    @* ZMIENIONY LOGOUT *@
-                    <li><partial name="_LogoutLink" /></li>
-                </ul>
-            </nav>
-        </aside>
-
-        <main class="main">
-            <header class="header">
-                <div class="info">
-                    @* ZMIENIONY LOGOUT *@
-                    <a href="#" id="akcja-wyloguj">Wyloguj</a>
-                    <a asp-controller="Home" asp-action="Index">Strona Główna</a>
-                </div>
-            </header>
-
-            <section class="zaw">
-                @if (TempData["Message"] != null) { <div class="alert">@TempData["Message"]</div> }
-                <h2>Lista Uprawnień</h2>
-
-                <div class="tabelka-wyniki">
-                    <table>
-                        <thead>
+                    else
+                    {
+                        foreach (var u in Model)
+                        {
                             <tr>
-                                <th>LOGIN</th>
-                                <th>IMIĘ I NAZWISKO</th>
-                                <th>OBECNE ROLE</th>
-                                <th>AKCJE</th>
+                                <td><strong>@u.Username</strong></td>
+                                <td>@u.FirstName</td>
+                                <td>@u.LastName</td>
+                                <td style="color:#007bff; font-weight:bold;">@u.Rola</td>
+                                <td>@u.Status</td>
+                                <td>
+                                    <button class="btn-secondary" type="button" 
+                                            onclick="openRoleModal('@u.Id', '@u.Username', '@u.Rola')">
+                                        Zmień uprawnienia
+                                    </button>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var u in Model)
-                            {
-                                <tr>
-                                    <td><strong>@u.Username</strong></td>
-                                    <td>@u.FirstName @u.LastName</td>
-                                    <td style="color: #007bff; font-weight: bold;">@u.Rola</td>
-                                    <td><a href="#popup-@u.Id" class="btn-secondary">Zmień uprawnienia</a></td>
-                                </tr>
+                        }
+                    }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</div>
 
-                                <div id="popup-@u.Id" class="popup-overlay">
-                                    <div class="popup-content search-bar">
-                                        <h3>Edytuj role: @u.Username</h3>
-                                        <form asp-action="SetRole" method="post">
-                                            @Html.AntiForgeryToken()
-                                            <input type="hidden" name="id" value="@u.Id" />
+<div id="roleModal" class="modal-overlay">
+    <div class="modal-content">
+        <form asp-controller="Uprawnienia" asp-action="SetRole" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" id="modalUserId" />
+            
+            <div class="modal-header">Edytuj role: <span id="modalUsername"></span></div>
+            
+            <div class="modal-grid">
+                @foreach (var rola in allRoles)
+                {
+                    <label class="modal-role-btn">
+                        <input type="checkbox" name="rola" value="@rola.Value" class="modal-role-checkbox" />
+                        <span>@rola.Label</span>
+                    </label>
+                }
+            </div>
 
-                                            <div class="role-grid">
-                                                @foreach (var r in allRoles)
-                                                {
-                                                    if (r == "Administrator" && !User.IsInRole("Administrator")) continue;
-
-                                                    bool ma = u.Rola != null && u.Rola.Split(',').Any(x => x.Trim().Equals(r, StringComparison.OrdinalIgnoreCase));
-
-                                                    <label class="role-btn">
-                                                        <input type="checkbox" name="rola" value="@r" @(ma ? "checked" : "") />
-                                                        @r
-                                                    </label>
-                                                }
-                                            </div>
-
-                                            <div style="margin-top:20px; text-align:right;">
-                                                <button type="submit" class="btn-primary">Zapisz</button>
-                                                <a href="#" class="btn-secondary">Anuluj</a>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-        </main>
+            <div class="modal-footer">
+                <button type="submit" class="btn-save">Zapisz</button>
+                <button type="button" class="btn-cancel" onclick="closeRoleModal()">Anuluj</button>
+            </div>
+        </form>
     </div>
+</div>
+
+<script>
+    function openRoleModal(id, username, currentRoles) {
+        document.getElementById('modalUserId').value = id;
+        document.getElementById('modalUsername').innerText = username;
+        
+        // Resetuj checkboxy
+        const checkboxes = document.querySelectorAll('.modal-role-checkbox');
+        checkboxes.forEach(cb => {
+            cb.checked = currentRoles.includes(cb.value);
+        });
+
+        document.getElementById('roleModal').style.display = 'flex';
+    }
+
+    function closeRoleModal() {
+        document.getElementById('roleModal').style.display = 'none';
+    }
+
+    // Zamknij po kliknięciu poza modalem
+    window.onclick = function(event) {
+        let modal = document.getElementById('roleModal');
+        if (event.target == modal) {
+            closeRoleModal();
+        }
+    }
+</script>
+
 </body>
 </html>

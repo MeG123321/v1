@@ -1,7 +1,14 @@
 @model List<Magazyn.Models.Dtos.UserListRowDto>
+
 @{
     Layout = null;
+
+    var isAdminOrManager =
+        User.IsInRole("Administrator")
+        || User.IsInRole("Kierownik magazynu")
+        || User.IsInRole("Kierownik sprzedazy");
 }
+
 <!DOCTYPE html>
 <html lang="pl">
 <head>
@@ -9,7 +16,6 @@
     <title>Magazyn GiTA - Przegląd personelu</title>
     <link rel="stylesheet" href="~/css/style.css" />
     <style>
-        /* Styl ujednolicający przycisk wyloguj we wszystkich widokach */
         .logout-btn-link {
             background: none;
             border: none;
@@ -25,57 +31,66 @@
     </style>
     <script defer src="~/js/script.js"></script>
 </head>
+
 <body data-home-url='@Url.Action("Index", "Home")'>
-    <div class="Wrapper">
+<div class="Wrapper">
+
+    @if (isAdminOrManager)
+    {
         <aside class="panelbok">
             <div class="logo"><h1>Magazyn GiTA</h1></div>
+
             <nav class="gitanav">
                 <p>Zarządzanie użytkownikami</p>
                 <ul>
                     <li><a asp-controller="Uzytkownicy" asp-action="AdminPanel" class="active">Przegląd personelu</a></li>
                     <li><a asp-controller="Uzytkownicy" asp-action="Rejestracja">Rejestracja pracownika</a></li>
-                    
+
                     @if (User.IsInRole("Administrator"))
                     {
                         <li><a asp-controller="Uzytkownicy" asp-action="ForgottenUsers">Użytkownicy zapomniani (RODO)</a></li>
                     }
-                    
+
                     <li><a asp-controller="Uprawnienia" asp-action="Uprawnienia">Lista Uprawnień</a></li>
-                    
                     <li><partial name="_LogoutLink" /></li>
                 </ul>
             </nav>
         </aside>
+    }
 
-        <main class="main">
-            <header class="header">
-                <div class="info">
-                    <a href="#" id="akcja-wyloguj">Wyloguj</a>
-                    <a asp-controller="Home" asp-action="Index">Strona Główna</a>
-                </div>
-            </header>
+    <main class="main">
+        <header class="header">
+            <div class="info">
+                <a href="#" id="akcja-wyloguj">Wyloguj</a>
+                <a asp-controller="Home" asp-action="Index">Strona Główna</a>
+            </div>
+        </header>
+
+        @if (isAdminOrManager)
+        {
             <section class="zaw">
                 <h2>Baza pracowników - Magazyn GiTA</h2>
 
- <section class="zaw">
-                <h2>Wyszukaj Użytkownika</h2>
-
                 <div class="search-bar">
-                    <form method="get" asp-controller="Uzytkownicy" asp-action="ForgottenUsers">
+                    <form method="get" asp-controller="Uzytkownicy" asp-action="AdminPanel">
                         <div class="tabelka">
-                            <div class="col-span-2">
-                                <label for="fname">Imię i nazwisko</label>
-                                <input type="text" id="fname" name="fname" value="@ViewBag.Fname" placeholder="np. Abc Xyz">
+                            <div>
+                                <label>Login</label>
+                                <input type="text" name="login" value="@ViewBag.Login">
                             </div>
                             <div>
-                                <label for="adminId">Login</label>
-                                <input type="text" id="login" name="login" value="@ViewBag.login" placeholder="np. jkowalski">
+                                <label>Imię i Nazwisko</label>
+                                <input type="text" name="name" value="@ViewBag.Name">
+                            </div>
+                            <div>
+                                <label>PESEL</label>
+                                <input type="text" name="pesel" value="@ViewBag.Pesel" maxlength="11">
                             </div>
                         </div>
 
                         <div class="btn-group">
                             <button type="submit" class="btn-primary">Wyszukaj</button>
-                            <a asp-controller="Uzytkownicy" asp-action="ForgottenUsers" class="btn-secondary">Wyczyść</a>
+                            <a asp-controller="Uzytkownicy" asp-action="AdminPanel" class="btn-secondary">Wyczyść</a>
                         </div>
                     </form>
                 </div>
@@ -88,10 +103,15 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var u in Model) {
+                            @foreach (var u in Model)
+                            {
                                 <tr>
-                                    <td><strong>@u.Username</strong></td><td>@u.FirstName</td><td>@u.LastName</td><td>@u.Email</td>
-                                    <td>@u.Status</td><td style="color: #007bff; font-weight: bold;">@u.Rola</td>
+                                    <td><strong>@u.Username</strong></td>
+                                    <td>@u.FirstName</td>
+                                    <td>@u.LastName</td>
+                                    <td>@u.Email</td>
+                                    <td>@u.Status</td>
+                                    <td style="color: #007bff; font-weight: bold;">@u.Rola</td>
                                     <td><a class="btn-secondary" asp-action="UserDetails" asp-route-id="@u.Id">Szczegóły</a></td>
                                 </tr>
                             }
@@ -99,7 +119,9 @@
                     </table>
                 </div>
             </section>
-        </main>
-    </div>
+        }
+    </main>
+
+</div>
 </body>
 </html>
