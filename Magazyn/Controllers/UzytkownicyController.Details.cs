@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Magazyn.Data;
 using Magazyn.Models.Dtos;
@@ -9,6 +10,7 @@ public partial class UzytkownicyController : Controller
 {
     // Jawny routing: URL będzie dokładnie /Uzytkownicy/UserDetails/1
     [HttpGet("/Uzytkownicy/UserDetails/{id:long}")]
+    [Authorize(Roles = "Administrator,Kierownik magazynu,Kierownik sprzedazy")]
     public IActionResult UserDetails(long id)
     {
         if (id <= 0)

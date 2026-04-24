@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Magazyn.Data;
 using Magazyn.Models.Dtos;
@@ -8,6 +9,7 @@ public partial class UzytkownicyController : Controller
 {
 
     [HttpGet]
+    [Authorize(Roles = "Administrator,Kierownik magazynu,Kierownik sprzedazy")]
     public IActionResult AdminPanel(string? login = null, string? name = null, string? pesel = null)
     {
         _logger.LogInformation("[AdminAccess] '{User}' otworzył AdminPanel [login={Login}, name={Name}, pesel={Pesel}] IP={RemoteIp}",

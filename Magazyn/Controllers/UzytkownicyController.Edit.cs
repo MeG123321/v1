@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Magazyn.Data;
 using Magazyn.Models;
@@ -10,6 +11,7 @@ public partial class UzytkownicyController : Controller
 {
     // GET: /Uzytkownicy/EditUser/5
     [HttpGet("/Uzytkownicy/EditUser/{id:long}")]
+    [Authorize(Roles = "Administrator,Kierownik magazynu")]
     public IActionResult EditUser(long id)
     {
         if (id <= 0)
@@ -70,6 +72,7 @@ public partial class UzytkownicyController : Controller
     // DODANO {id:long} do trasy, aby uniknąć błędu 405
     [HttpPost("/Uzytkownicy/EditUser/{id:long}")]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Administrator,Kierownik magazynu")]
     public IActionResult EditUser(long id, UserVm viewModel)
     {
         // Zabezpieczenie: ID z URL musi trafić do modelu

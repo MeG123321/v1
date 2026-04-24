@@ -138,6 +138,7 @@ public class AccountController : Controller
     // ==========================================
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Administrator,Kierownik magazynu")]
     public async Task<IActionResult> AdminGeneratePassword(long id)
     {
         using var connection = Db.OpenConnection(DbPath);
@@ -165,7 +166,14 @@ public class AccountController : Controller
     }
 
     // ==========================================
-    // LG_UC4: ZMIANA HASŁA (WYMAGANA)
+    // PROFIL UŻYTKOWNIKA
+    // ==========================================
+    [HttpGet]
+    [Microsoft.AspNetCore.Authorization.Authorize]
+    public IActionResult MyProfile() => View();
+
+    // ==========================================
+    // LG_UC4: ZMIANA HASŁA (WYMAGANA / DOBROWOLNA)
     // ==========================================
     [HttpGet]
     public IActionResult ChangePassword() => View();
@@ -205,16 +213,15 @@ public class AccountController : Controller
 {
     try
     {
-        // Dane pobierane z Mailtrap (zakładka SMTP Settings -> Integrations -> c#)
-        using var client = new System.Net.Mail.SmtpClient("sandbox.smtp.mailtrap.io", 2525)
+        using var client = new System.Net.Mail.SmtpClient("smtp.gmail.com", 587)
         {
-            Credentials = new System.Net.NetworkCredential("197e0e58a93abd", "082b154f9ad08b"),
+            Credentials = new System.Net.NetworkCredential("magazynfirma123321@gmail.com", "rznmictqzjgewklh"),
             EnableSsl = true
         };
 
         var mailMessage = new System.Net.Mail.MailMessage
         {
-            From = new System.Net.Mail.MailAddress("magazyn@gita.pl", "Magazyn GiTA"),
+            From = new System.Net.Mail.MailAddress("magazynfirma123321@gmail.com", "Magazyn GiTA"),
             Subject = "Odzyskiwanie hasła",
             Body = $"nowe hasło: {password}",
             IsBodyHtml = false
@@ -222,7 +229,6 @@ public class AccountController : Controller
 
         mailMessage.To.Add(targetEmail);
 
-        // Wysyłamy!
         await client.SendMailAsync(mailMessage);
         return true;
     }
