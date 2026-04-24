@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Magazyn.Data;
 using Magazyn.Models.Dtos;
@@ -10,6 +11,7 @@ namespace Magazyn.Controllers;
 public partial class UzytkownicyController : Controller
 {
     [HttpGet]
+    [Authorize(Roles = "Administrator")]
     public IActionResult ForgottenUsers(string? fname = null, long? adminId = null)
     {
         ViewBag.Fname = fname ?? "";
@@ -66,6 +68,7 @@ public partial class UzytkownicyController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Administrator")]
     public IActionResult ForgetUserFromDetails(long id)
     {
         var actionResult = ForgetUser(id);
@@ -77,6 +80,7 @@ public partial class UzytkownicyController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Administrator")]
     public IActionResult ForgetUser(long id)
     {
         var adminIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);

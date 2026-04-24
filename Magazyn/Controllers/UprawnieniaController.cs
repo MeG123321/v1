@@ -24,6 +24,7 @@ public class UprawnieniaController : Controller
         (value ?? "").Replace('\r', '_').Replace('\n', '_');
 
     [HttpGet]
+    [Authorize(Roles = "Administrator")]
     public IActionResult Uprawnienia(string[]? rola = null)
     {
         // Czyszczenie i przygotowanie wybranych ról
@@ -102,6 +103,7 @@ public class UprawnieniaController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Administrator")]
     public IActionResult SetRole(long id, string[]? rola = null)
     {
         var selectedRoles = rola?
@@ -139,6 +141,11 @@ public class UprawnieniaController : Controller
                 insertCommand.ExecuteNonQuery();
             }
         }
+
+        if (selectedRoles.Length > 0)
+            TempData["SuccessMessage"] = $"Uprawnienia zostały zapisane: {string.Join(", ", selectedRoles)}.";
+        else
+            TempData["SuccessMessage"] = "Wszystkie uprawnienia użytkownika zostały usunięte.";
 
         return RedirectToAction("UserDetails", "Uzytkownicy", new { id });
     }

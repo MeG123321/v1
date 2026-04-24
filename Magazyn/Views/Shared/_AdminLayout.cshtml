@@ -1,0 +1,95 @@
+@{
+    var activePage = ViewData["ActivePage"]?.ToString() ?? "";
+    var userName = User.Identity?.Name ?? "";
+}
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@(ViewData["Title"] ?? "Magazyn GiTA")</title>
+    <link rel="stylesheet" href="~/css/style.css" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+
+<body data-home-url='@Url.Action("Index", "Home")'>
+    <div class="Wrapper">
+        <aside class="panelbok">
+            <div class="logo"><h1>Magazyn GiTA</h1></div>
+            <nav class="gitanav">
+                <p>Zarządzanie użytkownikami</p>
+                <ul>
+                    @if (User.IsInRole("Administrator") || User.IsInRole("Kierownik magazynu") || User.IsInRole("Kierownik sprzedazy"))
+                    {
+                        <li>
+                            <a asp-controller="Uzytkownicy" asp-action="AdminPanel"
+                               class="@(activePage == "AdminPanel" ? "active" : "")">Przegląd personelu</a>
+                        </li>
+                    }
+                    @if (User.IsInRole("Administrator") || User.IsInRole("Kierownik magazynu"))
+                    {
+                        <li>
+                            <a asp-controller="Uzytkownicy" asp-action="Rejestracja"
+                               class="@(activePage == "Rejestracja" ? "active" : "")">Rejestracja pracownika</a>
+                        </li>
+                    }
+                    @if (User.IsInRole("Administrator"))
+                    {
+                        <li>
+                            <a asp-controller="Uzytkownicy" asp-action="ForgottenUsers"
+                               class="@(activePage == "ForgottenUsers" ? "active" : "")">Użytkownicy zapomniani (RODO)</a>
+                        </li>
+                        <li>
+                            <a asp-controller="Uprawnienia" asp-action="Uprawnienia"
+                               class="@(activePage == "Uprawnienia" ? "active" : "")">Lista Uprawnień</a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        </aside>
+
+        <main class="main">
+            <header class="header">
+                <div class="info" style="display:flex; gap:16px; align-items:center;">
+                    <span style="color: var(--text-main); font-weight: normal;">
+                        Zalogowany: <strong>@userName</strong>
+                    </span>
+                    <a asp-controller="Account" asp-action="MyProfile"
+                       style="color: var(--accent-blue); text-decoration: none; font-weight: bold;">
+                        Mój profil
+                    </a>
+
+                    @* Wyloguj w górnym pasku *@
+                    <form asp-controller="Account" asp-action="Logout" method="post" id="topLogoutForm" style="display:inline;">
+                        @Html.AntiForgeryToken()
+                        <a href="#" id="top-akcja-wyloguj" style="color: var(--accent-blue); text-decoration: none; font-weight: bold;">
+                            Wyloguj
+                        </a>
+                    </form>
+                </div>
+            </header>
+
+            <section class="zaw">
+                @RenderBody()
+            </section>
+        </main>
+    </div>
+
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script defer src="~/js/script.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            var btn = document.getElementById("top-akcja-wyloguj");
+            if (btn) {
+                btn.addEventListener("click", function (e) {
+                    e.preventDefault();
+                    if (confirm("Czy na pewno chcesz się wylogować?")) {
+                        document.getElementById("topLogoutForm").submit();
+                    }
+                });
+            }
+        });
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

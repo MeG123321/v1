@@ -1,97 +1,60 @@
 @model List<Magazyn.Models.Dtos.UserListRowDto>
 @{
-    Layout = null;
+    Layout = "_AdminLayout";
+    ViewData["ActivePage"] = "Uprawnienia";
     var rola = (string?)ViewBag.Rola ?? "-";
+    ViewData["Title"] = $"Magazyn GiTA - Użytkownicy roli {rola}";
 }
 
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Magazyn GiTA - Użytkownicy roli @rola</title>
+<a asp-controller="Uprawnienia" asp-action="Uprawnienia" class="back-link">
+    ← Wróć do ról
+</a>
 
-    <link rel="stylesheet" href="~/css/style.css" />
-</head>
+<h2>Użytkownicy z rolą: @rola</h2>
 
-<body data-home-url='@Url.Action("Index", "Home")'>
-    <div class="Wrapper">
-        <aside class="panelbok">
-            <div class="logo"><h1>Magazyn GiTA</h1></div>
-            <nav class="gitanav">
-                <p>Zarządzanie użytkownikami</p>
-                <ul>
-                    <li><a asp-controller="Uzytkownicy" asp-action="AdminPanel">Przegląd personelu</a></li>
-                    <li><a asp-controller="Uzytkownicy" asp-action="Rejestracja">Rejestracja pracownika</a></li>
-                    <li><a asp-controller="Uzytkownicy" asp-action="ForgottenUsers">Użytkownicy zapomniani (RODO)</a></li>
-                    <li><a asp-controller="Uprawnienia" asp-action="Uprawnienia" class="active">Nadaj Uprawnienia</a></li>
-                </ul>
-            </nav>
-        </aside>
+<div class="tabelka-wyniki">
+    <table>
+        <thead>
+            <tr>
+                <th>Login</th>
+                <th>Imię</th>
+                <th>Nazwisko</th>
+                <th>Email</th>
+                <th>PESEL</th>
+                <th>Status</th>
+                <th>Akcje</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model == null || Model.Count == 0)
+            {
+                <tr>
+                    <td colspan="7" class="no-results">Brak użytkowników z tą rolą</td>
+                </tr>
+            }
+            else
+            {
+                foreach (var u in Model)
+                {
+                    <tr>
+                        <td>@u.Username</td>
+                        <td>@u.FirstName</td>
+                        <td>@u.LastName</td>
+                        <td>@u.Email</td>
+                        <td>@u.Pesel</td>
+                        <td>@u.Status</td>
+                        <td>
+                            <a class="btn-secondary"
+                               asp-controller="Uzytkownicy"
+                               asp-action="UserDetails"
+                               asp-route-id="@u.Id">
+                                Szczegóły
+                            </a>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
 
-        <main class="main">
-            <header class="header">
-                <div class="info">
-                    <a href="#" id="akcja-wyloguj">Wyloguj</a>
-                    <a href="#">Konto</a>
-                    <a asp-controller="Home" asp-action="Index">Strona Główna</a>
-                </div>
-            </header>
-
-            <section class="zaw">
-                <a asp-controller="Uprawnienia" asp-action="Uprawnienia" class="back-link">
-                    ← Wróć do ról
-                </a>
-
-                <h2>Użytkownicy z rolą: @rola</h2>
-
-                <div class="tabelka-wyniki">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Login</th>
-                                <th>Imię</th>
-                                <th>Nazwisko</th>
-                                <th>Email</th>
-                                <th>PESEL</th>
-                                <th>Status</th>
-                                <th>Akcje</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @if (Model == null || Model.Count == 0)
-                            {
-                                <tr>
-                                    <td colspan="7" class="no-results">Brak użytkowników z tą rolą</td>
-                                </tr>
-                            }
-                            else
-                            {
-                                foreach (var u in Model)
-                                {
-                                    <tr>
-                                        <td>@u.Username</td>
-                                        <td>@u.FirstName</td>
-                                        <td>@u.LastName</td>
-                                        <td>@u.Email</td>
-                                        <td>@u.Pesel</td>
-                                        <td>@u.Status</td>
-                                        <td>
-                                            <a class="btn-secondary"
-                                               asp-controller="Uzytkownicy"
-                                               asp-action="UserDetails"
-                                               asp-route-id="@u.Id">
-                                                Szczegóły
-                                            </a>
-                                        </td>
-                                    </tr>
-                                }
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </section>
-        </main>
-    </div>
-</body>
-</html>
