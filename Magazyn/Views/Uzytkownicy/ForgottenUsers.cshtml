@@ -1,103 +1,63 @@
 @model List<Magazyn.Models.Dtos.ForgottenRowDto>
 @{
-    Layout = null;
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Magazyn GiTA - Użytkownicy zapomniani (RODO)";
+    ViewData["ActivePage"] = "ForgottenUsers";
 }
 
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Magazyn GiTA - Użytkownicy zapomniani (RODO)</title>
+<h2>Użytkownicy zapomniani (RODO)</h2>
 
-    <link rel="stylesheet" href="~/css/style.css" />
-</head>
+<div class="search-bar">
+    <form method="get" asp-controller="Uzytkownicy" asp-action="ForgottenUsers">
+        <div class="tabelka">
+            <div class="col-span-2">
+                <label for="fname">Imię i nazwisko (po zapomnieniu)</label>
+                <input type="text" id="fname" name="fname" value="@ViewBag.Fname" placeholder="np. Abc Xyz">
+            </div>
+            <div>
+                <label for="adminId">ID admina</label>
+                <input type="text" id="adminId" name="adminId" value="@ViewBag.AdminId" placeholder="np. 1">
+            </div>
+        </div>
 
-<body data-home-url='@Url.Action("Index", "Home")'>
-    <div class="Wrapper">
-        <aside class="panelbok">
-            <div class="logo"><h1>Magazyn GiTA</h1></div>
-            <nav class="gitanav">
-                <p>Zarządzanie użytkownikami</p>
-                <ul>
-                    <li><a asp-controller="Uzytkownicy" asp-action="AdminPanel">Przegląd personelu</a></li>
-                    <li><a asp-controller="Uzytkownicy" asp-action="Rejestracja">Rejestracja pracownika</a></li>
-                    <li><a asp-controller="Uzytkownicy" asp-action="ForgottenUsers" class="active">Użytkownicy zapomniani (RODO)</a></li>
-                    <li><a asp-controller="Uprawnienia" asp-action="Uprawnienia">Lista Uprawnień</a></li>
-                    <li><partial name="_LogoutLink" /></li>
-                </ul>
-            </nav>
-        </aside>
+        <div class="btn-group">
+            <button type="submit" class="btn-primary">Wyszukaj</button>
+            <a asp-controller="Uzytkownicy" asp-action="ForgottenUsers" class="btn-secondary">Wyczyść</a>
+        </div>
+    </form>
+</div>
 
-        <main class="main">
-            <header class="header">
-                <div class="info">
-                    <a href="#" id="akcja-wyloguj">Wyloguj</a>
-                    <a asp-controller="Home" asp-action="Index">Strona Główna</a>
-                </div>
-            </header>
-
-            <section class="zaw">
-                <h2>Użytkownicy zapomniani (RODO)</h2>
-
-                <div class="search-bar">
-                    <form method="get" asp-controller="Uzytkownicy" asp-action="ForgottenUsers">
-                        <div class="tabelka">
-                            <div class="col-span-2">
-                                <label for="fname">Imię i nazwisko (po zapomnieniu)</label>
-                                <input type="text" id="fname" name="fname" value="@ViewBag.Fname" placeholder="np. Abc Xyz">
-                            </div>
-                            <div>
-                                <label for="adminId">ID admina</label>
-                                <input type="text" id="adminId" name="adminId" value="@ViewBag.AdminId" placeholder="np. 1">
-                            </div>
-                        </div>
-
-                        <div class="btn-group">
-                            <button type="submit" class="btn-primary">Wyszukaj</button>
-                            <a asp-controller="Uzytkownicy" asp-action="ForgottenUsers" class="btn-secondary">Wyczyść</a>
-                        </div>
-                    </form>
-                </div>
-
-                <div class="tabelka-wyniki">
-                    <table>
-                        @* ... reszta pliku bez zmian ... *@
-<thead>
-    <tr>
-        <th>Identyfikator</th>
-        <th>Imię i nazwisko po zapomnieniu</th>
-        <th>Data zapomnienia</th>
-        @* ZMIENIONY NAGŁÓWEK *@
-        <th>Administrator wykonujący</th>
-        <th>Akcje</th>
-    </tr>
-</thead>
-<tbody>
-    @if (Model == null || Model.Count == 0)
-    {
-        @* ... brak wyników ... *@
-    }
-    else
-    {
-        foreach (var u in Model)
-        {
+<div class="tabelka-wyniki">
+    <table>
+        <thead>
             <tr>
-                <td>@u.Id</td>
-                <td>@u.FullNameAfterForget</td>
-                <td>@u.DataZapomnienia</td>
-                @* ZMIENIONA KOMÓRKA - zamiast ID wyświetlamy imię i nazwisko *@
-                <td><strong>@u.AdminName</strong></td>
-                <td><a class="btn-secondary" asp-controller="Uzytkownicy" asp-action="UserDetails" asp-route-id="@u.Id">Szczegóły</a></td>
+                <th>Identyfikator</th>
+                <th>Imię i nazwisko po zapomnieniu</th>
+                <th>Data zapomnienia</th>
+                <th>Administrator wykonujący</th>
+                <th>Akcje</th>
             </tr>
-        }
-    }
-</tbody>
-@* ... reszta pliku bez zmian ... *@
-                    </table>
-                </div>
-            </section>
-        </main>
-    </div>
-</body>
-</html>
+        </thead>
+        <tbody>
+            @if (Model == null || Model.Count == 0)
+            {
+                <tr>
+                    <td colspan="5" class="no-results">Brak wyników</td>
+                </tr>
+            }
+            else
+            {
+                foreach (var u in Model)
+                {
+                    <tr>
+                        <td>@u.Id</td>
+                        <td>@u.FullNameAfterForget</td>
+                        <td>@u.DataZapomnienia</td>
+                        <td><strong>@u.AdminName</strong></td>
+                        <td><a class="btn-secondary" asp-controller="Uzytkownicy" asp-action="UserDetails" asp-route-id="@u.Id">Szczegóły</a></td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

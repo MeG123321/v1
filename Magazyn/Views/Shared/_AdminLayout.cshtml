@@ -1,4 +1,4 @@
-﻿@{
+@{
     var activePage = ViewData["ActivePage"]?.ToString() ?? "";
     var userName = User.Identity?.Name ?? "";
 }
@@ -16,7 +16,36 @@
     <div class="Wrapper">
         <aside class="panelbok">
             <div class="logo"><h1>Magazyn GiTA</h1></div>
-                
+            <nav class="gitanav">
+                <p>Zarządzanie użytkownikami</p>
+                <ul>
+                    @if (User.IsInRole("Administrator") || User.IsInRole("Kierownik magazynu") || User.IsInRole("Kierownik sprzedazy"))
+                    {
+                        <li>
+                            <a asp-controller="Uzytkownicy" asp-action="AdminPanel"
+                               class="@(activePage == "AdminPanel" ? "active" : "")">Przegląd personelu</a>
+                        </li>
+                    }
+                    @if (User.IsInRole("Administrator") || User.IsInRole("Kierownik magazynu"))
+                    {
+                        <li>
+                            <a asp-controller="Uzytkownicy" asp-action="Rejestracja"
+                               class="@(activePage == "Rejestracja" ? "active" : "")">Rejestracja pracownika</a>
+                        </li>
+                    }
+                    @if (User.IsInRole("Administrator"))
+                    {
+                        <li>
+                            <a asp-controller="Uzytkownicy" asp-action="ForgottenUsers"
+                               class="@(activePage == "ForgottenUsers" ? "active" : "")">Użytkownicy zapomniani (RODO)</a>
+                        </li>
+                        <li>
+                            <a asp-controller="Uprawnienia" asp-action="Uprawnienia"
+                               class="@(activePage == "Uprawnienia" ? "active" : "")">Lista Uprawnień</a>
+                        </li>
+                    }
+                </ul>
+            </nav>
         </aside>
 
         <main class="main">

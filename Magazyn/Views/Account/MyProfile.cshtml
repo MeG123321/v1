@@ -1,0 +1,50 @@
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Magazyn GiTA - Mój profil";
+    ViewData["ActivePage"] = "";
+    var userName = User.Identity?.Name ?? "-";
+    var userEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? "-";
+    var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "-";
+    var roles = User.Claims
+        .Where(c => c.Type == System.Security.Claims.ClaimTypes.Role)
+        .Select(c => c.Value)
+        .ToList();
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert-success">@TempData["SuccessMessage"]</div>
+}
+
+<h2>Mój profil</h2>
+
+<div class="search-bar">
+    <div class="tabelka-wyniki" style="margin-bottom: 0;">
+        <table class="keyval">
+            <tbody>
+                <tr><th>Login</th><td><strong>@userName</strong></td></tr>
+                <tr><th>E-mail</th><td>@userEmail</td></tr>
+                <tr><th>ID konta</th><td>@userId</td></tr>
+                <tr>
+                    <th>Role</th>
+                    <td>
+                        @if (roles.Any())
+                        {
+                            @string.Join(", ", roles)
+                        }
+                        else
+                        {
+                            <span style="color: var(--error-red);">Brak przypisanej roli</span>
+                        }
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="btn-group" style="margin-top: 20px;">
+    <a asp-controller="Account" asp-action="ChangePassword" class="btn-primary">
+        Zmień hasło
+    </a>
+</div>

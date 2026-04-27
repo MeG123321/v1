@@ -6,94 +6,147 @@ using System.Data;
 
 namespace Magazyn.Controllers;
 
-[Authorize(Roles = "Administrator,Kierownik sprzedazy,Kierownik magazynu")]
+[Authorize]
 public class UprawnieniaController : Controller
 {
     private readonly IWebHostEnvironment _env;
-    public UprawnieniaController(IWebHostEnvironment env) => _env = env;
+    private readonly ILogger<UprawnieniaController> _logger;
+
+    public UprawnieniaController(IWebHostEnvironment env, ILogger<UprawnieniaController> logger)
+    {
+        _env = env;
+        _logger = logger;
+    }
+
     private string DbPath => Db.GetDbPath(_env);
 
+    private static string SL(string? value) =>
+        (value ?? "").Replace('\r', '_').Replace('\n', '_');
+
     [HttpGet]
-    public IActionResult Uprawnienia()
+    [Authorize(Roles = "Administrator")]
+    public IActionResult Uprawnienia(string[]? rola = null)
     {
+        // Czyszczenie i przygotowanie wybranych ról
+        var selectedRoles = rola?
+            .Where(r => !string.IsNullOrWhiteSpace(r))
+            .Select(r => r.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray() ?? Array.Empty<string>();
+
+        ViewBag.SelectedRoles = selectedRoles;
+
         var userList = new List<UserListRowDto>();
+        if (!System.IO.File.Exists(DbPath))
+            return View(userList);
+
         using var connection = Db.OpenConnection(DbPath);
         using var command = connection.CreateCommand();
-        command.CommandText = @"
-            SELECT u.id, u.username, u.firstName, u.LastName, u.Email,
+
+        // Podstawowe zapytanie - pobiera wszystkich użytkowników i łączy ich role w jeden ciąg
+        var sql = @"
+            SELECT u.id,
+                   u.username,
+                   u.firstName,
+                   u.LastName,
+                   u.Email,
+                   u.pesel,
+                   CASE WHEN u.Status = 1 THEN 'Aktywny' ELSE 'Nieaktywny' END AS Status,
                    COALESCE(GROUP_CONCAT(p.Nazwa, ', '), '-') AS Rola
             FROM Uzytkownicy u
             LEFT JOIN Uzytkownik_Uprawnienia uu ON uu.uzytkownik_id = u.id
             LEFT JOIN Uprawnienia p ON p.Id = uu.uprawnienie_id
-            WHERE COALESCE(u.czy_zapomniany, 0) = 0
-            GROUP BY u.id ORDER BY u.id";
+            WHERE COALESCE(u.czy_zapomniany, 0) = 0";
+
+        // Logika filtrowania AND: dla kazdej wybranej roli musi istniec przypisanie.
+        if (selectedRoles.Length > 0)
+        {
+            for (int i = 0; i < selectedRoles.Length; i++)
+            {
+                sql += $@"
+            AND EXISTS (
+                SELECT 1
+                FROM Uzytkownik_Uprawnienia uu2
+                JOIN Uprawnienia p2 ON p2.Id = uu2.uprawnienie_id
+                WHERE uu2.uzytkownik_id = u.id
+                  AND TRIM(p2.Nazwa) = TRIM($r{i})
+            )";
+
+                command.Parameters.AddWithValue($"$r{i}", selectedRoles[i]);
+            }
+        }
+
+        sql += @"
+            GROUP BY u.id, u.username, u.firstName, u.LastName, u.Email, u.pesel
+            ORDER BY u.id;";
+
+        command.CommandText = sql;
 
         using var dbReader = command.ExecuteReader();
-        while (dbReader.Read()) {
-            userList.Add(new UserListRowDto {
-                Id = Convert.ToInt64(dbReader["id"]),
-                Username = dbReader["username"]?.ToString(),
+        while (dbReader.Read())
+        {
+            userList.Add(new UserListRowDto
+            {
+                Id        = Convert.ToInt64(dbReader["id"]),
+                Username  = dbReader["username"]?.ToString(),
                 FirstName = dbReader["firstName"]?.ToString(),
-                LastName = dbReader["LastName"]?.ToString(),
-                Rola = dbReader["Rola"]?.ToString()
+                LastName  = dbReader["LastName"]?.ToString(),
+                Email     = dbReader["Email"]?.ToString(),
+                Pesel     = dbReader["pesel"]?.ToString(),
+                Status    = dbReader["Status"]?.ToString(),
+                Rola      = dbReader["Rola"]?.ToString()
             });
         }
+
         return View(userList);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Administrator")]
     public IActionResult SetRole(long id, string[]? rola = null)
     {
-        // 1. Przygotuj listę nowych ról z formularza
-        var newRoles = rola?.Where(r => !string.IsNullOrWhiteSpace(r))
-                           .Select(r => r.Trim())
-                           .Distinct()
-                           .ToList() ?? new List<string>();
-
-        // Blokada dla osób nie będących adminami
-        if (!User.IsInRole("Administrator")) {
-            newRoles.RemoveAll(r => r.Equals("Administrator", StringComparison.OrdinalIgnoreCase));
-        }
+        var selectedRoles = rola?
+            .Where(r => !string.IsNullOrWhiteSpace(r))
+            .Select(r => r.Trim())
+            .Distinct()
+            .ToArray() ?? Array.Empty<string>();
 
         using var connection = Db.OpenConnection(DbPath);
 
-        // 2. WAŻNE: Najpierw pobierz obecne role z bazy, ZANIM cokolwiek usuniesz
-        var oldRoles = new List<string>();
-        using (var cmd = connection.CreateCommand()) {
-            cmd.CommandText = "SELECT p.Nazwa FROM Uprawnienia p JOIN Uzytkownik_Uprawnienia uu ON p.Id = uu.uprawnienie_id WHERE uu.uzytkownik_id = $id";
-            cmd.Parameters.AddWithValue("$id", id);
-            using var r = cmd.ExecuteReader();
-            while (r.Read()) oldRoles.Add(r.GetString(0).Trim());
-        }
-
-        // 3. Porównaj zestawy ról
-        bool isIdentical = newRoles.Count == oldRoles.Count && 
-                          !newRoles.Except(oldRoles, StringComparer.OrdinalIgnoreCase).Any() &&
-                          !oldRoles.Except(newRoles, StringComparer.OrdinalIgnoreCase).Any();
-
-        if (isIdentical && newRoles.Count > 0)
+        using (var deleteCommand = connection.CreateCommand())
         {
-            TempData["Message"] = "Użytkownik już posiada wybrane role: " + string.Join(", ", oldRoles);
-            return RedirectToAction("Uprawnienia");
+            deleteCommand.CommandText = @"DELETE FROM Uzytkownik_Uprawnienia WHERE uzytkownik_id = $uzytkownikId;";
+            deleteCommand.Parameters.AddWithValue("$uzytkownikId", id);
+            deleteCommand.ExecuteNonQuery();
         }
 
-        // 4. Jeśli role są inne, wykonaj aktualizację
-        using (var del = connection.CreateCommand()) {
-            del.CommandText = "DELETE FROM Uzytkownik_Uprawnienia WHERE uzytkownik_id = $id";
-            del.Parameters.AddWithValue("$id", id);
-            del.ExecuteNonQuery();
+        foreach (var roleName in selectedRoles)
+        {
+            long permissionId;
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = @"SELECT Id FROM Uprawnienia WHERE TRIM(Nazwa) = TRIM($nazwaRoli) LIMIT 1;";
+                command.Parameters.AddWithValue("$nazwaRoli", roleName);
+                var scalar = command.ExecuteScalar();
+                if (scalar == null) continue;
+                permissionId = Convert.ToInt64(scalar);
+            }
+
+            using (var insertCommand = connection.CreateCommand())
+            {
+                insertCommand.CommandText = @"INSERT OR IGNORE INTO Uzytkownik_Uprawnienia (uprawnienie_id, uzytkownik_id) VALUES ($permissionId, $uzytkownikId);";
+                insertCommand.Parameters.AddWithValue("$permissionId", permissionId);
+                insertCommand.Parameters.AddWithValue("$uzytkownikId", id);
+                insertCommand.ExecuteNonQuery();
+            }
         }
 
-        foreach (var rName in newRoles) {
-            using var cmdIns = connection.CreateCommand();
-            cmdIns.CommandText = "INSERT INTO Uzytkownik_Uprawnienia (uzytkownik_id, uprawnienie_id) SELECT $uid, Id FROM Uprawnienia WHERE Nazwa = $n";
-            cmdIns.Parameters.AddWithValue("$uid", id);
-            cmdIns.Parameters.AddWithValue("$n", rName);
-            cmdIns.ExecuteNonQuery();
-        }
+        if (selectedRoles.Length > 0)
+            TempData["SuccessMessage"] = $"Uprawnienia zostały zapisane: {string.Join(", ", selectedRoles)}.";
+        else
+            TempData["SuccessMessage"] = "Wszystkie uprawnienia użytkownika zostały usunięte.";
 
-        TempData["Message"] = newRoles.Count > 0 ? "Nadano role: " + string.Join(", ", newRoles) : "Odebrano wszystkie uprawnienia.";
-        return RedirectToAction("Uprawnienia");
+        return RedirectToAction("UserDetails", "Uzytkownicy", new { id });
     }
 }

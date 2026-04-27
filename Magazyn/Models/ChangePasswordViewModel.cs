@@ -4,13 +4,15 @@ namespace Magazyn.Models;
 
 public class ChangePasswordViewModel
 {
-    [Required(ErrorMessage = "Nowe hasło jest wymagane")]
-    [MinLength(6, ErrorMessage = "Hasło musi mieć co najmniej 6 znaków")]
-    [DataType(DataType.Password)]
-    public string NewPassword { get; set; } = string.Empty;
+    [Required(ErrorMessage = "Hasło jest wymagane")]
+    // Kopiujemy StringLength z Twojego UserRegistrationDto
+    [StringLength(64, MinimumLength = 8, ErrorMessage = "Hasło musi mieć co najmniej 8 znaków")]
+    // Kopiujemy dokładnie ten sam Regex, który masz w rejestracji
+    [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$",
+        ErrorMessage = "Hasło musi zawierać: małą literę, dużą literę, cyfrę oraz znak specjalny")]
+    public string NewPassword { get; set; } = "";
 
     [Required(ErrorMessage = "Powtórzenie hasła jest wymagane")]
     [Compare("NewPassword", ErrorMessage = "Hasła nie są zgodne")]
-    [DataType(DataType.Password)]
-    public string ConfirmPassword { get; set; } = string.Empty;
+    public string ConfirmPassword { get; set; } = "";
 }

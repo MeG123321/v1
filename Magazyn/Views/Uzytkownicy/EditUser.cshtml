@@ -1,187 +1,145 @@
 @model Magazyn.Models.UserVm
 @{
-    Layout = null;
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Magazyn GiTA - Edycja pracownika";
+    ViewData["ActivePage"] = "AdminPanel";
 }
 
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Magazyn GiTA - Edycja pracownika</title>
-
-    <link rel="stylesheet" href="~/css/style.css" />
-    <script defer src="~/js/script.js"></script>
-</head>
-
-<body data-home-url='@Url.Action("Index", "Home")'>
-    <div class="Wrapper">
-        <aside class="panelbok">
-            <div class="logo"><h1>Magazyn GiTA</h1></div>
-            <nav class="gitanav">
-                <p>Zarządzanie użytkownikami</p>
-                <ul>
-                    <li><a asp-controller="Uzytkownicy" asp-action="AdminPanel" class="active">Przegląd personelu</a></li>
-                    <li><a asp-controller="Uzytkownicy" asp-action="Rejestracja">Rejestracja pracownika</a></li>
-                    
-                    @if (User.IsInRole("Administrator"))
-                    {
-                        <li><a asp-controller="Uzytkownicy" asp-action="ForgottenUsers">Użytkownicy zapomniani (RODO)</a></li>
-                    }
-                    
-                    <li><a asp-controller="Uprawnienia" asp-action="Uprawnienia">Lista Uprawnień</a></li>
-                    
-                    <li><partial name="_LogoutLink" /></li>
-                </ul>
-            </nav>
-        </aside>
-
-        <main class="main">
-            <header class="header">
-                <div class="info">
-                    <a href="#" id="akcja-wyloguj">Wyloguj</a>
-                    <a href="#">Konto</a>
-                    <a asp-controller="Home" asp-action="Index">Strona Główna</a>
-                </div>
-            </header>
-
-            <section class="zaw">
-                <a asp-controller="Uzytkownicy" asp-action="UserDetails" asp-route-id="@Model.Id" class="back-link">
-                    &larr; Wróć do szczegółów
-                </a>
-
-                <h2>Edycja użytkownika: @Model.FirstName @Model.LastName</h2>
-
-                <div class="search-bar">
-                    <form asp-controller="Uzytkownicy"
-                          asp-action="EditUser"
-                          asp-route-id="@Model.Id"
-                          method="post"
-                          class="form-rejestracja">
-                        @Html.AntiForgeryToken()
-
-                        <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
-
-                        <input type="hidden" asp-for="Id" />
-
-                        <h3 class="form-section-title">Dane pracownika</h3>
-                        <div class="tabelka">
-                            <div class="form-group">
-                                <label asp-for="Username">Login (5–20 znaków)</label>
-                                <input asp-for="Username" placeholder="np. mkowalski" />
-                                <span asp-validation-for="Username" class="field-error"></span>
-                            </div>
-
-                            <div class="form-group">
-                                <label asp-for="Password">Nowe hasło</label>
-                                <input asp-for="Password"
-                                       type="password"
-                                       autocomplete="new-password"
-                                       placeholder="Zostaw puste, jeśli bez zmian" />
-                                <span asp-validation-for="Password" class="field-error"></span>
-                            </div>
-
-                            <div class="form-group">
-                                <label asp-for="FirstName">Imię</label>
-                                <input asp-for="FirstName" placeholder="np. Marek" />
-                                <span asp-validation-for="FirstName" class="field-error"></span>
-                            </div>
-
-                            <div class="form-group">
-                                <label asp-for="LastName">Nazwisko</label>
-                                <input asp-for="LastName" placeholder="np. Kowalski" />
-                                <span asp-validation-for="LastName" class="field-error"></span>
-                            </div>
-
-                            <div class="form-group">
-                                <label asp-for="Email">Email</label>
-                                <input asp-for="Email" placeholder="np. jan.kowalski@gmail.com" />
-                                <span asp-validation-for="Email" class="field-error"></span>
-                            </div>
-
-                            <div class="form-group">
-                                <label asp-for="Pesel">PESEL</label>
-                                <input asp-for="Pesel" maxlength="11" inputmode="numeric" placeholder="11 cyfr" />
-                                <span asp-validation-for="Pesel" class="field-error"></span>
-                            </div>
-
-                            <div class="form-group">
-                                <label asp-for="DataUrodzenia">Data urodzenia</label>
-                                <input asp-for="DataUrodzenia" type="date" />
-                                <span asp-validation-for="DataUrodzenia" class="field-error"></span>
-                            </div>
-
-                            <div class="form-group">
-                                <label asp-for="NrTelefonu">Nr telefonu</label>
-                                <input asp-for="NrTelefonu" maxlength="9" inputmode="numeric" placeholder="9 cyfr" />
-                                <span asp-validation-for="NrTelefonu" class="field-error"></span>
-                            </div>
-
-                            <div class="form-group">
-                                <label asp-for="Plec">Płeć</label>
-                                <select asp-for="Plec">
-                                    <option value="">Wybierz...</option>
-                                    <option value="Kobieta">Kobieta</option>
-                                    <option value="Mężczyzna">Mężczyzna</option>
-                                </select>
-                                <span asp-validation-for="Plec" class="field-error"></span>
-                            </div>
-
-                            <div class="form-group">
-                                <label asp-for="Status">Status konta</label>
-                                <select asp-for="Status">
-                                    <option value="Aktywny">Aktywny</option>
-                                    <option value="Nieaktywny">Nieaktywny</option>
-                                </select>
-                                <span asp-validation-for="Status" class="field-error"></span>
-                            </div>
-                        </div>
-
-                        <h3 class="form-section-title">Adres zamieszkania</h3>
-                        <div class="tabelka">
-                            <div class="form-group">
-                                <label asp-for="Miejscowosc">Miejscowość</label>
-                                <input asp-for="Miejscowosc" placeholder="np. Warszawa" />
-                                <span asp-validation-for="Miejscowosc" class="field-error"></span>
-                            </div>
-
-                            <div class="form-group">
-                                <label asp-for="KodPocztowy">Kod pocztowy</label>
-                                <input asp-for="KodPocztowy" placeholder="00-000" />
-                                <span asp-validation-for="KodPocztowy" class="field-error"></span>
-                            </div>
-
-                            <div class="form-group">
-                                <label asp-for="Ulica">Ulica (opcjonalnie)</label>
-                                <input asp-for="Ulica" placeholder="np. Marszałkowska" />
-                                <span asp-validation-for="Ulica" class="field-error"></span>
-                            </div>
-
-                            <div class="form-group">
-                                <label asp-for="NrPosesji">Nr posesji</label>
-                                <input asp-for="NrPosesji" placeholder="np. 12A" />
-                                <span asp-validation-for="NrPosesji" class="field-error"></span>
-                            </div>
-
-                            <div class="form-group">
-                                <label asp-for="NrLokalu">Nr lokalu (opcjonalnie)</label>
-                                <input asp-for="NrLokalu" placeholder="np. 5" />
-                                <span asp-validation-for="NrLokalu" class="field-error"></span>
-                            </div>
-                        </div>
-
-                        <div class="btn-group-final">
-                            <button type="submit" class="btn-primary">Zapisz zmiany</button>
-                            <a asp-controller="Uzytkownicy" asp-action="UserDetails" asp-route-id="@Model.Id" class="btn-secondary">Anuluj</a>
-                        </div>
-                    </form>
-                </div>
-            </section>
-        </main>
-    </div>
-
+@section Scripts {
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.3/jquery.validate.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validation-unobtrusive/3.2.12/jquery.validate.unobtrusive.min.js"></script>
-</body>
-</html>
+}
+
+<a asp-controller="Uzytkownicy" asp-action="UserDetails" asp-route-id="@Model.Id" class="back-link">
+    &larr; Wróć do szczegółów
+</a>
+
+<h2>Edycja użytkownika: @Model.FirstName @Model.LastName</h2>
+
+<div class="search-bar">
+    <form asp-controller="Uzytkownicy"
+          asp-action="EditUser"
+          method="post"
+          class="form-rejestracja">
+        @Html.AntiForgeryToken()
+
+        <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+
+        <input type="hidden" asp-for="Id" />
+
+        @* --- SEKCJA 1: DANE OSOBOWE --- *@
+        <h3 class="form-section-title">Dane pracownika</h3>
+        <div class="tabelka">
+            <div class="form-group">
+                <label asp-for="Username">Login (5–20 znaków)</label>
+                <input asp-for="Username" placeholder="np. mkowalski" />
+                <span asp-validation-for="Username" class="field-error"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Password">Hasło</label>
+                <input asp-for="Password"
+                       type="password"
+                       value=""
+                       autocomplete="new-password"
+                       placeholder="Zostaw puste, jeśli nie zmieniasz" />
+                <span asp-validation-for="Password" class="field-error"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="FirstName">Imię</label>
+                <input asp-for="FirstName" placeholder="np. Marek" />
+                <span asp-validation-for="FirstName" class="field-error"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="LastName">Nazwisko</label>
+                <input asp-for="LastName" placeholder="np. Kowalski" />
+                <span asp-validation-for="LastName" class="field-error"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Email">Email</label>
+                <input asp-for="Email" placeholder="np. jan.kowalski@gmail.com" />
+                <span asp-validation-for="Email" class="field-error"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Pesel">PESEL</label>
+                <input asp-for="Pesel" maxlength="11" inputmode="numeric" placeholder="11 cyfr" />
+                <span asp-validation-for="Pesel" class="field-error"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="DataUrodzenia">Data urodzenia</label>
+                <input asp-for="DataUrodzenia" type="date" />
+                <span asp-validation-for="DataUrodzenia" class="field-error"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="NrTelefonu">Nr telefonu</label>
+                <input asp-for="NrTelefonu" maxlength="9" inputmode="numeric" placeholder="9 cyfr" />
+                <span asp-validation-for="NrTelefonu" class="field-error"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Plec">Płeć</label>
+                <select asp-for="Plec">
+                    <option value="">Wybierz...</option>
+                    <option value="Kobieta">Kobieta</option>
+                    <option value="Mężczyzna">Mężczyzna</option>
+                </select>
+                <span asp-validation-for="Plec" class="field-error"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Status">Status konta</label>
+                <select asp-for="Status">
+                    <option value="Aktywny">Aktywny</option>
+                    <option value="Nieaktywny">Nieaktywny</option>
+                </select>
+                <span asp-validation-for="Status" class="field-error"></span>
+            </div>
+        </div>
+
+        @* --- SEKCJA 2: ADRES --- *@
+        <h3 class="form-section-title">Adres zamieszkania</h3>
+        <div class="tabelka">
+            <div class="form-group">
+                <label asp-for="Miejscowosc">Miejscowość</label>
+                <input asp-for="Miejscowosc" placeholder="np. Warszawa" />
+                <span asp-validation-for="Miejscowosc" class="field-error"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="KodPocztowy">Kod pocztowy</label>
+                <input asp-for="KodPocztowy" placeholder="00-000" />
+                <span asp-validation-for="KodPocztowy" class="field-error"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="Ulica">Ulica (opcjonalnie)</label>
+                <input asp-for="Ulica" placeholder="np. Marszałkowska" />
+                <span asp-validation-for="Ulica" class="field-error"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="NrPosesji">Nr posesji</label>
+                <input asp-for="NrPosesji" placeholder="np. 12A" />
+                <span asp-validation-for="NrPosesji" class="field-error"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="NrLokalu">Nr lokalu (opcjonalnie)</label>
+                <input asp-for="NrLokalu" placeholder="np. 5" />
+                <span asp-validation-for="NrLokalu" class="field-error"></span>
+            </div>
+        </div>
+
+        <div class="btn-group" style="margin-top: 20px;">
+            <button type="submit" class="btn-primary">Zapisz zmiany</button>
+            <a asp-controller="Uzytkownicy" asp-action="UserDetails" asp-route-id="@Model.Id" class="btn-secondary">Anuluj</a>
+        </div>
+    </form>
+</div>

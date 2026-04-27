@@ -517,3 +517,26 @@ td {
 .close-x:hover {
     color: var(--accent-blue);
 }
+/* ========================= 
+   ALERTS / NOTIFICATIONS
+========================= */
+.alert-success {
+    background-color: rgba(87, 171, 90, 0.15);
+    color: var(--status-green);
+    padding: 15px 20px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    border: 1px solid var(--status-green);
+    font-weight: bold;
+}
+
+/* SECTION TITLES (forms) */
+.form-section-title {
+    color: var(--accent-blue);
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 24px 0 12px 0;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border-color);
+}

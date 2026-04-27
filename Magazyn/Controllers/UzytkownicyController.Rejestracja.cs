@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Magazyn.Data;
 using Magazyn.Models;
@@ -7,6 +8,7 @@ namespace Magazyn.Controllers;
 public partial class UzytkownicyController : Controller
 {
     [HttpGet]
+    [Authorize(Roles = "Administrator,Kierownik magazynu")]
     public IActionResult Rejestracja() => View();
 
     // --- METODY WALIDACJI ZDALNEJ (Remote Validation) ---
@@ -68,6 +70,7 @@ public partial class UzytkownicyController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Administrator,Kierownik magazynu")]
     public IActionResult Rejestracja(UserRegistrationDto dto)
     {
         // 1. Walidacja modelu (na podstawie atrybutów w DTO)
