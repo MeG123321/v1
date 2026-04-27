@@ -51,7 +51,11 @@ public class AccountController : Controller
             ModelState.AddModelError("", "Niepoprawny login lub hasło");
             return View(model);
         }
-
+       if (user.Status == 0)
+{
+    ModelState.AddModelError("", "Twoje konto jest nieaktywne.");
+    return View(model);
+}
         // Sprawdzenie blokady czasowej
         if (user.BlokadaDo.HasValue && user.BlokadaDo.Value > DateTime.Now)
         {
@@ -179,24 +183,66 @@ public class AccountController : Controller
     public IActionResult ChangePassword() => View();
 
     [HttpPost]
-    [ValidateAntiForgeryToken]
-    public IActionResult ChangePassword(ChangePasswordViewModel model)
+[ValidateAntiForgeryToken]
+public IActionResult ChangePassword(ChangePasswordViewModel model)
+{
+    if (!ModelState.IsValid) return View(model);
+
+    var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
+    if (userIdClaim is null) return RedirectToAction("Login");
+
+    long userId = Convert.ToInt64(userIdClaim.Value);
+
+    using var connection = Db.OpenConnection(DbPath);
+
+    // 1) SPRAWDŹ 3 OSTATNIE HASŁA
+    if (WasPasswordUsedRecently(connection, userId, model.NewPassword, 3))
     {
-        if (!ModelState.IsValid) return View(model);
-
-        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier);
-        if (userIdClaim is null) return RedirectToAction("Login");
-
-        using var connection = Db.OpenConnection(DbPath);
-        UpdatePasswordInDb(connection, Convert.ToInt64(userIdClaim.Value), model.NewPassword, false);
-
-        return RedirectToAction("AdminPanel", "Uzytkownicy");
+        ModelState.AddModelError("", "Nowe hasło musi różnić się od 3 ostatnich haseł");
+        return View(model);
     }
 
+    // 2) ZMIEŃ HASŁO + ZAPISZ HISTORIĘ
+    UpdatePasswordInDb(connection, userId, model.NewPassword, false);
+
+    return RedirectToAction("AdminPanel", "Uzytkownicy");
+}
     // ==========================================
     // METODY POMOCNICZE
     // ==========================================
+private bool WasPasswordUsedRecently(System.Data.IDbConnection conn, long userId, string newPassword, int lastN)
+{
+    using var cmd = conn.CreateCommand();
+    cmd.CommandText = @"
+        SELECT haslo_hash
+        FROM Historia_Hasel
+        WHERE uzytkownik_id = $uid
+        ORDER BY datetime(data_nadania) DESC
+        LIMIT $n";
 
+    // Usuwamy te błędne linie i używamy czytelnego podejścia:
+    
+    // Parametr 1: ID użytkownika
+    var pUid = cmd.CreateParameter();
+    pUid.ParameterName = "$uid";
+    pUid.Value = userId;
+    cmd.Parameters.Add(pUid);
+
+    // Parametr 2: Limit N haseł
+    var pN = cmd.CreateParameter();
+    pN.ParameterName = "$n";
+    pN.Value = lastN;
+    cmd.Parameters.Add(pN);
+
+    using var r = cmd.ExecuteReader();
+    while (r.Read())
+    {
+        var oldPass = r["haslo_hash"]?.ToString() ?? "";
+        if (oldPass == newPassword)
+            return true;
+    }
+    return false;
+}
     private void UpdatePasswordInDb(System.Data.IDbConnection conn, long userId, string pass, bool isTemp)
     {
         using var cmd = conn.CreateCommand();
@@ -207,7 +253,18 @@ public class AccountController : Controller
         var p3 = cmd.CreateParameter(); p3.ParameterName = "$id"; p3.Value = userId; cmd.Parameters.Add(p3);
         
         cmd.ExecuteNonQuery();
+
+        using (var hist = conn.CreateCommand())
+{
+    hist.CommandText = @"
+    INSERT INTO Historia_Hasel (uzytkownik_id, haslo_hash, data_nadania)
+    VALUES ($uid, $pass, datetime('now'))";
+    var h1 = hist.CreateParameter(); h1.ParameterName = "$uid";  h1.Value = userId; hist.Parameters.Add(h1);
+    var h2 = hist.CreateParameter(); h2.ParameterName = "$pass"; h2.Value = pass;   hist.Parameters.Add(h2);
+    hist.ExecuteNonQuery();
+}
     }
+    
 
    private async Task<bool> SendEmail(string targetEmail, string password)
 {
@@ -239,25 +296,33 @@ public class AccountController : Controller
     }
 }
 
-    private UserAuthDto? GetUserForAuth(System.Data.IDbConnection conn, string login)
-    {
-        using var cmd = conn.CreateCommand();
-        cmd.CommandText = "SELECT id, username, Email, Password, liczba_blednych_logowan, blokada_do, czy_haslo_tymczasowe FROM Uzytkownicy WHERE LOWER(username) = LOWER($login) AND czy_zapomniany = 0 LIMIT 1";
-        var p = cmd.CreateParameter(); p.ParameterName = "$login"; p.Value = login.Trim(); cmd.Parameters.Add(p);
-        
-        using var r = cmd.ExecuteReader();
-        if (!r.Read()) return null;
+   private UserAuthDto? GetUserForAuth(System.Data.IDbConnection conn, string login)
+{
+    using var cmd = conn.CreateCommand();
+    cmd.CommandText = @"
+SELECT id, username, Email, Password,
+       liczba_blednych_logowan, blokada_do, czy_haslo_tymczasowe,
+       Status
+FROM Uzytkownicy
+WHERE LOWER(username) = LOWER($login)
+  AND czy_zapomniany = 0
+LIMIT 1";
+    var p = cmd.CreateParameter(); p.ParameterName = "$login"; p.Value = login.Trim(); cmd.Parameters.Add(p);
 
-        return new UserAuthDto {
-            Id = Convert.ToInt64(r["id"]),
-            Username = r["username"].ToString()!,
-            Email = r["Email"].ToString()!,
-            Password = r["Password"].ToString()!,
-            LiczbaBledow = Convert.ToInt32(r["liczba_blednych_logowan"]),
-            BlokadaDo = r["blokada_do"] is DBNull ? null : DateTime.Parse(r["blokada_do"].ToString()!),
-            CzyHasloTymczasowe = Convert.ToInt32(r["czy_haslo_tymczasowe"]) == 1
-        };
-    }
+    using var r = cmd.ExecuteReader();
+    if (!r.Read()) return null;
+
+    return new UserAuthDto {
+        Id = Convert.ToInt64(r["id"]),
+        Username = r["username"].ToString()!,
+        Email = r["Email"].ToString()!,
+        Password = r["Password"].ToString()!,
+        LiczbaBledow = Convert.ToInt32(r["liczba_blednych_logowan"]),
+        BlokadaDo = r["blokada_do"] is DBNull ? null : DateTime.Parse(r["blokada_do"].ToString()!),
+        CzyHasloTymczasowe = Convert.ToInt32(r["czy_haslo_tymczasowe"]) == 1,
+        Status = r["Status"] is DBNull ? 0 : Convert.ToInt32(r["Status"])
+    };
+}
 
     private void HandleFailedLogin(System.Data.IDbConnection conn, UserAuthDto user)
     {
@@ -316,4 +381,6 @@ public class UserAuthDto
     public int LiczbaBledow { get; set; }
     public DateTime? BlokadaDo { get; set; }
     public bool CzyHasloTymczasowe { get; set; }
+
+    public int Status { get; set; }
 }
