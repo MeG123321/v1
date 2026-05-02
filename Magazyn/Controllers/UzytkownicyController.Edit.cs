@@ -104,6 +104,12 @@ public partial class UzytkownicyController : Controller
         viewModel.Ulica = (viewModel.Ulica ?? "").Trim();
         viewModel.NrLokalu = (viewModel.NrLokalu ?? "").Trim();
 
+        if (!TryValidatePeselConsistency(viewModel.Pesel, viewModel.DataUrodzenia, viewModel.Plec, out var peselError))
+        {
+            ModelState.AddModelError(nameof(viewModel.Pesel), peselError);
+            return View(viewModel);
+        }
+
         var dataUrodzeniaStr = viewModel.DataUrodzenia?.ToString("yyyy-MM-dd");
 
         using var connection = Db.OpenConnection(DbPath);
