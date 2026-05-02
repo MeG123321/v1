@@ -49,17 +49,14 @@
                 {
                     <p>Zarządzanie magazynem</p>
                     <ul>
-                        @if (User.IsInRole("Administrator") || User.IsInRole("Kierownik magazynu") || User.IsInRole("Pracownik magazynu"))
-                        {
-                            <li>
-                                <a asp-controller="Magazyn" asp-action="RejestracjaTowaru"
-                                   class="@(activePage == "RejestracjaTowaru" ? "active" : "")">Rejestracja towaru</a>
-                            </li>
-                            <li>
-                                <a asp-controller="Magazyn" asp-action="StanyMagazynowe"
-                                   class="@(activePage == "StanyMagazynowe" ? "active" : "")">Stany magazynowe</a>
-                            </li>
-                        }
+                        <li>
+                            <a asp-controller="Magazyn" asp-action="RejestracjaTowaru"
+                               class="@(activePage == "RejestracjaTowaru" ? "active" : "")">Rejestracja towaru</a>
+                        </li>
+                        <li>
+                            <a asp-controller="Magazyn" asp-action="StanyMagazynowe"
+                               class="@(activePage == "StanyMagazynowe" ? "active" : "")">Stany magazynowe</a>
+                        </li>
                         @if (User.IsInRole("Administrator") || User.IsInRole("Kierownik magazynu"))
                         {
                             <li>

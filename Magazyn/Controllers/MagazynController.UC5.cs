@@ -89,7 +89,7 @@ VALUES ($zakres, $towarId, $rodzajId, $vatId, $data, datetime('now'), $userId)";
             cmd.ExecuteNonQuery();
         }
 
-        TempData["SuccessMessage"] = $"Stawka VAT została zaktualizowana i będzie obowiązywać od dnia {vm.DataObowiazywania}";
+        TempData["SuccessMessage"] = $"Zmiana stawki VAT została zaplanowana i zacznie obowiązywać od dnia {vm.DataObowiazywania}";
         return RedirectToAction(nameof(StanyMagazynowe));
     }
 }
