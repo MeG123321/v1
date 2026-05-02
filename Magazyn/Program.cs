@@ -18,6 +18,10 @@ builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.Cookies.C
 
 var app = builder.Build();
 
+// Initialize warehouse database tables
+var dbPath = Magazyn.Data.Db.GetDbPath(app.Environment);
+Magazyn.Data.DbInit.EnsureTables(dbPath);
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
