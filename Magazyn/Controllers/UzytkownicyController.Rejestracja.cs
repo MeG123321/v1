@@ -101,6 +101,12 @@ public partial class UzytkownicyController : Controller
         dto.Ulica = (dto.Ulica ?? "").Trim();
         dto.NrLokalu = (dto.NrLokalu ?? "").Trim();
 
+        if (!TryValidatePeselConsistency(dto.Pesel, dto.DataUrodzenia, dto.Plec, out var peselError))
+        {
+            ModelState.AddModelError(nameof(dto.Pesel), peselError);
+            return View(dto);
+        }
+
         var dataUrodzeniaStr = dto.DataUrodzenia?.ToString("yyyy-MM-dd");
 
         using var connection = Db.OpenConnection(DbPath);
