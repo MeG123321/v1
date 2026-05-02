@@ -11,6 +11,8 @@ public partial class UzytkownicyController : Controller
 {
     private const int GenderFemale = 0;
     private const int GenderMale = 1;
+    private const string GenderFemaleText = "Kobieta";
+    private const string GenderMaleText = "Mężczyzna";
 
     private readonly IWebHostEnvironment _env;
     private readonly ILogger<UzytkownicyController> _logger;
@@ -29,7 +31,7 @@ public partial class UzytkownicyController : Controller
     private static int PlecToInt(string? genderText)
     {
         if (string.IsNullOrWhiteSpace(genderText)) return GenderFemale;
-        return genderText.Trim().Equals("Mężczyzna", StringComparison.OrdinalIgnoreCase) ? GenderMale : GenderFemale;
+        return genderText.Trim().Equals(GenderMaleText, StringComparison.OrdinalIgnoreCase) ? GenderMale : GenderFemale;
     }
 
     private static int StatusToInt(string? statusText)
@@ -38,7 +40,7 @@ public partial class UzytkownicyController : Controller
         return statusText.Trim().Equals("Aktywny", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
     }
 
-    private static string PlecToText(int genderValue) => genderValue == GenderMale ? "Mężczyzna" : "Kobieta";
+    private static string PlecToText(int genderValue) => genderValue == GenderMale ? GenderMaleText : GenderFemaleText;
 
     private static string StatusToText(object dbValue)
     {
@@ -123,25 +125,24 @@ public partial class UzytkownicyController : Controller
             return false;
         }
 
-        bool mismatch = false;
         if (dataUrodzenia.HasValue && peselBirthDate != dataUrodzenia.Value)
-            mismatch = true;
+        {
+            error = "PESEL nie zgadza się z płcią lub datą urodzenia.";
+            return false;
+        }
 
         if (!string.IsNullOrWhiteSpace(plec))
         {
             var plecTrimmed = plec.Trim();
-            bool selectedMale = plecTrimmed.Equals("Mężczyzna", StringComparison.OrdinalIgnoreCase);
-            bool selectedFemale = plecTrimmed.Equals("Kobieta", StringComparison.OrdinalIgnoreCase);
+            bool selectedMale = plecTrimmed.Equals(GenderMaleText, StringComparison.OrdinalIgnoreCase);
+            bool selectedFemale = plecTrimmed.Equals(GenderFemaleText, StringComparison.OrdinalIgnoreCase);
             bool peselMale = peselGender == GenderMale;
 
             if ((selectedMale && !peselMale) || (selectedFemale && peselMale))
-                mismatch = true;
-        }
-
-        if (mismatch)
-        {
-            error = "PESEL nie zgadza się z płcią lub datą urodzenia.";
-            return false;
+            {
+                error = "PESEL nie zgadza się z płcią lub datą urodzenia.";
+                return false;
+            }
         }
 
         return true;
