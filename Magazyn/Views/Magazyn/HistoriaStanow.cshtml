@@ -1,0 +1,82 @@
+@model Magazyn.Models.HistoriaStanowVm
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Historia stanów - " + Model.NazwaTowaru;
+    ViewData["ActivePage"] = "StanyMagazynowe";
+}
+
+<a asp-action="StanyMagazynowe" class="back-link">← Powrót do stanów magazynowych</a>
+
+<h2>Historia stanów: @Model.NazwaTowaru</h2>
+
+<div class="search-bar">
+    <form method="get" asp-action="HistoriaStanow">
+        <input type="hidden" name="id" value="@Model.TowarId" />
+        <div class="tabelka">
+            <div>
+                <label for="dataOd">Data od</label>
+                <input type="date" id="dataOd" name="dataOd" value="@Model.DataOd" />
+            </div>
+            <div>
+                <label for="dataDo">Data do</label>
+                <input type="date" id="dataDo" name="dataDo" value="@Model.DataDo" />
+            </div>
+            <div>
+                <label for="pracownikId">Pracownik</label>
+                <select id="pracownikId" name="pracownikId">
+                    <option value="">-- Wszyscy --</option>
+                    @foreach (var p in Model.Pracownicy)
+                    {
+                        if (Model.PracownikId == p.Id)
+                        {
+                            <option value="@p.Id" selected>@p.ImieNazwisko</option>
+                        }
+                        else
+                        {
+                            <option value="@p.Id">@p.ImieNazwisko</option>
+                        }
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="btn-group">
+            <button type="submit" class="btn-primary">Filtruj</button>
+            <a asp-action="HistoriaStanow" asp-route-id="@Model.TowarId" class="btn-secondary">Wyczyść</a>
+        </div>
+    </form>
+</div>
+
+<div class="tabelka-wyniki">
+    <table>
+        <thead>
+            <tr>
+                <th>Data rejestracji</th>
+                <th>Pracownik</th>
+                <th>Ilość</th>
+                <th>Akcje</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Historia.Count == 0)
+            {
+                <tr>
+                    <td colspan="4" class="no-results">Brak historii dla wybranego towaru w podanym zakresie</td>
+                </tr>
+            }
+            else
+            {
+                foreach (var h in Model.Historia)
+                {
+                    <tr>
+                        <td>@h.DataRejestracji</td>
+                        <td>@h.ImieNazwisko</td>
+                        <td>@h.Ilosc.ToString("G29")</td>
+                        <td>
+                            <a class="btn-secondary" asp-action="SzczegolyRejestracji" asp-route-id="@h.Id">Szczegóły</a>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

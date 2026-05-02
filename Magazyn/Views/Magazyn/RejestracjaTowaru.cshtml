@@ -1,0 +1,92 @@
+@model Magazyn.Models.RejestracjaTowaruVm
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Rejestracja towaru";
+    ViewData["ActivePage"] = "RejestracjaTowaru";
+}
+
+<h2>Rejestracja towaru</h2>
+
+@if (!string.IsNullOrEmpty(TempData["ErrorMessage"]?.ToString()))
+{
+    <div class="validation-summary">@TempData["ErrorMessage"]</div>
+}
+
+<div class="search-bar">
+    <form asp-action="RejestracjaTowaru" method="post">
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+
+        <div class="tabelka">
+            <div class="form-group">
+                <label asp-for="NazwaTowaru">Nazwa towaru *</label>
+                <input asp-for="NazwaTowaru" type="text" placeholder="Podaj nazwę towaru" />
+                <span asp-validation-for="NazwaTowaru" class="field-error"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="RodzajId">Rodzaj towaru *</label>
+                <select asp-for="RodzajId">
+                    <option value="0">-- Wybierz rodzaj --</option>
+                    @foreach (var r in Model.Rodzaje)
+                    {
+                        <option value="@r.Id">@r.Nazwa</option>
+                    }
+                </select>
+                <span asp-validation-for="RodzajId" class="field-error"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="JednostkaMiaryId">Jednostka miary *</label>
+                <select asp-for="JednostkaMiaryId">
+                    <option value="0">-- Wybierz jednostkę --</option>
+                    @foreach (var jm in Model.JednostkiMiary)
+                    {
+                        <option value="@jm.Id">@jm.Nazwa (@jm.Skrot)</option>
+                    }
+                </select>
+                <span asp-validation-for="JednostkaMiaryId" class="field-error"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="Ilosc">Ilość *</label>
+                <input asp-for="Ilosc" type="number" step="0.001" min="0.001" placeholder="0" />
+                <span asp-validation-for="Ilosc" class="field-error"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CenaNetto">Cena netto *</label>
+                <input asp-for="CenaNetto" type="number" step="0.01" min="0.01" placeholder="0.00" />
+                <span asp-validation-for="CenaNetto" class="field-error"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="StawkaVatId">Stawka VAT *</label>
+                <select asp-for="StawkaVatId">
+                    <option value="0">-- Wybierz stawkę VAT --</option>
+                    @foreach (var sv in Model.StawkiVat)
+                    {
+                        <option value="@sv.Id">@sv.Nazwa</option>
+                    }
+                </select>
+                <span asp-validation-for="StawkaVatId" class="field-error"></span>
+            </div>
+            <div class="form-group col-span-2">
+                <label asp-for="Opis">Opis</label>
+                <input asp-for="Opis" type="text" placeholder="Opcjonalny opis" />
+            </div>
+            <div class="form-group">
+                <label asp-for="Dostawca">Dostawca</label>
+                <input asp-for="Dostawca" type="text" placeholder="Nazwa firmy dostawcy" />
+            </div>
+            <div class="form-group">
+                <label asp-for="DataDostawy">Data dostawy</label>
+                <input asp-for="DataDostawy" type="date" />
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <button type="submit" class="btn-primary">Zapisz</button>
+            <a asp-action="StanyMagazynowe" class="btn-secondary">Anuluj</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

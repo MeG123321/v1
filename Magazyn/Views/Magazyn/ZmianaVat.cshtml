@@ -1,0 +1,58 @@
+@model Magazyn.Models.ZmianaVatVm
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Zmiana stawki VAT";
+    ViewData["ActivePage"] = "StanyMagazynowe";
+}
+
+<a asp-action="StanyMagazynowe" class="back-link">← Powrót do stanów magazynowych</a>
+
+<h2>Zmiana stawki VAT</h2>
+
+<div class="search-bar" style="max-width:500px;">
+    @if (Model.Zakres == "TOWAR" && !string.IsNullOrEmpty(Model.NazwaTowaru))
+    {
+        <p style="color:var(--text-main);margin-bottom:20px;">Towar: <strong style="color:var(--text-bright);">@Model.NazwaTowaru</strong></p>
+    }
+    else if (Model.Zakres == "RODZAJ" && !string.IsNullOrEmpty(Model.NazwaRodzaju))
+    {
+        <p style="color:var(--text-main);margin-bottom:20px;">Rodzaj towaru: <strong style="color:var(--text-bright);">@Model.NazwaRodzaju</strong> (zmiana dla wszystkich towarów tego rodzaju)</p>
+    }
+
+    <form asp-action="ZmianaVat" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Zakres" />
+        <input type="hidden" asp-for="TowarId" />
+        <input type="hidden" asp-for="RodzajId" />
+
+        <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+
+        <div class="tabelka">
+            <div class="form-group">
+                <label asp-for="NowaStawkaVatId">Nowa stawka VAT *</label>
+                <select asp-for="NowaStawkaVatId">
+                    <option value="0">-- Wybierz stawkę --</option>
+                    @foreach (var sv in Model.StawkiVat)
+                    {
+                        <option value="@sv.Id">@sv.Nazwa</option>
+                    }
+                </select>
+                <span asp-validation-for="NowaStawkaVatId" class="field-error"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="DataObowiazywania">Data obowiązywania *</label>
+                <input asp-for="DataObowiazywania" type="date" />
+                <span asp-validation-for="DataObowiazywania" class="field-error"></span>
+            </div>
+        </div>
+
+        <div class="btn-group mt-30">
+            <button type="submit" class="btn-primary">Zapisz</button>
+            <a asp-action="StanyMagazynowe" class="btn-secondary">Anuluj</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

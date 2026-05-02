@@ -1,0 +1,104 @@
+@model List<Magazyn.Models.TowarRodzajVm>
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Rodzaje towarów";
+    ViewData["ActivePage"] = "RodzajeTowaru";
+}
+
+<h2>Rodzaje towarów</h2>
+
+@if (!string.IsNullOrEmpty(TempData["SuccessMessage"]?.ToString()))
+{
+    <div style="background:rgba(87,171,90,0.12);border:1px solid var(--status-green);border-radius:6px;color:var(--status-green);padding:15px;margin-bottom:20px;">
+        @TempData["SuccessMessage"]
+    </div>
+}
+@if (!string.IsNullOrEmpty(TempData["ErrorMessage"]?.ToString()))
+{
+    <div class="validation-summary">@TempData["ErrorMessage"]</div>
+}
+
+<div class="search-bar" style="max-width:500px;margin-bottom:20px;">
+    <p style="color:#768390;font-size:12px;font-weight:bold;text-transform:uppercase;margin-bottom:15px;">Dodaj nowy rodzaj</p>
+    <form method="post" asp-action="DodajRodzaj">
+        @Html.AntiForgeryToken()
+        <div class="tabelka">
+            <div class="form-group">
+                <label for="nazwa">Nazwa rodzaju *</label>
+                <input type="text" id="nazwa" name="nazwa" placeholder="Podaj nazwę rodzaju towaru" />
+            </div>
+        </div>
+        <div class="btn-group">
+            <button type="submit" class="btn-primary">Dodaj</button>
+        </div>
+    </form>
+</div>
+
+<div class="tabelka-wyniki">
+    <table>
+        <thead>
+            <tr>
+                <th>Nazwa rodzaju</th>
+                <th>Liczba towarów</th>
+                <th>Akcje</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model == null || Model.Count == 0)
+            {
+                <tr>
+                    <td colspan="3" class="no-results">Brak zdefiniowanych rodzajów towarów</td>
+                </tr>
+            }
+            else
+            {
+                foreach (var r in Model)
+                {
+                    <tr>
+                        <td>
+                            <span id="nazwa-@r.Id">@r.Nazwa</span>
+                            <form id="edit-form-@r.Id" method="post" asp-action="EdytujRodzaj" style="display:none;margin-top:8px;">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@r.Id" />
+                                <input type="text" name="nazwa" value="@r.Nazwa" style="background:var(--bg-dark);border:1px solid var(--border-color);color:var(--text-bright);padding:6px;border-radius:4px;" />
+                                <button type="submit" class="btn-primary" style="margin-left:8px;height:32px;padding:4px 12px;">Zapisz</button>
+                                <button type="button" class="btn-secondary" style="margin-left:4px;height:32px;padding:4px 12px;" onclick="cancelEdit(@r.Id)">Anuluj</button>
+                            </form>
+                        </td>
+                        <td>@r.LiczbaTowarow</td>
+                        <td>
+                            <button type="button" class="btn-secondary" style="margin-right:4px;" id="edit-btn-@r.Id" onclick="showEdit(@r.Id)">Edytuj</button>
+                            @if (r.LiczbaTowarow == 0)
+                            {
+                                <form method="post" asp-action="UsunRodzaj" style="display:inline;" onsubmit="return confirm('Czy na pewno usunąć ten rodzaj?')">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="id" value="@r.Id" />
+                                    <button type="submit" class="btn-secondary" style="color:var(--error-red);border-color:var(--error-red);">Usuń</button>
+                                </form>
+                            }
+                            else
+                            {
+                                <span style="color:#768390;font-size:12px;">Przypisany do towarów</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+@section Scripts {
+<script>
+function showEdit(id) {
+    document.getElementById('nazwa-' + id).style.display = 'none';
+    document.getElementById('edit-btn-' + id).style.display = 'none';
+    document.getElementById('edit-form-' + id).style.display = 'block';
+}
+function cancelEdit(id) {
+    document.getElementById('nazwa-' + id).style.display = '';
+    document.getElementById('edit-btn-' + id).style.display = '';
+    document.getElementById('edit-form-' + id).style.display = 'none';
+}
+</script>
+}

@@ -1,0 +1,104 @@
+@model Magazyn.Models.StanyMagazynoweVm
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Stany magazynowe";
+    ViewData["ActivePage"] = "StanyMagazynowe";
+    bool isManager = User.IsInRole("Administrator") || User.IsInRole("Kierownik magazynu");
+}
+
+<h2>Stany magazynowe</h2>
+
+@if (!string.IsNullOrEmpty(TempData["SuccessMessage"]?.ToString()))
+{
+    <div style="background:rgba(87,171,90,0.12);border:1px solid var(--status-green);border-radius:6px;color:var(--status-green);padding:15px;margin-bottom:20px;">
+        @TempData["SuccessMessage"]
+    </div>
+}
+@if (!string.IsNullOrEmpty(TempData["ErrorMessage"]?.ToString()))
+{
+    <div class="validation-summary">@TempData["ErrorMessage"]</div>
+}
+
+<div class="search-bar">
+    <form method="get" asp-action="StanyMagazynowe">
+        <div class="tabelka">
+            <div>
+                <label for="nazwaTowar">Nazwa towaru</label>
+                <input type="text" id="nazwaTowar" name="nazwaTowar" value="@Model.NazwaTowaru" placeholder="Szukaj po nazwie" />
+            </div>
+            <div>
+                <label for="rodzajId">Rodzaj towaru</label>
+                <select id="rodzajId" name="rodzajId">
+                    <option value="">-- Wszystkie --</option>
+                    @foreach (var r in Model.Rodzaje)
+                    {
+                        if (Model.RodzajId == r.Id)
+                        {
+                            <option value="@r.Id" selected>@r.Nazwa</option>
+                        }
+                        else
+                        {
+                            <option value="@r.Id">@r.Nazwa</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div>
+                <label for="imiePracownika">Imię i nazwisko pracownika</label>
+                <input type="text" id="imiePracownika" name="imiePracownika" value="@Model.ImiePracownika" placeholder="Szukaj po pracowniku" />
+            </div>
+            @if (isManager)
+            {
+                <div>
+                    <label for="dataStanu">Data stanu (historyczny)</label>
+                    <input type="date" id="dataStanu" name="dataStanu" value="@Model.DataStanu" />
+                </div>
+            }
+        </div>
+        <div class="btn-group">
+            <button type="submit" class="btn-primary">Wyszukaj</button>
+            <a asp-action="StanyMagazynowe" class="btn-secondary">Wyczyść</a>
+        </div>
+    </form>
+</div>
+
+<div class="tabelka-wyniki">
+    <table>
+        <thead>
+            <tr>
+                <th>Nazwa towaru</th>
+                <th>Rodzaj</th>
+                <th>Jednostka miary</th>
+                <th>Stan magazynowy</th>
+                <th>Akcje</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Wyniki.Count == 0)
+            {
+                <tr>
+                    <td colspan="5" class="no-results">Nie znaleziono towarów spełniających podane kryteria</td>
+                </tr>
+            }
+            else
+            {
+                foreach (var t in Model.Wyniki)
+                {
+                    <tr>
+                        <td>@t.NazwaTowaru</td>
+                        <td>@t.RodzajTowaru</td>
+                        <td>@t.JednostkaMiary</td>
+                        <td>@t.StanMagazynowy.ToString("G29")</td>
+                        <td>
+                            @if (isManager)
+                            {
+                                <a class="btn-secondary" style="margin-right:4px;" asp-action="HistoriaStanow" asp-route-id="@t.TowarId">Historia</a>
+                                <a class="btn-secondary" style="margin-right:4px;" asp-action="ZmianaVat" asp-route-towarId="@t.TowarId">Zmień VAT</a>
+                            }
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
