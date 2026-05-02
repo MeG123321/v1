@@ -9,6 +9,9 @@ namespace Magazyn.Controllers;
 [Authorize]
 public partial class UzytkownicyController : Controller
 {
+    private const int GenderFemale = 0;
+    private const int GenderMale = 1;
+
     private readonly IWebHostEnvironment _env;
     private readonly ILogger<UzytkownicyController> _logger;
 
@@ -25,8 +28,8 @@ public partial class UzytkownicyController : Controller
 
     private static int PlecToInt(string? genderText)
     {
-        if (string.IsNullOrWhiteSpace(genderText)) return 0;
-        return genderText.Trim().Equals("Mężczyzna", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
+        if (string.IsNullOrWhiteSpace(genderText)) return GenderFemale;
+        return genderText.Trim().Equals("Mężczyzna", StringComparison.OrdinalIgnoreCase) ? GenderMale : GenderFemale;
     }
 
     private static int StatusToInt(string? statusText)
@@ -35,7 +38,7 @@ public partial class UzytkownicyController : Controller
         return statusText.Trim().Equals("Aktywny", StringComparison.OrdinalIgnoreCase) ? 1 : 0;
     }
 
-    private static string PlecToText(int genderValue) => genderValue == 1 ? "Mężczyzna" : "Kobieta";
+    private static string PlecToText(int genderValue) => genderValue == GenderMale ? "Mężczyzna" : "Kobieta";
 
     private static string StatusToText(object dbValue)
     {
@@ -46,7 +49,7 @@ public partial class UzytkownicyController : Controller
     private static bool TryParsePesel(string? pesel, out DateOnly birthDate, out int gender)
     {
         birthDate = default;
-        gender = 0;
+        gender = GenderFemale;
 
         if (string.IsNullOrWhiteSpace(pesel) || pesel.Length != 11)
             return false;
@@ -104,13 +107,13 @@ public partial class UzytkownicyController : Controller
         if (checksum != pesel[10] - '0')
             return false;
 
-        gender = ((pesel[9] - '0') % 2 == 1) ? 1 : 0;
+        gender = ((pesel[9] - '0') % 2 == 1) ? GenderMale : GenderFemale;
         return true;
     }
 
     private static bool TryValidatePeselConsistency(string? pesel, DateOnly? dataUrodzenia, string? plec, out string error)
     {
-        error = "";
+        error = string.Empty;
         if (string.IsNullOrWhiteSpace(pesel))
             return true;
 
@@ -129,7 +132,7 @@ public partial class UzytkownicyController : Controller
             var plecTrimmed = plec.Trim();
             bool selectedMale = plecTrimmed.Equals("Mężczyzna", StringComparison.OrdinalIgnoreCase);
             bool selectedFemale = plecTrimmed.Equals("Kobieta", StringComparison.OrdinalIgnoreCase);
-            bool peselMale = peselGender == 1;
+            bool peselMale = peselGender == GenderMale;
 
             if ((selectedMale && !peselMale) || (selectedFemale && peselMale))
                 mismatch = true;
