@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
 using Magazyn.Data;
 using Magazyn.Models;
-using Magazyn.Security;
+using Magazyn.Security; // Tu znajduje się PasswordGenerator
 
 namespace Magazyn.Controllers;
 
@@ -30,6 +30,9 @@ public class AccountController : Controller
     private string DbPath => Db.GetDbPath(_env);
     private static string SL(string? value) => (value ?? "").Replace('\r', '_').Replace('\n', '_');
 
+    // ==========================================
+    // LG_UC1: LOGOWANIE
+    // ==========================================
     [HttpGet]
     public IActionResult Login() => View(new LoginViewModel());
 
@@ -42,6 +45,7 @@ public class AccountController : Controller
         using var connection = Db.OpenConnection(DbPath);
         UserAuthDto? user = GetUserForAuth(connection, model.Username);
 
+        // NAPRAWA CS0019: Użycie 'is null' zamiast '== null'
         if (user is null)
         {
             ModelState.AddModelError("", "Niepoprawny login lub hasło");
@@ -52,12 +56,14 @@ public class AccountController : Controller
     ModelState.AddModelError("", "Twoje konto jest nieaktywne.");
     return View(model);
 }
+        // Sprawdzenie blokady czasowej
         if (user.BlokadaDo.HasValue && user.BlokadaDo.Value > DateTime.Now)
         {
             ModelState.AddModelError("", $"Konto zablokowane do godziny: {user.BlokadaDo.Value:HH:mm}");
             return View(model);
         }
 
+        // Weryfikacja hasła
         if (user.Password != model.Password)
         {
             HandleFailedLogin(connection, user);
@@ -65,18 +71,23 @@ public class AccountController : Controller
             return View(model);
         }
 
+        // Sukces logowania - reset licznika i sesja
         ResetLoginAttempts(connection, user.Id);
         var roles = GetUserRoles(connection, user.Id);
         await SignInUser(user, roles, model.RememberMe);
 
         _logger.LogInformation("[Auth] Zalogowano użytkownika: {Username}", SL(user.Username));
 
+        // LG_UC4: Wymuszona zmiana hasła przy hasle tymczasowym
         if (user.CzyHasloTymczasowe)
             return RedirectToAction("ChangePassword");
 
         return RedirectToAction("AdminPanel", "Uzytkownicy");
     }
 
+    // ==========================================
+    // LG_UC2: WYLOGOWANIE
+    // ==========================================
     [HttpPost]
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Logout()
@@ -85,6 +96,9 @@ public class AccountController : Controller
         return RedirectToAction("Login");
     }
 
+    // ==========================================
+    // LG_UC3: ODZYSKIWANIE HASŁA (UŻYTKOWNIK)
+    // ==========================================
     [HttpGet]
     public IActionResult RecoverPassword() => View();
 
@@ -111,6 +125,7 @@ public class AccountController : Controller
         string userEmail = reader["Email"].ToString()!;
         reader.Close();
 
+        // GENEROWANIE: Twoja funkcja PasswordGenerator
         string tempPass = PasswordGenerator.Generate(10);
         UpdatePasswordInDb(connection, userId, tempPass, true);
 
@@ -122,6 +137,9 @@ public class AccountController : Controller
         return View();
     }
 
+    // ==========================================
+    // LG_UC5: GENEROWANIE HASŁA (ADMINISTRATOR)
+    // ==========================================
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Microsoft.AspNetCore.Authorization.Authorize(Roles = "Administrator,Kierownik magazynu")]
@@ -139,6 +157,7 @@ public class AccountController : Controller
             return RedirectToAction("UserDetails", "Uzytkownicy", new { id });
         }
 
+        // GENEROWANIE: Twoja funkcja PasswordGenerator
         string tempPass = PasswordGenerator.Generate(10);
         UpdatePasswordInDb(connection, id, tempPass, true);
 
@@ -150,10 +169,16 @@ public class AccountController : Controller
         return RedirectToAction("UserDetails", "Uzytkownicy", new { id });
     }
 
+    // ==========================================
+    // PROFIL UŻYTKOWNIKA
+    // ==========================================
     [HttpGet]
     [Microsoft.AspNetCore.Authorization.Authorize]
     public IActionResult MyProfile() => View();
 
+    // ==========================================
+    // LG_UC4: ZMIANA HASŁA (WYMAGANA / DOBROWOLNA)
+    // ==========================================
     [HttpGet]
     public IActionResult ChangePassword() => View();
 
@@ -170,16 +195,21 @@ public IActionResult ChangePassword(ChangePasswordViewModel model)
 
     using var connection = Db.OpenConnection(DbPath);
 
+    // 1) SPRAWDŹ 3 OSTATNIE HASŁA
     if (WasPasswordUsedRecently(connection, userId, model.NewPassword, 3))
     {
         ModelState.AddModelError("", "Nowe hasło musi różnić się od 3 ostatnich haseł");
         return View(model);
     }
 
+    // 2) ZMIEŃ HASŁO + ZAPISZ HISTORIĘ
     UpdatePasswordInDb(connection, userId, model.NewPassword, false);
 
     return RedirectToAction("AdminPanel", "Uzytkownicy");
 }
+    // ==========================================
+    // METODY POMOCNICZE
+    // ==========================================
 private bool WasPasswordUsedRecently(System.Data.IDbConnection conn, long userId, string newPassword, int lastN)
 {
     using var cmd = conn.CreateCommand();
@@ -190,61 +220,49 @@ private bool WasPasswordUsedRecently(System.Data.IDbConnection conn, long userId
         ORDER BY datetime(data_nadania) DESC
         LIMIT $n";
 
-    var userIdParameter = cmd.CreateParameter();
-    userIdParameter.ParameterName = "$uid";
-    userIdParameter.Value = userId;
-    cmd.Parameters.Add(userIdParameter);
+    // Usuwamy te błędne linie i używamy czytelnego podejścia:
+    
+    // Parametr 1: ID użytkownika
+    var pUid = cmd.CreateParameter();
+    pUid.ParameterName = "$uid";
+    pUid.Value = userId;
+    cmd.Parameters.Add(pUid);
 
-    var limitParameter = cmd.CreateParameter();
-    limitParameter.ParameterName = "$n";
-    limitParameter.Value = lastN;
-    cmd.Parameters.Add(limitParameter);
+    // Parametr 2: Limit N haseł
+    var pN = cmd.CreateParameter();
+    pN.ParameterName = "$n";
+    pN.Value = lastN;
+    cmd.Parameters.Add(pN);
 
-    using var reader = cmd.ExecuteReader();
-    while (reader.Read())
+    using var r = cmd.ExecuteReader();
+    while (r.Read())
     {
-        var previousPassword = reader["haslo_hash"]?.ToString() ?? "";
-        if (previousPassword == newPassword)
+        var oldPass = r["haslo_hash"]?.ToString() ?? "";
+        if (oldPass == newPassword)
             return true;
     }
     return false;
 }
-    private void UpdatePasswordInDb(System.Data.IDbConnection conn, long userId, string password, bool isTemporary)
+    private void UpdatePasswordInDb(System.Data.IDbConnection conn, long userId, string pass, bool isTemp)
     {
         using var cmd = conn.CreateCommand();
         cmd.CommandText = "UPDATE Uzytkownicy SET Password = $pass, czy_haslo_tymczasowe = $temp, liczba_blednych_logowan = 0, blokada_do = NULL WHERE id = $id";
         
-        var passwordParameter = cmd.CreateParameter();
-        passwordParameter.ParameterName = "$pass";
-        passwordParameter.Value = password;
-        cmd.Parameters.Add(passwordParameter);
-
-        var tempFlagParameter = cmd.CreateParameter();
-        tempFlagParameter.ParameterName = "$temp";
-        tempFlagParameter.Value = isTemporary ? 1 : 0;
-        cmd.Parameters.Add(tempFlagParameter);
-
-        var userIdParameter = cmd.CreateParameter();
-        userIdParameter.ParameterName = "$id";
-        userIdParameter.Value = userId;
-        cmd.Parameters.Add(userIdParameter);
+        var p1 = cmd.CreateParameter(); p1.ParameterName = "$pass"; p1.Value = pass; cmd.Parameters.Add(p1);
+        var p2 = cmd.CreateParameter(); p2.ParameterName = "$temp"; p2.Value = isTemp ? 1 : 0; cmd.Parameters.Add(p2);
+        var p3 = cmd.CreateParameter(); p3.ParameterName = "$id"; p3.Value = userId; cmd.Parameters.Add(p3);
         
         cmd.ExecuteNonQuery();
 
-        using var historyCommand = conn.CreateCommand();
-        historyCommand.CommandText = @"
+        using (var hist = conn.CreateCommand())
+{
+    hist.CommandText = @"
     INSERT INTO Historia_Hasel (uzytkownik_id, haslo_hash, data_nadania)
     VALUES ($uid, $pass, datetime('now'))";
-        var historyUserIdParameter = historyCommand.CreateParameter();
-        historyUserIdParameter.ParameterName = "$uid";
-        historyUserIdParameter.Value = userId;
-        historyCommand.Parameters.Add(historyUserIdParameter);
-
-        var historyPasswordParameter = historyCommand.CreateParameter();
-        historyPasswordParameter.ParameterName = "$pass";
-        historyPasswordParameter.Value = password;
-        historyCommand.Parameters.Add(historyPasswordParameter);
-        historyCommand.ExecuteNonQuery();
+    var h1 = hist.CreateParameter(); h1.ParameterName = "$uid";  h1.Value = userId; hist.Parameters.Add(h1);
+    var h2 = hist.CreateParameter(); h2.ParameterName = "$pass"; h2.Value = pass;   hist.Parameters.Add(h2);
+    hist.ExecuteNonQuery();
+}
     }
     
 
@@ -289,48 +307,34 @@ FROM Uzytkownicy
 WHERE LOWER(username) = LOWER($login)
   AND czy_zapomniany = 0
 LIMIT 1";
-    var loginParameter = cmd.CreateParameter();
-    loginParameter.ParameterName = "$login";
-    loginParameter.Value = login.Trim();
-    cmd.Parameters.Add(loginParameter);
+    var p = cmd.CreateParameter(); p.ParameterName = "$login"; p.Value = login.Trim(); cmd.Parameters.Add(p);
 
-    using var reader = cmd.ExecuteReader();
-    if (!reader.Read()) return null;
+    using var r = cmd.ExecuteReader();
+    if (!r.Read()) return null;
 
     return new UserAuthDto {
-        Id = Convert.ToInt64(reader["id"]),
-        Username = reader["username"].ToString()!,
-        Email = reader["Email"].ToString()!,
-        Password = reader["Password"].ToString()!,
-        LiczbaBledow = Convert.ToInt32(reader["liczba_blednych_logowan"]),
-        BlokadaDo = reader["blokada_do"] is DBNull ? null : DateTime.Parse(reader["blokada_do"].ToString()!),
-        CzyHasloTymczasowe = Convert.ToInt32(reader["czy_haslo_tymczasowe"]) == 1,
-        Status = reader["Status"] is DBNull ? 0 : Convert.ToInt32(reader["Status"])
+        Id = Convert.ToInt64(r["id"]),
+        Username = r["username"].ToString()!,
+        Email = r["Email"].ToString()!,
+        Password = r["Password"].ToString()!,
+        LiczbaBledow = Convert.ToInt32(r["liczba_blednych_logowan"]),
+        BlokadaDo = r["blokada_do"] is DBNull ? null : DateTime.Parse(r["blokada_do"].ToString()!),
+        CzyHasloTymczasowe = Convert.ToInt32(r["czy_haslo_tymczasowe"]) == 1,
+        Status = r["Status"] is DBNull ? 0 : Convert.ToInt32(r["Status"])
     };
 }
 
     private void HandleFailedLogin(System.Data.IDbConnection conn, UserAuthDto user)
     {
         int newCount = user.LiczbaBledow + 1;
-        object lockoutValue = newCount >= MaxFailedAttempts ? DateTime.Now.AddMinutes(LockoutMinutes).ToString("yyyy-MM-dd HH:mm:ss") : DBNull.Value;
+        object lockout = newCount >= MaxFailedAttempts ? DateTime.Now.AddMinutes(LockoutMinutes).ToString("yyyy-MM-dd HH:mm:ss") : DBNull.Value;
         
         using var cmd = conn.CreateCommand();
         cmd.CommandText = "UPDATE Uzytkownicy SET liczba_blednych_logowan = $cnt, blokada_do = $lock WHERE id = $id";
         
-        var failedCountParameter = cmd.CreateParameter();
-        failedCountParameter.ParameterName = "$cnt";
-        failedCountParameter.Value = newCount;
-        cmd.Parameters.Add(failedCountParameter);
-
-        var lockoutParameter = cmd.CreateParameter();
-        lockoutParameter.ParameterName = "$lock";
-        lockoutParameter.Value = lockoutValue;
-        cmd.Parameters.Add(lockoutParameter);
-
-        var userIdParameter = cmd.CreateParameter();
-        userIdParameter.ParameterName = "$id";
-        userIdParameter.Value = user.Id;
-        cmd.Parameters.Add(userIdParameter);
+        var p1 = cmd.CreateParameter(); p1.ParameterName = "$cnt"; p1.Value = newCount; cmd.Parameters.Add(p1);
+        var p2 = cmd.CreateParameter(); p2.ParameterName = "$lock"; p2.Value = lockout; cmd.Parameters.Add(p2);
+        var p3 = cmd.CreateParameter(); p3.ParameterName = "$id"; p3.Value = user.Id; cmd.Parameters.Add(p3);
         
         cmd.ExecuteNonQuery();
     }
@@ -339,10 +343,7 @@ LIMIT 1";
     {
         using var cmd = conn.CreateCommand();
         cmd.CommandText = "UPDATE Uzytkownicy SET liczba_blednych_logowan = 0, blokada_do = NULL WHERE id = $id";
-        var userIdParameter = cmd.CreateParameter();
-        userIdParameter.ParameterName = "$id";
-        userIdParameter.Value = userId;
-        cmd.Parameters.Add(userIdParameter);
+        var p = cmd.CreateParameter(); p.ParameterName = "$id"; p.Value = userId; cmd.Parameters.Add(p);
         cmd.ExecuteNonQuery();
     }
 
@@ -351,12 +352,9 @@ LIMIT 1";
         var roles = new List<string>();
         using var cmd = conn.CreateCommand();
         cmd.CommandText = "SELECT p.Nazwa FROM Uprawnienia p JOIN Uzytkownik_Uprawnienia uu ON p.Id = uu.uprawnienie_id WHERE uu.uzytkownik_id = $id";
-        var userIdParameter = cmd.CreateParameter();
-        userIdParameter.ParameterName = "$id";
-        userIdParameter.Value = userId;
-        cmd.Parameters.Add(userIdParameter);
-        using var reader = cmd.ExecuteReader();
-        while (reader.Read()) roles.Add(reader.GetString(0));
+        var p = cmd.CreateParameter(); p.ParameterName = "$id"; p.Value = userId; cmd.Parameters.Add(p);
+        using var r = cmd.ExecuteReader();
+        while (r.Read()) roles.Add(r.GetString(0));
         return roles;
     }
 

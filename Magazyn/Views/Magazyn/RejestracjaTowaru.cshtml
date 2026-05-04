@@ -27,9 +27,9 @@
                 <label asp-for="RodzajId">Rodzaj towaru *</label>
                 <select asp-for="RodzajId">
                     <option value="0">-- Wybierz rodzaj --</option>
-                    @foreach (var productType in Model.Rodzaje)
+                    @foreach (var r in Model.Rodzaje)
                     {
-                        <option value="@productType.Id">@productType.Nazwa</option>
+                        <option value="@r.Id">@r.Nazwa</option>
                     }
                 </select>
                 <span asp-validation-for="RodzajId" class="field-error"></span>
@@ -38,9 +38,9 @@
                 <label asp-for="JednostkaMiaryId">Jednostka miary *</label>
                 <select asp-for="JednostkaMiaryId">
                     <option value="0">-- Wybierz jednostkę --</option>
-                    @foreach (var unit in Model.JednostkiMiary)
+                    @foreach (var jm in Model.JednostkiMiary)
                     {
-                        <option value="@unit.Id">@unit.Nazwa (@unit.Skrot)</option>
+                        <option value="@jm.Id">@jm.Nazwa (@jm.Skrot)</option>
                     }
                 </select>
                 <span asp-validation-for="JednostkaMiaryId" class="field-error"></span>
@@ -59,9 +59,9 @@
                 <label asp-for="StawkaVatId">Stawka VAT *</label>
                 <select asp-for="StawkaVatId">
                     <option value="0">-- Wybierz stawkę VAT --</option>
-                    @foreach (var vatRate in Model.StawkiVat)
+                    @foreach (var sv in Model.StawkiVat)
                     {
-                        <option value="@vatRate.Id">@vatRate.Nazwa</option>
+                        <option value="@sv.Id">@sv.Nazwa</option>
                     }
                 </select>
                 <span asp-validation-for="StawkaVatId" class="field-error"></span>

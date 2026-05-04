@@ -8,6 +8,7 @@ namespace Magazyn.Controllers;
 
 public partial class UzytkownicyController : Controller
 {
+    // Jawny routing: URL będzie dokładnie /Uzytkownicy/UserDetails/1
     [HttpGet("/Uzytkownicy/UserDetails/{id:long}")]
     [Authorize(Roles = "Administrator,Kierownik magazynu,Kierownik sprzedazy")]
     public IActionResult UserDetails(long id)
@@ -30,7 +31,7 @@ SELECT u.id,
        u.firstName,
        u.LastName,
        u.pesel,
-       u.Status AS RawStatus,
+       u.Status AS RawStatus, -- Pobieramy surową wartość statusu
        u.Plec,
        u.DataUrodzenia,
        u.Email,
@@ -40,8 +41,8 @@ SELECT u.id,
        u.numer_posesji,
        u.Ulica,
        u.NrLokalu,
-       COALESCE(u.czy_zapomniany, 0) AS czy_zapomniany,
-       COALESCE(GROUP_CONCAT(p.Nazwa, '|'), '') AS RolaRaw
+       COALESCE(u.czy_zapomniany, 0) AS czy_zapomniany, -- Pobieramy flagę RODO
+       COALESCE(GROUP_CONCAT(p.Nazwa, '|'), '') AS RolaRaw -- Używamy separatora | dla łatwiejszego splitu
 FROM Uzytkownicy u
 LEFT JOIN Uzytkownik_Uprawnienia uu ON uu.uzytkownik_id = u.id
 LEFT JOIN Uprawnienia p ON p.Id = uu.uprawnienie_id
@@ -55,10 +56,12 @@ LIMIT 1;
         if (!dbReader.Read())
             return NotFound(new { msg = "Nie znaleziono użytkownika", id });
 
+        // Odczytujemy flagę zapomnienia
         bool isForgotten = Convert.ToInt32(dbReader["czy_zapomniany"]) == 1;
         
-        string rawRoles = dbReader["RolaRaw"]?.ToString() ?? "";
-        var roleNames = rawRoles.Split('|', StringSplitOptions.RemoveEmptyEntries).ToList();
+        // Przygotowanie ról do listy (dla checkboxów w popupie)
+        string rolesRaw = dbReader["RolaRaw"]?.ToString() ?? "";
+        var roleList = rolesRaw.Split('|', StringSplitOptions.RemoveEmptyEntries).ToList();
 
         var userDetails = new UserDetailsDto
         {
@@ -68,6 +71,7 @@ LIMIT 1;
             LastName = dbReader["LastName"]?.ToString(),
             Pesel = dbReader["pesel"]?.ToString(),
             
+            // Logika statusu: jeśli zapomniany, nadpisujemy status
             Status = isForgotten ? "Zanonimizowany" : (Convert.ToInt32(dbReader["RawStatus"]) == 1 ? "Aktywny" : "Nieaktywny"),
             
             Plec = dbReader["Plec"] is DBNull ? 0 : Convert.ToInt32(dbReader["Plec"]),
@@ -81,9 +85,10 @@ LIMIT 1;
             NrPosesji = dbReader["numer_posesji"]?.ToString(),
             NrLokalu = dbReader["NrLokalu"]?.ToString(),
 
+            // Nowe pola obsługujące logikę widoku
             IsForgotten = isForgotten,
-            RoleList = roleNames,
-            Rola = roleNames.Any() ? string.Join(", ", roleNames) : "-"
+            RoleList = roleList,
+            Rola = roleList.Any() ? string.Join(", ", roleList) : "-"
         };
 
         return View(userDetails);

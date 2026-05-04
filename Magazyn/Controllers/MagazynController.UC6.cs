@@ -21,13 +21,13 @@ FROM TowarRodzaje r
 WHERE r.CzyAktywny = 1
 ORDER BY r.Nazwa";
         var list = new List<TowarRodzajVm>();
-        using var reader = cmd.ExecuteReader();
-        while (reader.Read())
+        using var dr = cmd.ExecuteReader();
+        while (dr.Read())
             list.Add(new TowarRodzajVm
             {
-                Id = Convert.ToInt64(reader["Id"]),
-                Nazwa = reader["Nazwa"].ToString()!,
-                LiczbaTowarow = Convert.ToInt32(reader["LiczbaTowarow"])
+                Id = Convert.ToInt64(dr["Id"]),
+                Nazwa = dr["Nazwa"].ToString()!,
+                LiczbaTowarow = Convert.ToInt32(dr["LiczbaTowarow"])
             });
         return View(list);
     }

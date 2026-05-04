@@ -9,6 +9,7 @@ namespace Magazyn.Controllers;
 
 public partial class UzytkownicyController : Controller
 {
+    // GET: /Uzytkownicy/EditUser/5
     [HttpGet("/Uzytkownicy/EditUser/{id:long}")]
     [Authorize(Roles = "Administrator,Kierownik magazynu")]
     public IActionResult EditUser(long id)
@@ -40,15 +41,15 @@ public partial class UzytkownicyController : Controller
             return NotFound(new { msg = "Nie znaleziono użytkownika", id });
 
         DateOnly? dataUrodzenia = null;
-        var birthDateRaw = dbReader["DataUrodzenia"]?.ToString();
-        if (DateOnly.TryParse(birthDateRaw, out var parsedBirthDate))
-            dataUrodzenia = parsedBirthDate;
+        var dataUrodzeniaDb = dbReader["DataUrodzenia"]?.ToString();
+        if (DateOnly.TryParse(dataUrodzeniaDb, out var d))
+            dataUrodzenia = d;
 
         var viewModel = new UserVm
         {
             Id = Convert.ToInt64(dbReader["id"]),
             Username = dbReader["username"]?.ToString() ?? "",
-            Password = "",
+            Password = "", // Hasło zostaje puste w widoku
             FirstName = dbReader["firstName"]?.ToString() ?? "",
             LastName = dbReader["LastName"]?.ToString() ?? "",
             Pesel = dbReader["pesel"]?.ToString() ?? "",
@@ -67,11 +68,14 @@ public partial class UzytkownicyController : Controller
         return View(viewModel);
     }
 
+    // POST: /Uzytkownicy/EditUser/5
+    // DODANO {id:long} do trasy, aby uniknąć błędu 405
     [HttpPost("/Uzytkownicy/EditUser/{id:long}")]
     [ValidateAntiForgeryToken]
     [Authorize(Roles = "Administrator,Kierownik magazynu")]
     public IActionResult EditUser(long id, UserVm viewModel)
     {
+        // Zabezpieczenie: ID z URL musi trafić do modelu
         viewModel.Id = id;
 
         if (!ModelState.IsValid)
@@ -86,6 +90,7 @@ public partial class UzytkownicyController : Controller
         _logger.LogInformation("[AdminAccess] '{User}' zapisuje edycję użytkownika id={TargetId} IP={RemoteIp}",
             SL(User.Identity?.Name), viewModel.Id, HttpContext.Connection.RemoteIpAddress);
 
+        // Czyszczenie danych wejściowych
         viewModel.Username = (viewModel.Username ?? "").Trim();
         viewModel.Password = (viewModel.Password ?? "").Trim();
         viewModel.FirstName = (viewModel.FirstName ?? "").Trim();
@@ -110,6 +115,7 @@ public partial class UzytkownicyController : Controller
         using var connection = Db.OpenConnection(DbPath);
         using var command = connection.CreateCommand();
 
+        // Jeśli hasło jest puste, nie dodajemy go do zapytania UPDATE
         var updatePasswordSql = string.IsNullOrWhiteSpace(viewModel.Password)
             ? ""
             : ", Password = $password";
@@ -136,8 +142,11 @@ public partial class UzytkownicyController : Controller
         command.Parameters.AddWithValue("$id", viewModel.Id);
         command.Parameters.AddWithValue("$username", viewModel.Username);
 
+        // Jeśli hasło nie jest puste, zahashuj je (lub dodaj czyste, jeśli nie masz metody)
         if (!string.IsNullOrWhiteSpace(viewModel.Password))
         {
+            // Jeśli masz metodę HashujHaslo w tym kontrolerze, użyj jej tutaj:
+            // command.Parameters.AddWithValue("$password", HashujHaslo(viewModel.Password));
             command.Parameters.AddWithValue("$password", viewModel.Password);
         }
 
@@ -171,6 +180,7 @@ public partial class UzytkownicyController : Controller
             return View(viewModel);
         }
 
+        // Przekierowanie do szczegółów użytkownika po udanym zapisie
         return RedirectToAction("UserDetails", new { id = viewModel.Id });
     }
 }

@@ -9,51 +9,51 @@
 
 <h2>Szczegóły rejestracji</h2>
 
-<div class="search-bar search-bar--wide">
+<div class="search-bar" style="max-width:700px;">
     <div class="tabelka">
         <div>
             <label>Nazwa towaru</label>
-            <p class="detail-value">@Model.NazwaTowaru</p>
+            <p style="color:var(--text-bright);margin:0;padding:10px 0;">@Model.NazwaTowaru</p>
         </div>
         <div>
             <label>Rodzaj towaru</label>
-            <p class="detail-value">@Model.RodzajTowaru</p>
+            <p style="color:var(--text-bright);margin:0;padding:10px 0;">@Model.RodzajTowaru</p>
         </div>
         <div>
             <label>Jednostka miary</label>
-            <p class="detail-value">@Model.JednostkaMiary</p>
+            <p style="color:var(--text-bright);margin:0;padding:10px 0;">@Model.JednostkaMiary</p>
         </div>
         <div>
             <label>Ilość</label>
-            <p class="detail-value">@(Model.Ilosc?.ToString("0.###") ?? "-")</p>
+            <p style="color:var(--text-bright);margin:0;padding:10px 0;">@(Model.Ilosc?.ToString("0.###") ?? "-")</p>
         </div>
         <div>
             <label>Cena netto</label>
-            <p class="detail-value">@(Model.CenaNetto?.ToString("0.00") ?? "-") zł</p>
+            <p style="color:var(--text-bright);margin:0;padding:10px 0;">@(Model.CenaNetto?.ToString("0.00") ?? "-") zł</p>
         </div>
         <div>
             <label>Stawka VAT</label>
-            <p class="detail-value">@Model.StawkaVat</p>
+            <p style="color:var(--text-bright);margin:0;padding:10px 0;">@Model.StawkaVat</p>
         </div>
         <div class="col-span-2">
             <label>Opis</label>
-            <p class="detail-value">@(Model.Opis ?? "-")</p>
+            <p style="color:var(--text-bright);margin:0;padding:10px 0;">@(Model.Opis ?? "-")</p>
         </div>
         <div>
             <label>Dostawca</label>
-            <p class="detail-value">@(Model.Dostawca ?? "-")</p>
+            <p style="color:var(--text-bright);margin:0;padding:10px 0;">@(Model.Dostawca ?? "-")</p>
         </div>
         <div>
             <label>Data dostawy</label>
-            <p class="detail-value">@(Model.DataDostawy ?? "-")</p>
+            <p style="color:var(--text-bright);margin:0;padding:10px 0;">@(Model.DataDostawy ?? "-")</p>
         </div>
         <div>
             <label>Data rejestracji</label>
-            <p class="detail-value">@Model.DataRejestracji</p>
+            <p style="color:var(--text-bright);margin:0;padding:10px 0;">@Model.DataRejestracji</p>
         </div>
         <div>
             <label>Pracownik rejestrujący</label>
-            <p class="detail-value">@Model.ImieNazwiskoPracownika</p>
+            <p style="color:var(--text-bright);margin:0;padding:10px 0;">@Model.ImieNazwiskoPracownika</p>
         </div>
     </div>
     <div class="btn-group mt-30">

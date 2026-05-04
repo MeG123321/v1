@@ -1,6 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc; // Wymagane dla [Remote]
 
 namespace Magazyn.Models;
 
@@ -9,7 +9,7 @@ public class UserRegistrationDto
     [Required(ErrorMessage = "Nazwa użytkownika jest wymagana")]
     [StringLength(20, MinimumLength = 5, ErrorMessage = "Nazwa użytkownika musi mieć od 5 do 20 znaków")]
     [RegularExpression(@"^(?=.*[a-zA-Z0-9])[a-zA-Z0-9_]+$", ErrorMessage = "Nazwa użytkownika może zawierać tylko litery, cyfry i podkreślnik")]
-    [Remote(action: "CheckUsername", controller: "Uzytkownicy")]
+    [Remote(action: "CheckUsername", controller: "Uzytkownicy")] // Sprawdzanie w tle
     public string Username { get; set; } = "";
 
     [Required(ErrorMessage = "Hasło jest wymagane")]
@@ -32,12 +32,12 @@ public class UserRegistrationDto
     [Required(ErrorMessage = "Adres e-mail jest wymagany")]
     [StringLength(255, ErrorMessage = "E-mail może mieć maksymalnie 255 znaków")]
     [EmailAddress(ErrorMessage = "Nieprawidłowy format adresu e-mail")]
-    [Remote(action: "CheckEmail", controller: "Uzytkownicy")]
+    [Remote(action: "CheckEmail", controller: "Uzytkownicy")] // Sprawdzanie w tle
     public string Email { get; set; } = "";
 
     [Required(ErrorMessage = "PESEL jest wymagany")]
     [RegularExpression(@"^\d{11}$", ErrorMessage = "PESEL musi składać się z 11 cyfr")]
-    [Remote(action: "CheckPesel", controller: "Uzytkownicy")]
+    [Remote(action: "CheckPesel", controller: "Uzytkownicy")] // Sprawdzanie w tle
     public string Pesel { get; set; } = "";
 
     [Required(ErrorMessage = "Numer telefonu jest wymagany")]

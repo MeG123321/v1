@@ -2,15 +2,15 @@
 @{
     Layout = "_AdminLayout";
     ViewData["ActivePage"] = "Uprawnienia";
-    var roleName = (string?)ViewBag.Rola ?? "-";
-    ViewData["Title"] = $"Magazyn GiTA - Użytkownicy roli {roleName}";
+    var rola = (string?)ViewBag.Rola ?? "-";
+    ViewData["Title"] = $"Magazyn GiTA - Użytkownicy roli {rola}";
 }
 
 <a asp-controller="Uprawnienia" asp-action="Uprawnienia" class="back-link">
     ← Wróć do ról
 </a>
 
-<h2>Użytkownicy z rolą: @roleName</h2>
+<h2>Użytkownicy z rolą: @rola</h2>
 
 <div class="tabelka-wyniki">
     <table>
@@ -34,20 +34,20 @@
             }
             else
             {
-                foreach (var userRow in Model)
+                foreach (var u in Model)
                 {
                     <tr>
-                        <td>@userRow.Username</td>
-                        <td>@userRow.FirstName</td>
-                        <td>@userRow.LastName</td>
-                        <td>@userRow.Email</td>
-                        <td>@userRow.Pesel</td>
-                        <td>@userRow.Status</td>
+                        <td>@u.Username</td>
+                        <td>@u.FirstName</td>
+                        <td>@u.LastName</td>
+                        <td>@u.Email</td>
+                        <td>@u.Pesel</td>
+                        <td>@u.Status</td>
                         <td>
                             <a class="btn-secondary"
                                asp-controller="Uzytkownicy"
                                asp-action="UserDetails"
-                               asp-route-id="@userRow.Id">
+                               asp-route-id="@u.Id">
                                 Szczegóły
                             </a>
                         </td>
@@ -57,3 +57,4 @@
         </tbody>
     </table>
 </div>
+

@@ -19,6 +19,7 @@
             <nav class="gitanav">
                 <p>Przejdź</p>
 
+                <!-- ZAMIANA: zamiast modala logowania przechodzimy na osobną stronę -->
                 <a class="przycisk-menu przycisk-wyrozniony"
                    asp-controller="Account" asp-action="Login">
                     Zaloguj się
@@ -31,6 +32,7 @@
                 <div class="info">
                     <a asp-controller="Home" asp-action="Index">Strona Główna</a>
 
+                    <!-- opcjonalnie: link do panelu (i tak będzie chroniony przez [Authorize]) -->
                     <a asp-controller="Uzytkownicy" asp-action="AdminPanel">Panel</a>
                 </div>
             </header>

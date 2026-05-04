@@ -5,7 +5,7 @@
     var userName = User.Identity?.Name ?? "-";
     var userEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? "-";
     var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "-";
-    var userRoles = User.Claims
+    var roles = User.Claims
         .Where(c => c.Type == System.Security.Claims.ClaimTypes.Role)
         .Select(c => c.Value)
         .ToList();
@@ -19,7 +19,7 @@
 <h2>Mój profil</h2>
 
 <div class="search-bar">
-    <div class="tabelka-wyniki table-compact">
+    <div class="tabelka-wyniki" style="margin-bottom: 0;">
         <table class="keyval">
             <tbody>
                 <tr><th>Login</th><td><strong>@userName</strong></td></tr>
@@ -28,13 +28,13 @@
                 <tr>
                     <th>Role</th>
                     <td>
-                        @if (userRoles.Any())
+                        @if (roles.Any())
                         {
-                            @string.Join(", ", userRoles)
+                            @string.Join(", ", roles)
                         }
                         else
                         {
-                            <span class="text-error">Brak przypisanej roli</span>
+                            <span style="color: var(--error-red);">Brak przypisanej roli</span>
                         }
                     </td>
                 </tr>
@@ -43,7 +43,7 @@
     </div>
 </div>
 
-<div class="btn-group mt-20">
+<div class="btn-group" style="margin-top: 20px;">
     <a asp-controller="Account" asp-action="ChangePassword" class="btn-primary">
         Zmień hasło
     </a>

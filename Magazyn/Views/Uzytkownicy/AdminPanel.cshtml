@@ -54,18 +54,18 @@
             }
             else
             {
-                foreach (var userRow in Model)
+                foreach (var u in Model)
                 {
                     <tr>
-                        <td>@userRow.Username</td>
-                        <td>@userRow.FirstName</td>
-                        <td>@userRow.LastName</td>
-                        <td>@userRow.Email</td>
-                        <td>@userRow.Pesel</td>
-                        <td>@userRow.Status</td>
-                        <td>@userRow.Rola</td>
+                        <td>@u.Username</td>
+                        <td>@u.FirstName</td>
+                        <td>@u.LastName</td>
+                        <td>@u.Email</td>
+                        <td>@u.Pesel</td>
+                        <td>@u.Status</td>
+                        <td>@u.Rola</td>
                         <td>
-                            <a class="btn-secondary" asp-controller="Uzytkownicy" asp-action="UserDetails" asp-route-id="@userRow.Id">Szczegóły</a>
+                            <a class="btn-secondary" asp-controller="Uzytkownicy" asp-action="UserDetails" asp-route-id="@u.Id">Szczegóły</a>
                         </td>
                     </tr>
                 }

@@ -37,11 +37,11 @@ public class RejestracjaTowaruVm
 
     [Required(ErrorMessage = "Ilość jest wymagana")]
     [Range(0.001, double.MaxValue, ErrorMessage = "Ilość musi być większa od 0")]
-    public decimal? Ilosc { get; set; }
+    public decimal? Ilosc { get; set; }   // <- zmiana (było decimal)
 
     [Required(ErrorMessage = "Cena netto jest wymagana")]
     [Range(0.01, double.MaxValue, ErrorMessage = "Cena netto musi być większa od 0")]
-    public decimal? CenaNetto { get; set; }
+    public decimal? CenaNetto { get; set; } // <- zmiana (było decimal)
 
     [Required(ErrorMessage = "Stawka VAT jest wymagana")]
     [Range(1, long.MaxValue, ErrorMessage = "Wybierz stawkę VAT")]

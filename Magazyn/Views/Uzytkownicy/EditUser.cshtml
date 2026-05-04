@@ -28,6 +28,7 @@
 
         <input type="hidden" asp-for="Id" />
 
+        @* --- SEKCJA 1: DANE OSOBOWE --- *@
         <h3 class="form-section-title">Dane pracownika</h3>
         <div class="tabelka">
             <div class="form-group">
@@ -102,6 +103,7 @@
             </div>
         </div>
 
+        @* --- SEKCJA 2: ADRES --- *@
         <h3 class="form-section-title">Adres zamieszkania</h3>
         <div class="tabelka">
             <div class="form-group">
@@ -135,7 +137,7 @@
             </div>
         </div>
 
-        <div class="btn-group mt-20">
+        <div class="btn-group" style="margin-top: 20px;">
             <button type="submit" class="btn-primary">Zapisz zmiany</button>
             <a asp-controller="Uzytkownicy" asp-action="UserDetails" asp-route-id="@Model.Id" class="btn-secondary">Anuluj</a>
         </div>

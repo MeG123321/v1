@@ -14,6 +14,7 @@ public class UserVm
 
     [Required(ErrorMessage = "Hasło jest wymagane")]
     [StringLength(15, MinimumLength = 8, ErrorMessage = "Hasło musi mieć od 8 do 15 znaków")]
+    // jeśli w edycji hasło ma być opcjonalne (zmiana tylko gdy wpisane) — powiedz, przerobię
     [RegularExpression(@"^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[-,!*#$&]).{8,15}$",
         ErrorMessage = "Hasło 8–15 znaków: 1 wielka, 1 mała litera, 1 cyfra i 1 znak specjalny (-, !, *, #, $, &)")]
     public string Password { get; set; } = "";
@@ -53,6 +54,7 @@ public class UserVm
     [StringLength(30)]
     public string Status { get; set; } = "";
 
+    // Rola zwykle jest z joinów, więc może być null/readonly w widoku
     [StringLength(50)]
     public string? Rola { get; set; }
 
