@@ -1,6 +1,4 @@
-@* Widok częściowy obsługujący LG_UC2 (Wylogowanie) *@
-
-<form asp-controller="Account" asp-action="Logout" method="post" id="logoutForm" style="display: none;">
+<form asp-controller="Account" asp-action="Logout" method="post" id="logoutForm" class="hidden-form">
     @Html.AntiForgeryToken()
 </form>
 
@@ -10,17 +8,13 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        const logoutBtn = document.getElementById("akcja-wyloguj");
-        if (logoutBtn) {
-            logoutBtn.addEventListener("click", function (e) {
-                e.preventDefault(); // Zapobiega przeładowaniu strony
-                
-                // Realizacja LG_UC2 Krok 2: Wyświetlenie okna potwierdzenia
+        const logoutLink = document.getElementById("akcja-wyloguj");
+        if (logoutLink) {
+            logoutLink.addEventListener("click", function (e) {
+                e.preventDefault();
                 if (confirm("Czy na pewno chcesz się wylogować?")) {
-                    // LG_UC2 Krok 3: Użytkownik potwierdza
                     document.getElementById("logoutForm").submit();
                 }
-                // Scenariusz Alternatywny A: Anulowanie - system pozostaje w widoku (nic nie robi)
             });
         }
     });

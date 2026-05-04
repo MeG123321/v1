@@ -16,14 +16,14 @@ public partial class MagazynController : Controller
 
         using var conn = Db.OpenConnection(DbPath);
 
-        string nazwaTowar = "";
+        string towarName = "";
         using (var cmd = conn.CreateCommand())
         {
             cmd.CommandText = "SELECT NazwaTowaru FROM Towary WHERE Id = $id";
             cmd.Parameters.AddWithValue("$id", id);
             var val = cmd.ExecuteScalar();
             if (val == null || val is DBNull) return RedirectToAction(nameof(StanyMagazynowe));
-            nazwaTowar = val.ToString()!;
+            towarName = val.ToString()!;
         }
 
         var sql = new System.Text.StringBuilder(@"
@@ -44,22 +44,22 @@ WHERE rt.TowarId = $towarId
         if (!string.IsNullOrWhiteSpace(dataDo)) histCmd.Parameters.AddWithValue("$dataDo", dataDo);
         if (pracownikId.HasValue && pracownikId > 0) histCmd.Parameters.AddWithValue("$pracownikId", pracownikId.Value);
 
-        var historia = new List<HistoriaWpisDto>();
-        using (var dr = histCmd.ExecuteReader())
+        var historyEntries = new List<HistoriaWpisDto>();
+        using (var historyReader = histCmd.ExecuteReader())
         {
-            while (dr.Read())
+            while (historyReader.Read())
             {
-                historia.Add(new HistoriaWpisDto
+                historyEntries.Add(new HistoriaWpisDto
                 {
-                    Id = Convert.ToInt64(dr["Id"]),
-                    DataRejestracji = dr["DataRejestracji"].ToString()!,
-                    ImieNazwisko = dr["ImieNazwisko"].ToString()!,
-                    Ilosc = Convert.ToDecimal(dr["Ilosc"])
+                    Id = Convert.ToInt64(historyReader["Id"]),
+                    DataRejestracji = historyReader["DataRejestracji"].ToString()!,
+                    ImieNazwisko = historyReader["ImieNazwisko"].ToString()!,
+                    Ilosc = Convert.ToDecimal(historyReader["Ilosc"])
                 });
             }
         }
 
-        var pracownicy = new List<PracownikListDto>();
+        var employeeOptions = new List<PracownikListDto>();
         using (var pCmd = conn.CreateCommand())
         {
             pCmd.CommandText = @"
@@ -69,20 +69,20 @@ JOIN Uzytkownicy u ON u.id = rt.RejestrujacyUserId
 WHERE rt.TowarId = $towarId
 ORDER BY ImieNazwisko";
             pCmd.Parameters.AddWithValue("$towarId", id);
-            using var pr = pCmd.ExecuteReader();
-            while (pr.Read())
-                pracownicy.Add(new PracownikListDto { Id = Convert.ToInt64(pr["id"]), ImieNazwisko = pr["ImieNazwisko"].ToString()! });
+            using var employeeReader = pCmd.ExecuteReader();
+            while (employeeReader.Read())
+                employeeOptions.Add(new PracownikListDto { Id = Convert.ToInt64(employeeReader["id"]), ImieNazwisko = employeeReader["ImieNazwisko"].ToString()! });
         }
 
         var vm = new HistoriaStanowVm
         {
             TowarId = id,
-            NazwaTowaru = nazwaTowar,
+            NazwaTowaru = towarName,
             DataOd = dataOd,
             DataDo = dataDo,
             PracownikId = pracownikId,
-            Historia = historia,
-            Pracownicy = pracownicy,
+            Historia = historyEntries,
+            Pracownicy = employeeOptions,
             Filtered = !string.IsNullOrWhiteSpace(dataOd) || !string.IsNullOrWhiteSpace(dataDo) || (pracownikId.HasValue && pracownikId > 0)
         };
 

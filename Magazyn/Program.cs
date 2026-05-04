@@ -1,6 +1,5 @@
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddControllersWithViews();
 
 builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme)
@@ -16,7 +15,6 @@ builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.Cookies.C
             : Microsoft.AspNetCore.Http.CookieSecurePolicy.Always;
     });
 
-// HttpClient (MUSI być przed builder.Build())
 builder.Services.AddHttpClient("Mailtrap", client =>
 {
     client.BaseAddress = new Uri("https://send.api.mailtrap.io/");
@@ -24,7 +22,6 @@ builder.Services.AddHttpClient("Mailtrap", client =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");

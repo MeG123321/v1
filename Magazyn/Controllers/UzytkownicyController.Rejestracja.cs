@@ -11,18 +11,14 @@ public partial class UzytkownicyController : Controller
     [Authorize(Roles = "Administrator,Kierownik magazynu")]
     public IActionResult Rejestracja() => View();
 
-    // --- METODY WALIDACJI ZDALNEJ (Remote Validation) ---
-    // Te metody są wywoływane przez JavaScript, gdy użytkownik wpisuje dane w formularzu.
-
     [AcceptVerbs("Get", "Post")]
     [ResponseCache(Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult CheckUsername(string Username) // Nazwa musi pasować do pola w DTO
+    public IActionResult CheckUsername(string username)
     {
         using var connection = Db.OpenConnection(DbPath);
         using var cmd = connection.CreateCommand();
-        // Sprawdzamy bez względu na wielkość liter i usuwamy zbędne spacje
         cmd.CommandText = "SELECT COUNT(*) FROM Uzytkownicy WHERE LOWER(TRIM(username)) = LOWER(TRIM($u))";
-        cmd.Parameters.AddWithValue("$u", (Username ?? "").Trim());
+        cmd.Parameters.AddWithValue("$u", (username ?? "").Trim());
         
         var count = Convert.ToInt32(cmd.ExecuteScalar());
         
@@ -34,12 +30,12 @@ public partial class UzytkownicyController : Controller
 
     [AcceptVerbs("Get", "Post")]
     [ResponseCache(Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult CheckEmail(string Email)
+    public IActionResult CheckEmail(string email)
     {
         using var connection = Db.OpenConnection(DbPath);
         using var cmd = connection.CreateCommand();
         cmd.CommandText = "SELECT COUNT(*) FROM Uzytkownicy WHERE LOWER(TRIM(Email)) = LOWER(TRIM($e))";
-        cmd.Parameters.AddWithValue("$e", (Email ?? "").Trim());
+        cmd.Parameters.AddWithValue("$e", (email ?? "").Trim());
         
         var count = Convert.ToInt32(cmd.ExecuteScalar());
         
@@ -51,12 +47,12 @@ public partial class UzytkownicyController : Controller
 
     [AcceptVerbs("Get", "Post")]
     [ResponseCache(Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult CheckPesel(string Pesel)
+    public IActionResult CheckPesel(string pesel)
     {
         using var connection = Db.OpenConnection(DbPath);
         using var cmd = connection.CreateCommand();
         cmd.CommandText = "SELECT COUNT(*) FROM Uzytkownicy WHERE TRIM(pesel) = TRIM($p)";
-        cmd.Parameters.AddWithValue("$p", (Pesel ?? "").Trim());
+        cmd.Parameters.AddWithValue("$p", (pesel ?? "").Trim());
         
         var count = Convert.ToInt32(cmd.ExecuteScalar());
         
@@ -66,18 +62,14 @@ public partial class UzytkownicyController : Controller
         return Json(true);
     }
 
-    // --- GŁÓWNA METODA ZAPISU FORMULARZA ---
-
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Roles = "Administrator,Kierownik magazynu")]
     public IActionResult Rejestracja(UserRegistrationDto dto)
     {
-        // 1. Walidacja modelu (na podstawie atrybutów w DTO)
         if (!ModelState.IsValid)
             return View(dto);
 
-        // 2. Sprawdzenie czy plik bazy istnieje
         if (!System.IO.File.Exists(DbPath))
         {
             ModelState.AddModelError("", $"Nie znaleziono bazy danych: {DbPath}");
@@ -87,7 +79,6 @@ public partial class UzytkownicyController : Controller
         _logger.LogInformation("[AdminAccess] '{User}' rejestruje nowego użytkownika login='{NewLogin}' IP={RemoteIp}",
             SL(User.Identity?.Name), SL(dto.Username), HttpContext.Connection.RemoteIpAddress);
 
-        // 3. Czyszczenie danych (Trim)
         dto.Username = (dto.Username ?? "").Trim();
         dto.Password = (dto.Password ?? "").Trim();
         dto.FirstName = (dto.FirstName ?? "").Trim();
@@ -107,12 +98,10 @@ public partial class UzytkownicyController : Controller
             return View(dto);
         }
 
-        var dataUrodzeniaStr = dto.DataUrodzenia?.ToString("yyyy-MM-dd");
+        var birthDateString = dto.DataUrodzenia?.ToString("yyyy-MM-dd");
 
         using var connection = Db.OpenConnection(DbPath);
 
-        // 4. Ponowne sprawdzenie unikalności (zabezpieczenie serwerowe)
-        // Sprawdzanie loginu
         using (var checkUsernameCommand = connection.CreateCommand())
         {
             checkUsernameCommand.CommandText = "SELECT COUNT(*) FROM Uzytkownicy WHERE LOWER(TRIM(username)) = LOWER(TRIM($username));";
@@ -124,7 +113,6 @@ public partial class UzytkownicyController : Controller
             }
         }
 
-        // Sprawdzanie e-maila
         using (var checkEmailCommand = connection.CreateCommand())
         {
             checkEmailCommand.CommandText = "SELECT COUNT(*) FROM Uzytkownicy WHERE LOWER(TRIM(Email)) = LOWER(TRIM($email));";
@@ -136,7 +124,6 @@ public partial class UzytkownicyController : Controller
             }
         }
 
-        // 5. Zapis nowego użytkownika
         using (var insertCommand = connection.CreateCommand())
         {
             insertCommand.CommandText = @"
@@ -159,7 +146,7 @@ public partial class UzytkownicyController : Controller
             insertCommand.Parameters.AddWithValue("$plec", PlecToInt(dto.Plec));
             insertCommand.Parameters.AddWithValue("$nrTelefonu", dto.NrTelefonu);
             insertCommand.Parameters.AddWithValue("$ulica", string.IsNullOrWhiteSpace(dto.Ulica) ? DBNull.Value : dto.Ulica);
-            insertCommand.Parameters.AddWithValue("$dataUrodzenia", string.IsNullOrWhiteSpace(dataUrodzeniaStr) ? DBNull.Value : dataUrodzeniaStr);
+            insertCommand.Parameters.AddWithValue("$dataUrodzenia", string.IsNullOrWhiteSpace(birthDateString) ? DBNull.Value : birthDateString);
             insertCommand.Parameters.AddWithValue("$password", string.IsNullOrWhiteSpace(dto.Password) ? DBNull.Value : dto.Password);
             insertCommand.Parameters.AddWithValue("$kodPocztowy", dto.KodPocztowy);
             insertCommand.Parameters.AddWithValue("$nrPosesji", dto.NrPosesji);
@@ -168,7 +155,6 @@ public partial class UzytkownicyController : Controller
             insertCommand.ExecuteNonQuery();
         }
 
-        // 6. Nadanie roli
         if (!string.IsNullOrWhiteSpace(dto.Rola))
         {
             long newUserId;

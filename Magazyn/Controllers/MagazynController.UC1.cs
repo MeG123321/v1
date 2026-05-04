@@ -39,7 +39,6 @@ public partial class MagazynController : Controller
 
         var userId = GetCurrentUserId();
 
-        // Find or create Towar
         long towarId;
         using (var findCmd = conn.CreateCommand())
         {
@@ -71,7 +70,6 @@ public partial class MagazynController : Controller
             }
         }
 
-        // Create registration record
         using (var regCmd = conn.CreateCommand())
         {
             regCmd.CommandText = @"

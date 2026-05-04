@@ -11,7 +11,6 @@ public static class PasswordGenerator
 
     private const string All = Lower + Upper + Digits + Special;
 
-    // Hasło 10 znaków: min. 1 mała, 1 duża, 1 cyfra, 1 specjalny
     public static string Generate(int length = 10)
     {
         if (length != 10)
@@ -32,7 +31,6 @@ public static class PasswordGenerator
         return new string(chars);
     }
 
-    // Token do loginu typu del_xxxxxxxx (bez znaków specjalnych)
     public static string RandomToken(int length)
     {
         const string tokenAlphabet = "abcdefghijklmnopqrstuvwxyz0123456789";
@@ -44,7 +42,6 @@ public static class PasswordGenerator
         return new string(charBuffer);
     }
 
-    // Alias, żeby stary kod działał (bez "RODO_")
     public static string GenerateRodoPassword(int tokenLength = 10) => Generate(10);
 
     private static char Pick(string alphabet)

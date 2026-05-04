@@ -6,7 +6,5 @@ public class ForgottenRowDto
     public string? FullNameAfterForget { get; set; }
     public string? DataZapomnienia { get; set; }
     public string? ZapomnialUserId { get; set; }
-    
-    // Tego brakowało – dodaj tę linię:
-    public string? AdminName { get; set; } 
+    public string? AdminName { get; set; }
 }

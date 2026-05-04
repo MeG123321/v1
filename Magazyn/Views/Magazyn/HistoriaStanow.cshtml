@@ -25,15 +25,15 @@
                 <label for="pracownikId">Pracownik</label>
                 <select id="pracownikId" name="pracownikId">
                     <option value="">-- Wszyscy --</option>
-                    @foreach (var p in Model.Pracownicy)
+                    @foreach (var employee in Model.Pracownicy)
                     {
-                        if (Model.PracownikId == p.Id)
+                        if (Model.PracownikId == employee.Id)
                         {
-                            <option value="@p.Id" selected>@p.ImieNazwisko</option>
+                            <option value="@employee.Id" selected>@employee.ImieNazwisko</option>
                         }
                         else
                         {
-                            <option value="@p.Id">@p.ImieNazwisko</option>
+                            <option value="@employee.Id">@employee.ImieNazwisko</option>
                         }
                     }
                 </select>
@@ -65,14 +65,14 @@
             }
             else
             {
-                foreach (var h in Model.Historia)
+                foreach (var historyEntry in Model.Historia)
                 {
                     <tr>
-                        <td>@h.DataRejestracji</td>
-                        <td>@h.ImieNazwisko</td>
-                        <td>@h.Ilosc.ToString("G29")</td>
+                        <td>@historyEntry.DataRejestracji</td>
+                        <td>@historyEntry.ImieNazwisko</td>
+                        <td>@historyEntry.Ilosc.ToString("G29")</td>
                         <td>
-                            <a class="btn-secondary" asp-action="SzczegolyRejestracji" asp-route-id="@h.Id">Szczegóły</a>
+                            <a class="btn-secondary" asp-action="SzczegolyRejestracji" asp-route-id="@historyEntry.Id">Szczegóły</a>
                         </td>
                     </tr>
                 }

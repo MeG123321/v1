@@ -27,10 +27,9 @@ public class UprawnieniaController : Controller
     [Authorize(Roles = "Administrator")]
     public IActionResult Uprawnienia(string[]? rola = null)
     {
-        // Czyszczenie i przygotowanie wybranych ról
         var selectedRoles = rola?
-            .Where(r => !string.IsNullOrWhiteSpace(r))
-            .Select(r => r.Trim())
+            .Where(roleName => !string.IsNullOrWhiteSpace(roleName))
+            .Select(roleName => roleName.Trim())
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToArray() ?? Array.Empty<string>();
 
@@ -43,7 +42,6 @@ public class UprawnieniaController : Controller
         using var connection = Db.OpenConnection(DbPath);
         using var command = connection.CreateCommand();
 
-        // Podstawowe zapytanie - pobiera wszystkich użytkowników i łączy ich role w jeden ciąg
         var sql = @"
             SELECT u.id,
                    u.username,
@@ -58,7 +56,6 @@ public class UprawnieniaController : Controller
             LEFT JOIN Uprawnienia p ON p.Id = uu.uprawnienie_id
             WHERE COALESCE(u.czy_zapomniany, 0) = 0";
 
-        // Logika filtrowania AND: dla kazdej wybranej roli musi istniec przypisanie.
         if (selectedRoles.Length > 0)
         {
             for (int i = 0; i < selectedRoles.Length; i++)

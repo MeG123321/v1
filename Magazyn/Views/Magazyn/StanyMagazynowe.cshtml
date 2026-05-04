@@ -3,14 +3,14 @@
     Layout = "_AdminLayout";
     ViewData["Title"] = "Stany magazynowe";
     ViewData["ActivePage"] = "StanyMagazynowe";
-    bool isManager = User.IsInRole("Administrator") || User.IsInRole("Kierownik magazynu");
+    bool canManageStock = User.IsInRole("Administrator") || User.IsInRole("Kierownik magazynu");
 }
 
 <h2>Stany magazynowe</h2>
 
 @if (!string.IsNullOrEmpty(TempData["SuccessMessage"]?.ToString()))
 {
-    <div style="background:rgba(87,171,90,0.12);border:1px solid var(--status-green);border-radius:6px;color:var(--status-green);padding:15px;margin-bottom:20px;">
+    <div class="alert-success">
         @TempData["SuccessMessage"]
     </div>
 }
@@ -30,15 +30,15 @@
                 <label for="rodzajId">Rodzaj towaru</label>
                 <select id="rodzajId" name="rodzajId">
                     <option value="">-- Wszystkie --</option>
-                    @foreach (var r in Model.Rodzaje)
+                    @foreach (var productType in Model.Rodzaje)
                     {
-                        if (Model.RodzajId == r.Id)
+                        if (Model.RodzajId == productType.Id)
                         {
-                            <option value="@r.Id" selected>@r.Nazwa</option>
+                            <option value="@productType.Id" selected>@productType.Nazwa</option>
                         }
                         else
                         {
-                            <option value="@r.Id">@r.Nazwa</option>
+                            <option value="@productType.Id">@productType.Nazwa</option>
                         }
                     }
                 </select>
@@ -47,7 +47,7 @@
                 <label for="imiePracownika">Imię i nazwisko pracownika</label>
                 <input type="text" id="imiePracownika" name="imiePracownika" value="@Model.ImiePracownika" placeholder="Szukaj po pracowniku" />
             </div>
-            @if (isManager)
+            @if (canManageStock)
             {
                 <div>
                     <label for="dataStanu">Data stanu (historyczny)</label>
@@ -82,18 +82,18 @@
             }
             else
             {
-                foreach (var t in Model.Wyniki)
+                foreach (var stockItem in Model.Wyniki)
                 {
                     <tr>
-                        <td>@t.NazwaTowaru</td>
-                        <td>@t.RodzajTowaru</td>
-                        <td>@t.JednostkaMiary</td>
-                        <td>@t.StanMagazynowy.ToString("G29")</td>
+                        <td>@stockItem.NazwaTowaru</td>
+                        <td>@stockItem.RodzajTowaru</td>
+                        <td>@stockItem.JednostkaMiary</td>
+                        <td>@stockItem.StanMagazynowy.ToString("G29")</td>
                         <td>
-                            @if (isManager)
+                            @if (canManageStock)
                             {
-                                <a class="btn-secondary" style="margin-right:4px;" asp-action="HistoriaStanow" asp-route-id="@t.TowarId">Historia</a>
-                                <a class="btn-secondary" style="margin-right:4px;" asp-action="ZmianaVat" asp-route-towarId="@t.TowarId">Zmień VAT</a>
+                                <a class="btn-secondary mr-4" asp-action="HistoriaStanow" asp-route-id="@stockItem.TowarId">Historia</a>
+                                <a class="btn-secondary mr-4" asp-action="ZmianaVat" asp-route-towarId="@stockItem.TowarId">Zmień VAT</a>
                             }
                         </td>
                     </tr>

@@ -25,7 +25,6 @@ public partial class UzytkownicyController : Controller
         using var connection = Db.OpenConnection(DbPath);
         using var command = connection.CreateCommand();
 
-        // SQL z użyciem JOIN: u to użytkownik zapomniany, a to administrator
         command.CommandText = @"
             SELECT
                 u.id,
@@ -47,16 +46,15 @@ public partial class UzytkownicyController : Controller
         using var dbReader = command.ExecuteReader();
         while (dbReader.Read())
         {
-            var fName = dbReader.IsDBNull(1) ? "" : dbReader.GetString(1);
-            var lName = dbReader.IsDBNull(2) ? "" : dbReader.GetString(2);
+            var firstName = dbReader.IsDBNull(1) ? "" : dbReader.GetString(1);
+            var lastName = dbReader.IsDBNull(2) ? "" : dbReader.GetString(2);
 
-            // Sprawdzamy, czy udało się znaleźć admina w bazie
             var adminName = dbReader.IsDBNull(5) ? "Nieznany admin" : dbReader.GetString(5);
 
             forgottenList.Add(new ForgottenRowDto
             {
                 Id = dbReader.GetInt64(0),
-                FullNameAfterForget = $"{fName} {lName}".Trim(),
+                FullNameAfterForget = $"{firstName} {lastName}".Trim(),
                 DataZapomnienia = dbReader.IsDBNull(3) ? "" : dbReader.GetString(3),
                 ZapomnialUserId = dbReader.IsDBNull(4) ? "" : dbReader.GetInt64(4).ToString(),
                 AdminName = adminName
@@ -92,7 +90,6 @@ public partial class UzytkownicyController : Controller
 
         using var connection = Db.OpenConnection(DbPath);
 
-        // --- GENERATORY ---
         static int SecureRandomInt(int maxExclusive) => RandomNumberGenerator.GetInt32(maxExclusive);
 
         static string RandomLetters(int length)
@@ -104,8 +101,7 @@ public partial class UzytkownicyController : Controller
             return char.ToUpper(charBuffer[0]) + new string(charBuffer, 1, length - 1);
         }
 
-        // --- LOSOWANIE DANYCH (Imię, Nazwisko, Płeć, Data, PESEL) ---
-        int anonymizedGender = SecureRandomInt(2); // 0=K, 1=M
+        int anonymizedGender = SecureRandomInt(2);
         int birthYear = 1955 + SecureRandomInt(50);
         int birthMonth = 1 + SecureRandomInt(12);
         int birthDay = 1 + SecureRandomInt(DateTime.DaysInMonth(birthYear, birthMonth));
@@ -116,7 +112,6 @@ public partial class UzytkownicyController : Controller
         string anonymizedBirthDate = birthDate.ToString("yyyy-MM-dd");
         string anonymizedPesel = GenerateValidPesel(birthDate, anonymizedGender);
 
-        // --- UPDATE BAZY (Tylko wymagane pola) ---
         using var command = connection.CreateCommand();
         command.CommandText = @"
             UPDATE Uzytkownicy
@@ -147,7 +142,6 @@ public partial class UzytkownicyController : Controller
         var affectedRows = command.ExecuteNonQuery();
         if (affectedRows == 0) return NotFound(new { msg = "Użytkownik nie istnieje" });
 
-        // Usunięcie uprawnień, aby osoba zanonimizowana nic nie mogła zrobić
         using (var deleteCmd = connection.CreateCommand())
         {
             deleteCmd.CommandText = "DELETE FROM Uzytkownik_Uprawnienia WHERE uzytkownik_id = $uzytkownikId;";
@@ -165,26 +159,26 @@ public partial class UzytkownicyController : Controller
         int day = date.Day;
         if (year >= 2000) month += 20;
 
-        int[] d = new int[11];
-        d[0] = (year % 100) / 10;
-        d[1] = year % 10;
-        d[2] = month / 10;
-        d[3] = month % 10;
-        d[4] = day / 10;
-        d[5] = day % 10;
-        d[6] = RandomNumberGenerator.GetInt32(10);
-        d[7] = RandomNumberGenerator.GetInt32(10);
-        d[8] = RandomNumberGenerator.GetInt32(10);
+        int[] digits = new int[11];
+        digits[0] = (year % 100) / 10;
+        digits[1] = year % 10;
+        digits[2] = month / 10;
+        digits[3] = month % 10;
+        digits[4] = day / 10;
+        digits[5] = day % 10;
+        digits[6] = RandomNumberGenerator.GetInt32(10);
+        digits[7] = RandomNumberGenerator.GetInt32(10);
+        digits[8] = RandomNumberGenerator.GetInt32(10);
 
-        int gDigit = RandomNumberGenerator.GetInt32(5) * 2;
-        if (gender == 1) gDigit += 1;
-        d[9] = gDigit;
+        int genderDigit = RandomNumberGenerator.GetInt32(5) * 2;
+        if (gender == 1) genderDigit += 1;
+        digits[9] = genderDigit;
 
-        int[] w = { 1, 3, 7, 9, 1, 3, 7, 9, 1, 3 };
+        int[] weights = { 1, 3, 7, 9, 1, 3, 7, 9, 1, 3 };
         int sum = 0;
-        for (int i = 0; i < 10; i++) sum += d[i] * w[i];
-        d[10] = (10 - (sum % 10)) % 10;
+        for (int i = 0; i < 10; i++) sum += digits[i] * weights[i];
+        digits[10] = (10 - (sum % 10)) % 10;
 
-        return string.Join("", d);
+        return string.Join("", digits);
     }
 }

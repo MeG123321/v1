@@ -9,14 +9,14 @@
 
 <h2>Zmiana stawki VAT</h2>
 
-<div class="search-bar" style="max-width:500px;">
+<div class="search-bar search-bar--narrow">
     @if (Model.Zakres == "TOWAR" && !string.IsNullOrEmpty(Model.NazwaTowaru))
     {
-        <p style="color:var(--text-main);margin-bottom:20px;">Towar: <strong style="color:var(--text-bright);">@Model.NazwaTowaru</strong></p>
+        <p class="text-muted">Towar: <strong class="text-bright">@Model.NazwaTowaru</strong></p>
     }
     else if (Model.Zakres == "RODZAJ" && !string.IsNullOrEmpty(Model.NazwaRodzaju))
     {
-        <p style="color:var(--text-main);margin-bottom:20px;">Rodzaj towaru: <strong style="color:var(--text-bright);">@Model.NazwaRodzaju</strong> (zmiana dla wszystkich towarów tego rodzaju)</p>
+        <p class="text-muted">Rodzaj towaru: <strong class="text-bright">@Model.NazwaRodzaju</strong> (zmiana dla wszystkich towarów tego rodzaju)</p>
     }
 
     <form asp-action="ZmianaVat" method="post">

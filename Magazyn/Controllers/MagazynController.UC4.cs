@@ -33,8 +33,8 @@ JOIN Uzytkownicy u ON u.id = rt.RejestrujacyUserId
 WHERE rt.Id = $id";
         cmd.Parameters.AddWithValue("$id", id);
 
-        using var dr = cmd.ExecuteReader();
-        if (!dr.Read())
+        using var reader = cmd.ExecuteReader();
+        if (!reader.Read())
         {
             TempData["ErrorMessage"] = "Nie znaleziono szczegółowych danych dla wybranego towaru";
             return RedirectToAction(nameof(StanyMagazynowe));
@@ -42,18 +42,18 @@ WHERE rt.Id = $id";
 
         var vm = new SzczegolyRejestracjiVm
         {
-            Id = Convert.ToInt64(dr["Id"]),
-            NazwaTowaru = dr["NazwaTowaru"].ToString()!,
-            RodzajTowaru = dr["RodzajTowaru"].ToString()!,
-            JednostkaMiary = dr["JednostkaMiary"].ToString()!,
-            Ilosc = Convert.ToDecimal(dr["Ilosc"]),
-            CenaNetto = Convert.ToDecimal(dr["CenaNetto"]),
-            StawkaVat = dr["StawkaVat"].ToString()!,
-            Opis = dr["Opis"] is DBNull ? null : dr["Opis"].ToString(),
-            Dostawca = dr["Dostawca"] is DBNull ? null : dr["Dostawca"].ToString(),
-            DataDostawy = dr["DataDostawy"] is DBNull ? null : dr["DataDostawy"].ToString(),
-            DataRejestracji = dr["DataRejestracji"].ToString()!,
-            ImieNazwiskoPracownika = dr["ImieNazwisko"].ToString()!
+            Id = Convert.ToInt64(reader["Id"]),
+            NazwaTowaru = reader["NazwaTowaru"].ToString()!,
+            RodzajTowaru = reader["RodzajTowaru"].ToString()!,
+            JednostkaMiary = reader["JednostkaMiary"].ToString()!,
+            Ilosc = Convert.ToDecimal(reader["Ilosc"]),
+            CenaNetto = Convert.ToDecimal(reader["CenaNetto"]),
+            StawkaVat = reader["StawkaVat"].ToString()!,
+            Opis = reader["Opis"] is DBNull ? null : reader["Opis"].ToString(),
+            Dostawca = reader["Dostawca"] is DBNull ? null : reader["Dostawca"].ToString(),
+            DataDostawy = reader["DataDostawy"] is DBNull ? null : reader["DataDostawy"].ToString(),
+            DataRejestracji = reader["DataRejestracji"].ToString()!,
+            ImieNazwiskoPracownika = reader["ImieNazwisko"].ToString()!
         };
 
         return View(vm);
