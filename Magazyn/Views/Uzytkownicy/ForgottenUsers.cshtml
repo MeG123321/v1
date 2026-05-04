@@ -47,14 +47,14 @@
             }
             else
             {
-                foreach (var u in Model)
+                foreach (var forgottenUser in Model)
                 {
                     <tr>
-                        <td>@u.Id</td>
-                        <td>@u.FullNameAfterForget</td>
-                        <td>@u.DataZapomnienia</td>
-                        <td><strong>@u.AdminName</strong></td>
-                        <td><a class="btn-secondary" asp-controller="Uzytkownicy" asp-action="UserDetails" asp-route-id="@u.Id">Szczegóły</a></td>
+                        <td>@forgottenUser.Id</td>
+                        <td>@forgottenUser.FullNameAfterForget</td>
+                        <td>@forgottenUser.DataZapomnienia</td>
+                        <td><strong>@forgottenUser.AdminName</strong></td>
+                        <td><a class="btn-secondary" asp-controller="Uzytkownicy" asp-action="UserDetails" asp-route-id="@forgottenUser.Id">Szczegóły</a></td>
                     </tr>
                 }
             }

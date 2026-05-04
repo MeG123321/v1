@@ -4,8 +4,7 @@
     ViewData["Title"] = "Magazyn GiTA - Lista Uprawnień";
     ViewData["ActivePage"] = "Uprawnienia";
     
-    // Lista ról - WAŻNE: Pierwszy parametr musi być IDENTYCZNY z nazwą w bazie danych (tabela Uprawnienia)
-    var allRoles = new (string Value, string Label)[]
+    var roleOptions = new (string Value, string Label)[]
     {
         ("Administrator",       "Administrator"),
         ("Pracownik magazynu",  "Pracownik magazynu"),
@@ -14,53 +13,35 @@
         ("Kierownik sprzedazy", "Kierownik sprzedaży")
     };
 
-    var selectedFilters = (string[])(ViewBag.SelectedRoles ?? Array.Empty<string>());
-}
-
-@section Styles {
-    <style>
-        /* Styl zapewniający, że zaznaczone role będą od razu podświetlone na zielono */
-        .role-btn:has(input:checked) {
-            background-color: #28a745 !important;
-            color: white !important;
-            border-color: #1e7e34 !important;
-        }
-        /* Dla starszych przeglądarek, jeśli nie wspierają :has */
-        .role-btn input:checked + span {
-            background-color: #28a745 !important;
-            color: white !important;
-        }
-    </style>
+    var selectedRoleFilters = (string[])(ViewBag.SelectedRoles ?? Array.Empty<string>());
 }
 
 <h2>Lista Uprawnień</h2>
 
-@* SEKCJA FILTRÓW *@
 <div class="search-bar">
     <form method="get" id="filterForm" asp-controller="Uprawnienia" asp-action="Uprawnienia">
-        <label style="display:block; margin-bottom: 15px; font-weight: bold; color: var(--accent-blue);">
+        <label class="filter-label">
             Filtruj użytkowników (wybierz role):
         </label>
         
         <div class="role-grid horizontal">
-            @foreach (var rola in allRoles)
+            @foreach (var roleOption in roleOptions)
             {
                 <label class="role-btn">
-                    <input type="checkbox" name="rola" value="@rola.Value" 
+                    <input type="checkbox" name="rola" value="@roleOption.Value" 
                            onchange="this.form.submit()"
-                           @(selectedFilters.Contains(rola.Value) ? "checked" : "") />
-                    @rola.Label
+                           @(selectedRoleFilters.Contains(roleOption.Value) ? "checked" : "") />
+                    @roleOption.Label
                 </label>
             }
         </div>
 
-        <div class="btn-group" style="margin-top: 20px;">
+        <div class="btn-group mt-20">
             <a class="btn-primary" asp-controller="Uprawnienia" asp-action="Uprawnienia">Wyczyść filtry</a>
         </div>
     </form>
 </div>
 
-@* TABELA WYNIKÓW *@
 <div class="tabelka-wyniki">
     <table>
         <thead>
@@ -77,65 +58,62 @@
             @if (Model == null || !Model.Any())
             {
                 <tr>
-                    <td colspan="6" class="no-results" style="text-align: center; padding: 40px;">
+                    <td colspan="6" class="no-results no-results-centered">
                         Brak użytkowników.
                     </td>
                 </tr>
             }
             else
             {
-                foreach (var u in Model)
+                foreach (var user in Model)
                 {
                     <tr>
-                        <td><strong>@u.Username</strong></td>
-                        <td>@u.FirstName</td>
-                        <td>@u.LastName</td>
-                        <td style="color: var(--accent-blue); font-size: 13px; font-weight: bold;">@u.Rola</td>
-                        <td>@u.Status</td>
+                        <td><strong>@user.Username</strong></td>
+                        <td>@user.FirstName</td>
+                        <td>@user.LastName</td>
+                        <td class="role-value">@user.Rola</td>
+                        <td>@user.Status</td>
                         <td>
-                            <a class="btn-secondary" href="#popup-@u.Id">Zmień Uprawnienia</a>
-                            <a class="btn-secondary" asp-controller="Uzytkownicy" asp-action="UserDetails" asp-route-id="@u.Id">Szczegóły</a>
+                            <a class="btn-secondary" href="#popup-@user.Id">Zmień Uprawnienia</a>
+                            <a class="btn-secondary" asp-controller="Uzytkownicy" asp-action="UserDetails" asp-route-id="@user.Id">Szczegóły</a>
                         </td>
                     </tr>
 
-                    @* POPUP INDYWIDUALNY *@
-                    <div id="popup-@u.Id" class="popup-overlay">
+                    <div id="popup-@user.Id" class="popup-overlay">
                         <div class="search-bar popup-content">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                                <h2 style="margin:0;">Zarządzaj rolami: @u.FirstName @u.LastName</h2>
+                            <div class="popup-header">
+                                <h2 class="popup-title">Zarządzaj rolami: @user.FirstName @user.LastName</h2>
                                 <a href="#" class="close-x">&times;</a>
                             </div>
 
                             <form asp-controller="Uprawnienia" asp-action="SetRole" method="post">
                                 @Html.AntiForgeryToken()
-                                <input type="hidden" name="id" value="@u.Id" />
+                                <input type="hidden" name="id" value="@user.Id" />
 
                                 <div class="role-grid">
-                                    @foreach (var r in allRoles)
+                                    @foreach (var roleOption in roleOptions)
                                     {
-                                        @* LOGIKA SPRAWDZANIA BAZY *@
-                                        bool maRole = false;
-                                        if (!string.IsNullOrWhiteSpace(u.Rola) && u.Rola != "-")
+                                        bool hasRole = false;
+                                        if (!string.IsNullOrWhiteSpace(user.Rola) && user.Rola != "-")
                                         {
-                                            // Rozbijamy string z bazy i czyścimy spacje, potem porównujemy z listą allRoles
-                                            maRole = u.Rola.Split(',')
-                                                           .Select(x => x.Trim())
-                                                           .Any(x => x.Equals(r.Value, StringComparison.OrdinalIgnoreCase));
+                                            hasRole = user.Rola.Split(',')
+                                                .Select(roleName => roleName.Trim())
+                                                .Any(roleName => roleName.Equals(roleOption.Value, StringComparison.OrdinalIgnoreCase));
                                         }
 
                                         <label class="role-btn">
-                                            <input type="checkbox" name="rola" value="@r.Value" 
-                                                   @(maRole ? "checked" : "") />
-                                            @r.Label
+                                            <input type="checkbox" name="rola" value="@roleOption.Value" 
+                                                   @(hasRole ? "checked" : "") />
+                                            @roleOption.Label
                                         </label>
                                     }
                                 </div>
 
-                                <p class="db-info-note" style="margin-top: 20px;">
+                                <p class="db-info-note mt-20">
                                     Aktualne role są podświetlone. Zaznacz nowe i kliknij Zapisz.
                                 </p>
 
-                                <div class="btn-group" style="justify-content: flex-end; margin-top: 20px;">
+                                <div class="btn-group btn-group-end mt-20">
                                     <a class="btn-secondary" href="#">Anuluj</a>
                                     <button type="submit" class="btn-primary">Zapisz uprawnienia</button>
                                 </div>

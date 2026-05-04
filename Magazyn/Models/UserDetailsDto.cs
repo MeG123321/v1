@@ -10,7 +10,7 @@ public class UserDetailsDto
     public string? Pesel { get; set; }
     public string? DataUrodzenia { get; set; }
     public string? NrTelefonu { get; set; }
-    public int Plec { get; set; } // Zostawiamy int, bo tak masz w bazie
+    public int Plec { get; set; }
     public string? Status { get; set; }
     public string? Rola { get; set; }
     public List<string> RoleList { get; set; } = new();
@@ -19,5 +19,5 @@ public class UserDetailsDto
     public string? Ulica { get; set; }
     public string? NrPosesji { get; set; }
     public string? NrLokalu { get; set; }
-    public bool IsForgotten { get; set; } 
+    public bool IsForgotten { get; set; }
 }

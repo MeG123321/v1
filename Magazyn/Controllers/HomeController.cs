@@ -6,10 +6,6 @@ using Magazyn.Models;
 
 namespace Magazyn.Controllers;
 
-/// <summary>
-/// Kontroler główny obsługujący stronę startową oraz API podglądu użytkowników.
-/// Logowanie i wylogowanie zostały przeniesione do <see cref="AccountController"/>.
-/// </summary>
 public class HomeController : Controller
 {
     private readonly IWebHostEnvironment _env;
@@ -21,13 +17,8 @@ public class HomeController : Controller
         _logger = logger;
     }
 
-    /// <summary>Pełna ścieżka do pliku bazy danych SQLite.</summary>
     private string DbPath => Db.GetDbPath(_env);
 
-    /// <summary>
-    /// Konwertuje wartość kolumny Status z bazy danych (INT lub DBNull)
-    /// na czytelny ciąg tekstowy: "Aktywny" lub "Nieaktywny".
-    /// </summary>
     private static string StatusToText(object dbValue)
     {
         if (dbValue == DBNull.Value) return "Nieaktywny";
@@ -36,18 +27,6 @@ public class HomeController : Controller
 
     public IActionResult Index() => View();
 
-    // =========================
-    // API: lista userów
-    // =========================
-
-    /// <summary>
-    /// Zwraca listę aktywnych użytkowników (nie-zapomnianych) w formacie JSON.
-    /// Umożliwia filtrowanie po loginie, nazwisku lub peselu (częściowe dopasowanie, case-insensitive).
-    /// Używana przez JavaScript do dynamicznego podglądu użytkowników.
-    /// </summary>
-    /// <param name="login">Opcjonalny filtr na login (username).</param>
-    /// <param name="name">Opcjonalny filtr na imię i nazwisko.</param>
-    /// <param name="pesel">Opcjonalny filtr na PESEL.</param>
     [Authorize]
     [HttpGet]
     public IActionResult ApiUsers(string? login = null, string? name = null, string? pesel = null)
@@ -60,8 +39,6 @@ public class HomeController : Controller
         using var connection = Db.OpenConnection(DbPath);
         using var command = connection.CreateCommand();
 
-        // Pobiera podstawowe dane użytkowników z opcjonalnym filtrowaniem.
-        // Parametry NULL wyłączają dany filtr (brak ograniczenia).
         command.CommandText = @"
 SELECT id, username, firstName, LastName, pesel, Email
 FROM Uzytkownicy
@@ -92,15 +69,6 @@ ORDER BY id;
         return Json(userList);
     }
 
-    // =========================
-    // API: jeden user
-    // =========================
-
-    /// <summary>
-    /// Zwraca pełne dane jednego użytkownika (łącznie z hasłem i danymi adresowymi) w formacie JSON.
-    /// Używana przez panel edycji do wstępnego załadowania formularza przez AJAX.
-    /// </summary>
-    /// <param name="id">Identyfikator użytkownika w tabeli Uzytkownicy.</param>
     [Authorize]
     [HttpGet]
     public IActionResult ApiUser(long id)
@@ -111,7 +79,6 @@ ORDER BY id;
         using var connection = Db.OpenConnection(DbPath);
         using var command = connection.CreateCommand();
 
-        // Pobieramy kompletny rekord użytkownika wraz z danymi adresowymi i polami RODO.
         command.CommandText = @"
 SELECT id, username, Password, firstName, LastName, pesel, Status, Plec, DataUrodzenia,
        Email, NrTelefonu,
@@ -140,7 +107,6 @@ LIMIT 1;
             lastName     = dbReader["LastName"],
             pesel        = dbReader["pesel"],
 
-            // Status: wartość liczbowa (0/1) oraz odpowiadający tekst
             statusInt    = statusInt,
             status       = StatusToText(dbReader["Status"]),
 
