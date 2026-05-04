@@ -13,7 +13,7 @@
 }
 
 <div class="search-bar">
-    <form asp-action="RejestracjaTowaru" method="post">
+    <form asp-action="RejestracjaTowaru" method="post" novalidate>
         @Html.AntiForgeryToken()
         <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
 

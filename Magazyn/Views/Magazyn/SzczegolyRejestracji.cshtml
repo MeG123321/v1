@@ -25,11 +25,11 @@
         </div>
         <div>
             <label>Ilość</label>
-            <p style="color:var(--text-bright);margin:0;padding:10px 0;">@Model.Ilosc.ToString("G29")</p>
+            <p style="color:var(--text-bright);margin:0;padding:10px 0;">@(Model.Ilosc?.ToString("0.###") ?? "-")</p>
         </div>
         <div>
             <label>Cena netto</label>
-            <p style="color:var(--text-bright);margin:0;padding:10px 0;">@Model.CenaNetto.ToString("F2") zł</p>
+            <p style="color:var(--text-bright);margin:0;padding:10px 0;">@(Model.CenaNetto?.ToString("0.00") ?? "-") zł</p>
         </div>
         <div>
             <label>Stawka VAT</label>

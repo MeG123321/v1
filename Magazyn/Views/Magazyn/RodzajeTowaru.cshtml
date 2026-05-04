@@ -20,7 +20,7 @@
 
 <div class="search-bar" style="max-width:500px;margin-bottom:20px;">
     <p style="color:#768390;font-size:12px;font-weight:bold;text-transform:uppercase;margin-bottom:15px;">Dodaj nowy rodzaj</p>
-    <form method="post" asp-action="DodajRodzaj">
+    <form asp-action="RejestracjaTowaru" method="post" novalidate>
         @Html.AntiForgeryToken()
         <div class="tabelka">
             <div class="form-group">
