@@ -9,7 +9,7 @@
 
 @if (!string.IsNullOrEmpty(TempData["SuccessMessage"]?.ToString()))
 {
-    <div style="background:rgba(87,171,90,0.12);border:1px solid var(--status-green);border-radius:6px;color:var(--status-green);padding:15px;margin-bottom:20px;">
+    <div class="alert-success">
         @TempData["SuccessMessage"]
     </div>
 }
@@ -18,8 +18,8 @@
     <div class="validation-summary">@TempData["ErrorMessage"]</div>
 }
 
-<div class="search-bar" style="max-width:500px;margin-bottom:20px;">
-    <p style="color:#768390;font-size:12px;font-weight:bold;text-transform:uppercase;margin-bottom:15px;">Dodaj nowy rodzaj</p>
+<div class="search-bar search-bar--narrow">
+    <p class="section-caption">Dodaj nowy rodzaj</p>
     <form asp-action="RejestracjaTowaru" method="post" novalidate>
         @Html.AntiForgeryToken()
         <div class="tabelka">
@@ -52,33 +52,33 @@
             }
             else
             {
-                foreach (var r in Model)
+                foreach (var typeRow in Model)
                 {
                     <tr>
                         <td>
-                            <span id="nazwa-@r.Id">@r.Nazwa</span>
-                            <form id="edit-form-@r.Id" method="post" asp-action="EdytujRodzaj" style="display:none;margin-top:8px;">
+                            <span id="nazwa-@typeRow.Id">@typeRow.Nazwa</span>
+                            <form id="edit-form-@typeRow.Id" method="post" asp-action="EdytujRodzaj" class="edit-form">
                                 @Html.AntiForgeryToken()
-                                <input type="hidden" name="id" value="@r.Id" />
-                                <input type="text" name="nazwa" value="@r.Nazwa" style="background:var(--bg-dark);border:1px solid var(--border-color);color:var(--text-bright);padding:6px;border-radius:4px;" />
-                                <button type="submit" class="btn-primary" style="margin-left:8px;height:32px;padding:4px 12px;">Zapisz</button>
-                                <button type="button" class="btn-secondary" style="margin-left:4px;height:32px;padding:4px 12px;" onclick="cancelEdit(@r.Id)">Anuluj</button>
+                                <input type="hidden" name="id" value="@typeRow.Id" />
+                                <input type="text" name="nazwa" value="@typeRow.Nazwa" class="inline-input" />
+                                <button type="submit" class="btn-primary btn-compact ml-8">Zapisz</button>
+                                <button type="button" class="btn-secondary btn-compact ml-4" onclick="cancelEdit(@typeRow.Id)">Anuluj</button>
                             </form>
                         </td>
-                        <td>@r.LiczbaTowarow</td>
+                        <td>@typeRow.LiczbaTowarow</td>
                         <td>
-                            <button type="button" class="btn-secondary" style="margin-right:4px;" id="edit-btn-@r.Id" onclick="showEdit(@r.Id)">Edytuj</button>
-                            @if (r.LiczbaTowarow == 0)
+                            <button type="button" class="btn-secondary mr-4" id="edit-btn-@typeRow.Id" onclick="showEdit(@typeRow.Id)">Edytuj</button>
+                            @if (typeRow.LiczbaTowarow == 0)
                             {
-                                <form method="post" asp-action="UsunRodzaj" style="display:inline;" onsubmit="return confirm('Czy na pewno usunąć ten rodzaj?')">
+                                <form method="post" asp-action="UsunRodzaj" class="inline-form" onsubmit="return confirm('Czy na pewno usunąć ten rodzaj?')">
                                     @Html.AntiForgeryToken()
-                                    <input type="hidden" name="id" value="@r.Id" />
-                                    <button type="submit" class="btn-secondary" style="color:var(--error-red);border-color:var(--error-red);">Usuń</button>
+                                    <input type="hidden" name="id" value="@typeRow.Id" />
+                                    <button type="submit" class="btn-secondary btn-danger">Usuń</button>
                                 </form>
                             }
                             else
                             {
-                                <span style="color:#768390;font-size:12px;">Przypisany do towarów</span>
+                                <span class="text-muted-small">Przypisany do towarów</span>
                             }
                         </td>
                     </tr>

@@ -95,9 +95,35 @@ body {
 }
 
 .info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
     font-size: 13px;
     color: var(--accent-blue);
     font-weight: bold;
+}
+
+.header-user-label {
+    color: var(--text-main);
+    font-weight: normal;
+}
+
+.header-link {
+    color: var(--accent-blue);
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.filter-label {
+    display: block;
+    margin-bottom: 15px;
+    font-weight: bold;
+    color: var(--accent-blue);
+}
+
+.hidden-form {
+    display: none;
 }
 
 .zaw {
@@ -209,14 +235,34 @@ h2 {
     align-items: center;
 }
 
+.btn-group-end {
+    justify-content: flex-end;
+}
+
 .back-link {
     display: inline-block;
     margin-bottom: 14px;
     color: rgba(90, 155, 255, 0.3);
 }
 
+.mt-20 {
+    margin-top: 20px;
+}
+
 .mt-30 {
     margin-top: 30px;
+}
+
+.mr-4 {
+    margin-right: 4px;
+}
+
+.ml-4 {
+    margin-left: 4px;
+}
+
+.ml-8 {
+    margin-left: 8px;
 }
 
 .db-info-note {
@@ -229,20 +275,29 @@ h2 {
     font-weight: 700;
 }
 
+.no-results-centered {
+    text-align: center;
+    padding: 40px;
+}
+
+.role-value {
+    color: var(--accent-blue);
+    font-size: 13px;
+    font-weight: bold;
+}
+
 .col-span-2 {
     grid-column: span 2;
 }
 
-/* =========================
-   WALIDACJA FORMULARZY (POPRAWIONA)
-========================= */
+
 
 .form-group {
     display: flex;
     flex-direction: column;
 }
 
-/* Napis błędu pod polem */
+
 .field-error {
     color: var(--error-red);
     font-size: 11px;
@@ -252,7 +307,7 @@ h2 {
     min-height: 16px;
 }
 
-/* Podsumowanie błędów na górze */
+
 .validation-summary {
     background: rgba(255, 107, 107, 0.12);
     border: 1px solid rgba(255, 107, 107, 0.4);
@@ -268,28 +323,28 @@ h2 {
     padding-left: 20px;
 }
 
-/* POLE Z BŁĘDEM (Dark Mode Fix) */
+
 .tabelka input.input-validation-error,
 .tabelka select.input-validation-error {
     border: 2px solid var(--error-red) !important;
-    background-color: #1a1111 !important; /* Bardzo ciemny czerwony zamiast białego */
+    background-color: #1a1111 !important; 
     color: var(--text-bright) !important;
 }
 
-/* POLE POPRAWNE (Zielone) */
-/* Używamy :not(), aby błąd zawsze wygrywał z zielenią */
+
+
 .tabelka input.valid:not(.input-validation-error),
 .tabelka select.valid:not(.input-validation-error) {
     border: 2px solid var(--status-green) !important;
     background-color: var(--bg-dark) !important;
 }
 
-/* Wyłączenie zielonej ramki dla haseł dla bezpieczeństwa */
+
 .tabelka input[type="password"].valid {
     border-color: var(--border-color) !important;
 }
 
-/* Reszta stylów tabeli i okienek... */
+
 .tabelka-wyniki {
     background-color: var(--panel-dark);
     border-radius: 8px;
@@ -323,9 +378,7 @@ td {
     text-decoration: none;
 }
 
-/* ========================= 
-   DETAILS PAGE
-========================= */
+
 
 .details-top {
     display: flex;
@@ -389,6 +442,10 @@ td {
     border-color: rgba(180, 35, 24, 0.2);
 }
 
+.status-pill-readonly {
+    border: 1px dashed #ccc;
+}
+
 .subline {
     opacity: .85;
     margin-top: 4px;
@@ -424,30 +481,41 @@ td {
     display: inline;
 }
 
-/* --- KONTENER RÓL --- */
+.popup-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.popup-title {
+    margin: 0;
+}
+
+
 .role-grid {
     display: flex;
-    flex-direction: column;    /* Domyślnie pod sobą (dla popupu) */
+    flex-direction: column;    
     gap: 8px;
-    align-items: flex-start;   /* Border dopasowuje się do tekstu */
+    align-items: flex-start;   
     width: 100%;
 }
 
-/* Klasa modyfikująca dla filtrów (układ poziomy) */
+
 .role-grid.horizontal {
-    flex-direction: row;       /* Obok siebie */
-    flex-wrap: wrap;           /* Zawijanie rzędów */
+    flex-direction: row;       
+    flex-wrap: wrap;           
     align-items: center;
 }
 
-/* --- PRZYCISK ROLI (Na wzór btn-secondary) --- */
+
 .role-btn {
-    box-sizing: border-box;    /* Zapobiega wystawaniu */
-    display: inline-flex;      /* Szerokość zależna od tekstu */
+    box-sizing: border-box;    
+    display: inline-flex;      
     align-items: center;
     justify-content: center;
     
-    height: 38px;              /* Twoja wysokość standardowa */
+    height: 38px;              
     padding: 0 16px;
     border-radius: 6px;
     
@@ -457,35 +525,35 @@ td {
     cursor: pointer;
     transition: all 0.2s ease;
     
-    /* Styl bazowy: Niebieski (nieaktywny) */
+    
     background-color: transparent;
     color: white;
     border: 1px solid var(--accent-blue);
     user-select: none;
-    white-space: nowrap;       /* Tekst w jednej linii */
+    white-space: nowrap;       
 }
 
-/* Ukrycie natywnego checkboxa */
+
 .role-btn input {
     display: none;
 }
 
-/* Hover dla przycisku */
+
 .role-btn:hover {
     background-color: rgba(255, 255, 255, 0.05);
     border-color: #5a9bff;
     box-shadow: 0 0 8px rgba(90, 155, 255, 0.2);
 }
 
-/* --- STAN ZAZNACZONY (Zielony) --- */
+
 .role-btn:has(input:checked) {
-    border: 2px solid var(--status-green) !important;
-    color: var(--status-green);
-    background-color: rgba(87, 171, 90, 0.08);
+    background-color: #28a745;
+    color: white;
+    border-color: #1e7e34;
     box-shadow: 0 0 10px rgba(87, 171, 90, 0.2);
 }
 
-/* --- OBSŁUGA POPUPU (Overlay) --- */
+
 .popup-overlay {
     display: none;
     position: fixed;
@@ -517,9 +585,7 @@ td {
 .close-x:hover {
     color: var(--accent-blue);
 }
-/* ========================= 
-   ALERTS / NOTIFICATIONS
-========================= */
+
 .alert-success {
     background-color: rgba(87, 171, 90, 0.15);
     color: var(--status-green);
@@ -530,7 +596,17 @@ td {
     font-weight: bold;
 }
 
-/* SECTION TITLES (forms) */
+.alert-error {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 15px 20px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    border: 1px solid #f5c6cb;
+    font-weight: bold;
+}
+
+
 .form-section-title {
     color: var(--accent-blue);
     font-size: 14px;
@@ -539,4 +615,83 @@ td {
     margin: 24px 0 12px 0;
     padding-bottom: 6px;
     border-bottom: 1px solid var(--border-color);
+}
+
+.search-bar--narrow {
+    max-width: 500px;
+    margin-bottom: 20px;
+}
+
+.search-bar--wide {
+    max-width: 700px;
+}
+
+.section-caption {
+    color: #768390;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-bottom: 15px;
+}
+
+.edit-form {
+    display: none;
+    margin-top: 8px;
+}
+
+.inline-input {
+    background: var(--bg-dark);
+    border: 1px solid var(--border-color);
+    color: var(--text-bright);
+    padding: 6px;
+    border-radius: 4px;
+}
+
+.btn-compact {
+    height: 32px;
+    padding: 4px 12px;
+}
+
+.btn-danger {
+    color: var(--error-red);
+    border-color: var(--error-red);
+}
+
+.text-muted-small {
+    color: #768390;
+    font-size: 12px;
+}
+
+.detail-value {
+    color: var(--text-bright);
+    margin: 0;
+    padding: 10px 0;
+}
+
+.text-muted {
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.text-bright {
+    color: var(--text-bright);
+}
+
+.table-compact {
+    margin-bottom: 0;
+}
+
+.text-error {
+    color: var(--error-red);
+}
+
+.form-group-inline {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.subtle-link {
+    font-size: 0.9em;
+    color: #666;
 }

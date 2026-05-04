@@ -4,25 +4,23 @@
     ViewData["Title"] = "Magazyn GiTA - Szczegóły pracownika";
     ViewData["ActivePage"] = "AdminPanel";
 
-    // Pobieramy status i czyścimy go
-    var currentStatus = Model.Status?.Trim() ?? "";
-    var active = string.Equals(currentStatus, "Aktywny", StringComparison.OrdinalIgnoreCase);
+    var statusText = Model.Status?.Trim() ?? "";
+    var isActive = string.Equals(statusText, "Aktywny", StringComparison.OrdinalIgnoreCase);
 }
 
 @section Scripts {
     <script defer src="~/js/script.js"></script>
 }
 
-@* Komunikaty systemowe (np. o wygenerowaniu hasła) *@
 @if (TempData["SuccessMessage"] != null)
 {
-    <div style="background-color: #d4edda; color: #155724; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #c3e6cb; font-weight: bold;">
+    <div class="alert-success">
         @TempData["SuccessMessage"]
     </div>
 }
 @if (TempData["ErrorMessage"] != null)
 {
-    <div style="background-color: #f8d7da; color: #721c24; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #f5c6cb; font-weight: bold;">
+    <div class="alert-error">
         @TempData["ErrorMessage"]
     </div>
 }
@@ -41,17 +39,17 @@
         </div>
 
         <div>
-            <div class="name-line">
-                <h2>@Model.FirstName @Model.LastName</h2>
+                <div class="name-line">
+                    <h2>@Model.FirstName @Model.LastName</h2>
 
-                <span class="status-pill @(active ? "" : "off")">
-                    @if (Model.IsForgotten) {
-                        @:Status: Zanonimizowany (RODO)
-                    } else {
-                        @(string.IsNullOrWhiteSpace(currentStatus) ? "Status: Nieokreślony" : $"Status: {currentStatus}")
-                    }
-                </span>
-            </div>
+                    <span class="status-pill @(isActive ? "" : "off")">
+                        @if (Model.IsForgotten) {
+                            @:Status: Zanonimizowany (RODO)
+                        } else {
+                            @(string.IsNullOrWhiteSpace(statusText) ? "Status: Nieokreślony" : $"Status: {statusText}")
+                        }
+                    </span>
+                </div>
 
             <div class="subline">
                 <span class="subline-item">Login: <strong>@(Model.Username ?? "-")</strong></span>
@@ -60,7 +58,6 @@
         </div>
     </div>
 
-    @* SEKCJA PRZYCISKÓW AKCJI (LG_UC5) *@
     <div class="action-row">
         @if (!Model.IsForgotten)
         {
@@ -70,7 +67,6 @@
                     Edytuj
                 </a>
 
-                @* Przycisk generowania hasła przez administratora *@
                 <form class="inline-form" asp-controller="Account" asp-action="AdminGeneratePassword" asp-route-id="@Model.Id" method="post"
                       onsubmit="return confirm('Czy na pewno wygenerować nowe hasło tymczasowe? Zostanie ono wysłane na e-mail pracownika.');">
                     @Html.AntiForgeryToken()
@@ -91,7 +87,7 @@
         }
         else
         {
-            <span class="status-pill off" style="border: 1px dashed #ccc;">Tryb tylko do odczytu</span>
+            <span class="status-pill off status-pill-readonly">Tryb tylko do odczytu</span>
         }
     </div>
 </div>
@@ -114,7 +110,6 @@
     </table>
 </div>
 
-@* Popup do nadawania uprawnień (tylko Administrator) *@
 @if (!Model.IsForgotten && User.IsInRole("Administrator"))
 {
     <div id="role-popup" class="popup-overlay">
@@ -125,7 +120,7 @@
                 <input type="hidden" name="id" value="@Model.Id" />
                 <div class="role-grid">
                     @{
-                        var dostepneRole = new (string Value, string Label)[]
+                        var availableRoles = new (string Value, string Label)[]
                         {
                             ("Administrator", "Administrator"),
                             ("Pracownik magazynu", "Pracownik magazynu"),
@@ -134,12 +129,12 @@
                             ("Kierownik sprzedazy", "Kierownik sprzedaży")
                         };
                     }
-                    @foreach (var r in dostepneRole)
+                    @foreach (var roleOption in availableRoles)
                     {
                         <label class="role-btn">
-                            <input type="checkbox" name="rola" value="@r.Value"
-                                   @(Model.RoleList.Contains(r.Value) ? "checked" : "") />
-                            @r.Label
+                            <input type="checkbox" name="rola" value="@roleOption.Value"
+                                   @(Model.RoleList.Contains(roleOption.Value) ? "checked" : "") />
+                            @roleOption.Label
                         </label>
                     }
                 </div>

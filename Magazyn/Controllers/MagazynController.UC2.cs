@@ -29,14 +29,14 @@ public partial class MagazynController : Controller
         bool canSeeHistorical = User.IsInRole("Administrator") || User.IsInRole("Kierownik magazynu");
         bool useHistorical = canSeeHistorical && !string.IsNullOrWhiteSpace(dataStanu);
 
-        var sql = new System.Text.StringBuilder();
+        var queryBuilder = new System.Text.StringBuilder();
         if (useHistorical)
         {
-            sql.Append(@"
-SELECT t.Id as TowarId, t.NazwaTowaru, r.Nazwa as RodzajTowaru, jm.Nazwa as JednostkaMiary,
-       COALESCE((SELECT SUM(rt2.Ilosc) FROM RejestracjeTowaru rt2
-                  WHERE rt2.TowarId = t.Id AND rt2.DataRejestracji <= $dataStanu || ' 23:59:59'), 0) as StanMagazynowy
-FROM Towary t
+            queryBuilder.Append(@"
+ SELECT t.Id as TowarId, t.NazwaTowaru, r.Nazwa as RodzajTowaru, jm.Nazwa as JednostkaMiary,
+        COALESCE((SELECT SUM(rt2.Ilosc) FROM RejestracjeTowaru rt2
+                   WHERE rt2.TowarId = t.Id AND rt2.DataRejestracji <= $dataStanu || ' 23:59:59'), 0) as StanMagazynowy
+ FROM Towary t
 JOIN TowarRodzaje r ON r.Id = t.RodzajId
 JOIN JednostkiMiary jm ON jm.Id = t.JednostkaMiaryId
 WHERE t.CzyAktywny = 1
@@ -45,10 +45,10 @@ WHERE t.CzyAktywny = 1
         }
         else
         {
-            sql.Append(@"
-SELECT t.Id as TowarId, t.NazwaTowaru, r.Nazwa as RodzajTowaru, jm.Nazwa as JednostkaMiary,
-       t.AktualnaIlosc as StanMagazynowy
-FROM Towary t
+            queryBuilder.Append(@"
+ SELECT t.Id as TowarId, t.NazwaTowaru, r.Nazwa as RodzajTowaru, jm.Nazwa as JednostkaMiary,
+        t.AktualnaIlosc as StanMagazynowy
+ FROM Towary t
 JOIN TowarRodzaje r ON r.Id = t.RodzajId
 JOIN JednostkiMiary jm ON jm.Id = t.JednostkaMiaryId
 WHERE t.CzyAktywny = 1
@@ -56,33 +56,33 @@ WHERE t.CzyAktywny = 1
         }
 
         if (!string.IsNullOrWhiteSpace(nazwaTowar))
-            sql.Append("  AND LOWER(TRIM(t.NazwaTowaru)) LIKE '%' || LOWER(TRIM($nazwa)) || '%'\n");
+            queryBuilder.Append("  AND LOWER(TRIM(t.NazwaTowaru)) LIKE '%' || LOWER(TRIM($nazwa)) || '%'\n");
         if (rodzajId.HasValue && rodzajId > 0)
-            sql.Append("  AND t.RodzajId = $rodzajId\n");
+            queryBuilder.Append("  AND t.RodzajId = $rodzajId\n");
         if (!string.IsNullOrWhiteSpace(imiePracownika))
-            sql.Append(@"  AND EXISTS (SELECT 1 FROM RejestracjeTowaru rt3
+            queryBuilder.Append(@"  AND EXISTS (SELECT 1 FROM RejestracjeTowaru rt3
                 JOIN Uzytkownicy u3 ON u3.id = rt3.RejestrujacyUserId
                 WHERE rt3.TowarId = t.Id AND LOWER(u3.firstName || ' ' || u3.LastName) LIKE '%' || LOWER($imie) || '%')
-");
-        sql.Append("ORDER BY t.NazwaTowaru");
+ ");
+        queryBuilder.Append("ORDER BY t.NazwaTowaru");
 
         using var cmd = conn.CreateCommand();
-        cmd.CommandText = sql.ToString();
+        cmd.CommandText = queryBuilder.ToString();
         if (!string.IsNullOrWhiteSpace(nazwaTowar)) cmd.Parameters.AddWithValue("$nazwa", nazwaTowar);
         if (rodzajId.HasValue && rodzajId > 0) cmd.Parameters.AddWithValue("$rodzajId", rodzajId.Value);
         if (!string.IsNullOrWhiteSpace(imiePracownika)) cmd.Parameters.AddWithValue("$imie", imiePracownika);
         if (useHistorical) cmd.Parameters.AddWithValue("$dataStanu", dataStanu!);
 
-        using var dr = cmd.ExecuteReader();
-        while (dr.Read())
+        using var reader = cmd.ExecuteReader();
+        while (reader.Read())
         {
             vm.Wyniki.Add(new TowarStanDto
             {
-                TowarId = Convert.ToInt64(dr["TowarId"]),
-                NazwaTowaru = dr["NazwaTowaru"].ToString()!,
-                RodzajTowaru = dr["RodzajTowaru"].ToString()!,
-                JednostkaMiary = dr["JednostkaMiary"].ToString()!,
-                StanMagazynowy = Convert.ToDecimal(dr["StanMagazynowy"])
+                TowarId = Convert.ToInt64(reader["TowarId"]),
+                NazwaTowaru = reader["NazwaTowaru"].ToString()!,
+                RodzajTowaru = reader["RodzajTowaru"].ToString()!,
+                JednostkaMiary = reader["JednostkaMiary"].ToString()!,
+                StanMagazynowy = Convert.ToDecimal(reader["StanMagazynowy"])
             });
         }
 
