@@ -66,6 +66,26 @@
                         }
                     </ul>
                 }
+                @if (User.IsInRole("Administrator") || User.IsInRole("Sprzedawca") || User.IsInRole("Kierownik sprzedazy"))
+                {
+                    <p>Zarządzanie sprzedażą</p>
+                    <ul>
+                        @if (User.IsInRole("Administrator") || User.IsInRole("Sprzedawca"))
+                        {
+                            <li>
+                                <a asp-controller="Sprzedaz" asp-action="RejestracjaSprzedazy"
+                                   class="@(activePage == "RejestracjaSprzedazy" ? "active" : "")">Rejestracja sprzedaży</a>
+                            </li>
+                        }
+                        @if (User.IsInRole("Administrator") || User.IsInRole("Kierownik sprzedazy"))
+                        {
+                            <li>
+                                <a asp-controller="Sprzedaz" asp-action="HistoriaSprzedazy"
+                                   class="@(activePage == "HistoriaSprzedazy" ? "active" : "")">Historia sprzedaży</a>
+                            </li>
+                        }
+                    </ul>
+                }
             </nav>
         </aside>
 

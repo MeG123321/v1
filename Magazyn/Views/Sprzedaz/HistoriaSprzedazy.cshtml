@@ -1,0 +1,84 @@
+@model Magazyn.Models.HistoriaSprzedazyVm
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Historia sprzedaży";
+    ViewData["ActivePage"] = "HistoriaSprzedazy";
+}
+
+<h2>Historia sprzedaży</h2>
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="validation-summary">@Model.ErrorMessage</div>
+}
+
+<div class="search-bar">
+    <form method="get" asp-action="HistoriaSprzedazy">
+        <div class="tabelka">
+            <div class="form-group">
+                <label for="dataOd">Data od</label>
+                <input type="date" id="dataOd" name="dataOd" value="@Model.DataOd" />
+            </div>
+            <div class="form-group">
+                <label for="dataDo">Data do</label>
+                <input type="date" id="dataDo" name="dataDo" value="@Model.DataDo" />
+            </div>
+            <div class="form-group">
+                <label for="nabywca">Nabywca</label>
+                <input type="text" id="nabywca" name="nabywca" value="@Model.Nabywca" placeholder="Wyszukaj nabywcę" />
+            </div>
+            <div class="form-group">
+                <label for="sprzedawca">Sprzedawca</label>
+                <input type="text" id="sprzedawca" name="sprzedawca" value="@Model.Sprzedawca" placeholder="Imię i nazwisko" />
+            </div>
+            <div class="form-group">
+                <label for="towar">Towar</label>
+                <input type="text" id="towar" name="towar" value="@Model.Towar" placeholder="Nazwa towaru" />
+            </div>
+        </div>
+
+        <div class="btn-group">
+            <button type="submit" class="btn-primary">Filtruj</button>
+            <a asp-action="HistoriaSprzedazy" class="btn-secondary">Wyczyść</a>
+        </div>
+    </form>
+</div>
+
+<div class="tabelka-wyniki">
+    <table>
+        <thead>
+            <tr>
+                <th>Data sprzedaży</th>
+                <th>Nabywca</th>
+                <th>Sprzedawca</th>
+                <th>Pozycje</th>
+                <th>Akcje</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Wyniki == null || !Model.Wyniki.Any())
+            {
+                <tr>
+                    <td colspan="5" class="no-results no-results-centered">
+                        @(Model.Filtered ? "Brak wyników dla podanych kryteriów." : "Brak zarejestrowanych sprzedaży.")
+                    </td>
+                </tr>
+            }
+            else
+            {
+                foreach (var row in Model.Wyniki)
+                {
+                    <tr>
+                        <td>@row.DataSprzedazy</td>
+                        <td>@row.Nabywca</td>
+                        <td>@row.Sprzedawca</td>
+                        <td>@row.LiczbaPozycji</td>
+                        <td>
+                            <a class="btn-secondary" asp-action="SzczegolySprzedazy" asp-route-id="@row.Id">Szczegóły</a>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

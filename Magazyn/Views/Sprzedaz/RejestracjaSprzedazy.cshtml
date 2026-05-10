@@ -1,0 +1,96 @@
+@model Magazyn.Models.RejestracjaSprzedazyVm
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Rejestracja sprzedaży";
+    ViewData["ActivePage"] = "RejestracjaSprzedazy";
+}
+
+<h2>Rejestracja sprzedaży</h2>
+
+@if (!string.IsNullOrEmpty(TempData["SuccessMessage"]?.ToString()))
+{
+    <div class="alert-success">@TempData["SuccessMessage"]</div>
+}
+@if (!string.IsNullOrEmpty(TempData["ErrorMessage"]?.ToString()))
+{
+    <div class="alert-error">@TempData["ErrorMessage"]</div>
+}
+
+<div class="search-bar">
+    <form asp-action="RejestracjaSprzedazy" method="post" novalidate>
+        @Html.AntiForgeryToken()
+        <div asp-validation-summary="ModelOnly" class="validation-summary"></div>
+
+        <div class="tabelka">
+            <div class="form-group">
+                <label asp-for="NazwaKlienta">Nazwa klienta *</label>
+                <input asp-for="NazwaKlienta" type="text" placeholder="Wprowadź nazwę klienta" />
+                <span asp-validation-for="NazwaKlienta" class="field-error"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="AdresKlienta">Adres klienta *</label>
+                <input asp-for="AdresKlienta" type="text" placeholder="Wprowadź adres klienta" />
+                <span asp-validation-for="AdresKlienta" class="field-error"></span>
+            </div>
+
+            <div class="form-group">
+                <label asp-for="DataSprzedazy">Data sprzedaży *</label>
+                <input asp-for="DataSprzedazy" type="date" />
+                <span asp-validation-for="DataSprzedazy" class="field-error"></span>
+                <span class="text-muted-small">Data sprzedaży może być bieżąca lub przyszła.</span>
+            </div>
+        </div>
+
+        <div class="form-section-title">Towary do sprzedaży</div>
+        <div class="tabelka-wyniki sales-items-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Towar</th>
+                        <th>Jednostka</th>
+                        <th>Dostępna ilość</th>
+                        <th>Ilość sprzedaży</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Pozycje == null || !Model.Pozycje.Any())
+                    {
+                        <tr>
+                            <td colspan="4" class="no-results no-results-centered">
+                                Brak towarów dostępnych do sprzedaży.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        for (int i = 0; i < Model.Pozycje.Count; i++)
+                        {
+                            <tr>
+                                <td>
+                                    <strong>@Model.Pozycje[i].NazwaTowaru</strong>
+                                    <input type="hidden" asp-for="Pozycje[i].TowarId" />
+                                </td>
+                                <td>@Model.Pozycje[i].JednostkaMiary</td>
+                                <td>@Model.Pozycje[i].DostepnaIlosc</td>
+                                <td>
+                                    <input asp-for="Pozycje[i].Ilosc" type="number" step="0.001" min="0" class="sales-qty-input" />
+                                    <span asp-validation-for="Pozycje[i].Ilosc" class="field-error"></span>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="btn-group mt-20">
+            <button type="submit" class="btn-primary">Zapisz</button>
+            <a asp-controller="Home" asp-action="Index" class="btn-secondary">Anuluj</a>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
