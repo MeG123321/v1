@@ -37,7 +37,7 @@ public partial class SprzedazController : Controller
 SELECT s.Id,
        s.DataSprzedazy,
        s.Nabywca,
-       u.firstName || ' ' || u.LastName AS Sprzedawca,
+       u.FirstName || ' ' || u.LastName AS Sprzedawca,
        (SELECT COUNT(*) FROM SprzedazPozycje sp WHERE sp.SprzedazId = s.Id) AS LiczbaPozycji
 FROM Sprzedaze s
 JOIN Uzytkownicy u ON u.id = s.SprzedawcaUserId
@@ -51,7 +51,7 @@ WHERE 1 = 1
         if (!string.IsNullOrWhiteSpace(nabywca))
             sql.Append("  AND LOWER(TRIM(s.Nabywca)) LIKE '%' || LOWER(TRIM($nabywca)) || '%'\n");
         if (!string.IsNullOrWhiteSpace(sprzedawca))
-            sql.Append("  AND LOWER(u.firstName || ' ' || u.LastName) LIKE '%' || LOWER(TRIM($sprzedawca)) || '%'\n");
+            sql.Append("  AND LOWER(u.FirstName || ' ' || u.LastName) LIKE '%' || LOWER(TRIM($sprzedawca)) || '%'\n");
         if (!string.IsNullOrWhiteSpace(towar))
         {
             sql.Append(@"  AND EXISTS (

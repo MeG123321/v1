@@ -24,7 +24,7 @@ public partial class SprzedazController : Controller
         {
             cmd.CommandText = @"
 SELECT s.Id, s.Nabywca, s.Adres, s.DataSprzedazy, s.DataRejestracji,
-       u.firstName || ' ' || u.LastName AS Sprzedawca
+       u.FirstName || ' ' || u.LastName AS Sprzedawca
 FROM Sprzedaze s
 JOIN Uzytkownicy u ON u.id = s.SprzedawcaUserId
 WHERE s.Id = $id";
