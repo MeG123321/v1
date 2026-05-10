@@ -38,8 +38,14 @@ public partial class SprzedazController : Controller
         using var conn = Db.OpenConnection(DbPath);
         vm.Pozycje ??= new List<SprzedazPozycjaVm>();
 
-        if (!DateTime.TryParse(vm.DataSprzedazy, out var dataSprzedazy) || dataSprzedazy.Date < DateTime.Today)
+        if (!DateTime.TryParse(vm.DataSprzedazy, out var dataSprzedazy))
+        {
+            ModelState.AddModelError("DataSprzedazy", "Niepoprawny format daty sprzedaży");
+        }
+        else if (dataSprzedazy.Date < DateTime.Today)
+        {
             ModelState.AddModelError("DataSprzedazy", "Data sprzedaży nie może być wcześniejsza niż bieżąca");
+        }
 
         var wybranePozycje = vm.Pozycje
             .Where(p => p.Ilosc.HasValue && p.Ilosc.Value > 0)

@@ -94,23 +94,33 @@ WHERE 1 = 1
         message = string.Empty;
         if (string.IsNullOrWhiteSpace(dataOd) && string.IsNullOrWhiteSpace(dataDo)) return true;
 
-        if (!string.IsNullOrWhiteSpace(dataOd) && !DateTime.TryParse(dataOd, out var od))
+        DateTime? od = null;
+        if (!string.IsNullOrWhiteSpace(dataOd))
         {
-            message = "Niepoprawny zakres dat.";
-            return false;
+            if (!DateTime.TryParse(dataOd, out var parsedOd))
+            {
+                message = "Niepoprawny zakres dat.";
+                return false;
+            }
+
+            od = parsedOd.Date;
         }
 
-        if (!string.IsNullOrWhiteSpace(dataDo) && !DateTime.TryParse(dataDo, out var doDate))
+        DateTime? doDate = null;
+        if (!string.IsNullOrWhiteSpace(dataDo))
         {
-            message = "Niepoprawny zakres dat.";
-            return false;
+            if (!DateTime.TryParse(dataDo, out var parsedDo))
+            {
+                message = "Niepoprawny zakres dat.";
+                return false;
+            }
+
+            doDate = parsedDo.Date;
         }
 
-        if (!string.IsNullOrWhiteSpace(dataOd) && !string.IsNullOrWhiteSpace(dataDo))
+        if (od.HasValue && doDate.HasValue)
         {
-            DateTime.TryParse(dataOd, out var odDate);
-            DateTime.TryParse(dataDo, out var doParsed);
-            if (doParsed.Date < odDate.Date)
+            if (doDate.Value < od.Value)
             {
                 message = "Niepoprawny zakres dat.";
                 return false;
