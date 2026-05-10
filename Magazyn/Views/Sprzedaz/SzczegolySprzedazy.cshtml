@@ -1,0 +1,57 @@
+@model Magazyn.Models.SzczegolySprzedazyVm
+@{
+    Layout = "_AdminLayout";
+    ViewData["Title"] = "Szczegóły sprzedaży";
+    ViewData["ActivePage"] = "HistoriaSprzedazy";
+}
+
+<a asp-action="HistoriaSprzedazy" class="back-link">&larr; Wróć do historii sprzedaży</a>
+
+<h2>Szczegóły sprzedaży</h2>
+
+<div class="tabelka-wyniki">
+    <table class="keyval">
+        <tbody>
+            <tr><th>ID sprzedaży</th><td>@Model.Id</td></tr>
+            <tr><th>Nabywca</th><td>@Model.NazwaKlienta</td></tr>
+            <tr><th>Adres</th><td>@Model.AdresKlienta</td></tr>
+            <tr><th>Data sprzedaży</th><td>@Model.DataSprzedazy</td></tr>
+            <tr><th>Data rejestracji</th><td>@Model.DataRejestracji</td></tr>
+            <tr><th>Sprzedawca</th><td>@Model.Sprzedawca</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="form-section-title">Pozycje sprzedaży</div>
+<div class="tabelka-wyniki">
+    <table>
+        <thead>
+            <tr>
+                <th>Towar</th>
+                <th>Jednostka</th>
+                <th>Ilość</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model.Pozycje == null || !Model.Pozycje.Any())
+            {
+                <tr>
+                    <td colspan="3" class="no-results no-results-centered">
+                        Brak pozycji dla tej sprzedaży.
+                    </td>
+                </tr>
+            }
+            else
+            {
+                foreach (var pozycja in Model.Pozycje)
+                {
+                    <tr>
+                        <td>@pozycja.NazwaTowaru</td>
+                        <td>@pozycja.JednostkaMiary</td>
+                        <td>@pozycja.Ilosc</td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

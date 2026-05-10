@@ -695,3 +695,21 @@ td {
     font-size: 0.9em;
     color: #666;
 }
+
+.sales-items-table td {
+    vertical-align: top;
+}
+
+.sales-qty-input {
+    width: 100%;
+    background-color: var(--bg-dark);
+    border: 1px solid var(--border-color);
+    color: var(--text-bright);
+    padding: 8px;
+    border-radius: 6px;
+    box-sizing: border-box;
+}
+
+.sales-items-table .field-error {
+    margin-top: 6px;
+}

@@ -40,6 +40,9 @@ Aplikacja posiada **5 ról**, które określają zakres dostępu do funkcji syst
 | **MAG: Szczegóły rejestracji (MAG-UC4)** | ✅ | ✅ | ❌ | ❌ | ❌ |
 | **MAG: Zmiana stawki VAT (MAG-UC5)** | ✅ | ✅ | ❌ | ❌ | ❌ |
 | **MAG: Słowniki – rodzaje towarów (MAG-UC6)** | ✅ | ✅ | ❌ | ❌ | ❌ |
+| **SPRZ: Rejestracja sprzedaży (SPRZ-UC1)** | ✅ | ❌ | ❌ | ❌ | ✅ |
+| **SPRZ: Historia sprzedaży (SPRZ-UC2)** | ✅ | ❌ | ✅ | ❌ | ❌ |
+| **SPRZ: Szczegóły sprzedaży (SPRZ-UC3)** | ✅ | ❌ | ✅ | ❌ | ❌ |
 
 ---
 
@@ -64,6 +67,7 @@ Zarządza pracownikami i funkcjami magazynowymi:
 Widok tylko do odczytu:
 - Przegląda listę pracowników i ich szczegóły
 - **Nie może** edytować danych, rejestrować, ani zarządzać uprawnieniami
+- Przegląda historię sprzedaży oraz szczegóły transakcji
 
 ### Pracownik magazynu
 Ograniczony dostęp + operacje magazynowe:
@@ -75,6 +79,7 @@ Ograniczony dostęp + operacje magazynowe:
 Identyczny zakres jak Pracownik magazynu w obszarze profilu:
 - Ma dostęp wyłącznie do **własnego profilu**
 - Może zmieniać własne hasło
+- Rejestruje sprzedaż towarów
 
 ---
 
@@ -206,6 +211,38 @@ Walidacje:
 Komunikaty:
 - sukces: „Nowy rodzaj towaru został dodany”
 - duplikat: „Podany rodzaj towaru już znajduje się w systemie”
+
+---
+
+## Moduł: Zarządzanie sprzedażą
+
+### SPRZ-UC1 — Rejestracja sprzedaży
+**Aktor:** Sprzedawca
+
+**Cel:** Zarejestrowanie sprzedaży towarów, zapisanie transakcji i aktualizacja stanów magazynowych.
+
+**Dane wejściowe:**
+- Nazwa klienta, adres klienta
+- Lista towarów z ilościami
+- Data sprzedaży (domyślnie bieżąca, może być przyszła)
+
+Komunikaty:
+- sukces: „Sprzedaż została zarejestrowana”
+- błąd: „Brak wystarczającej ilości towaru” lub „Data sprzedaży nie może być wcześniejsza niż bieżąca”
+
+### SPRZ-UC2 — Przegląd historii sprzedaży
+**Aktor:** Kierownik sprzedazy
+
+**Cel:** Przeglądanie sprzedaży z możliwością filtrowania po dacie, nabywcy, sprzedawcy i towarze.
+
+Komunikaty:
+- brak wyników: „Brak wyników dla podanych kryteriów”
+- błąd zakresu dat: „Niepoprawny zakres dat”
+
+### SPRZ-UC3 — Podgląd szczegółów sprzedaży
+**Aktor:** Kierownik sprzedazy
+
+**Cel:** Podgląd pełnych danych wybranej transakcji sprzedaży.
 
 ---
 
