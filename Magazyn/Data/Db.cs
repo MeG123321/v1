@@ -5,7 +5,7 @@ namespace Magazyn.Data;
 
 public static class Db
 {
-    private static readonly object RepairLock = new();
+    private static readonly object _repairLock = new();
 
     public static string GetDbPath(IWebHostEnvironment env) =>
         Path.Combine(env.WebRootPath, "magazyn.db");
@@ -60,7 +60,7 @@ public static class Db
 
     private static void RepairDatabase(string dbPath)
     {
-        lock (RepairLock)
+        lock (_repairLock)
         {
             if (IsDatabaseHealthy(dbPath)) return;
 
