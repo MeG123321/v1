@@ -64,6 +64,8 @@ public static class Db
         {
             if (IsDatabaseHealthy(dbPath)) return;
 
+            SqliteConnection.ClearAllPools();
+
             var backupPath = GetCorruptBackupPath(dbPath);
             if (File.Exists(dbPath))
             {
