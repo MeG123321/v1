@@ -231,7 +231,7 @@ Komunikaty:
 - błąd: „Brak wystarczającej ilości towaru” lub „Data sprzedaży nie może być wcześniejsza niż bieżąca”
 
 ### SPRZ-UC2 — Przegląd historii sprzedaży
-**Aktor:** Kierownik sprzedazy
+**Aktor:** Kierownik sprzedaży
 
 **Cel:** Przeglądanie sprzedaży z możliwością filtrowania po dacie, nabywcy, sprzedawcy i towarze.
 
@@ -240,7 +240,7 @@ Komunikaty:
 - błąd zakresu dat: „Niepoprawny zakres dat”
 
 ### SPRZ-UC3 — Podgląd szczegółów sprzedaży
-**Aktor:** Kierownik sprzedazy
+**Aktor:** Kierownik sprzedaży
 
 **Cel:** Podgląd pełnych danych wybranej transakcji sprzedaży.
 
