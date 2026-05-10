@@ -23,6 +23,7 @@
                 <input asp-for="NazwaTowaru" type="text" placeholder="Podaj nazwę towaru" />
                 <span asp-validation-for="NazwaTowaru" class="field-error"></span>
             </div>
+
             <div class="form-group">
                 <label asp-for="RodzajId">Rodzaj towaru *</label>
                 <select asp-for="RodzajId">
@@ -34,6 +35,7 @@
                 </select>
                 <span asp-validation-for="RodzajId" class="field-error"></span>
             </div>
+
             <div class="form-group">
                 <label asp-for="JednostkaMiaryId">Jednostka miary *</label>
                 <select asp-for="JednostkaMiaryId">
@@ -45,16 +47,19 @@
                 </select>
                 <span asp-validation-for="JednostkaMiaryId" class="field-error"></span>
             </div>
+
             <div class="form-group">
                 <label asp-for="Ilosc">Ilość *</label>
                 <input asp-for="Ilosc" type="number" step="0.001" min="0.001" placeholder="0" />
                 <span asp-validation-for="Ilosc" class="field-error"></span>
             </div>
+
             <div class="form-group">
                 <label asp-for="CenaNetto">Cena netto *</label>
                 <input asp-for="CenaNetto" type="number" step="0.01" min="0.01" placeholder="0.00" />
                 <span asp-validation-for="CenaNetto" class="field-error"></span>
             </div>
+
             <div class="form-group">
                 <label asp-for="StawkaVatId">Stawka VAT *</label>
                 <select asp-for="StawkaVatId">
@@ -66,14 +71,17 @@
                 </select>
                 <span asp-validation-for="StawkaVatId" class="field-error"></span>
             </div>
+
             <div class="form-group col-span-2">
                 <label asp-for="Opis">Opis</label>
                 <input asp-for="Opis" type="text" placeholder="Opcjonalny opis" />
             </div>
+
             <div class="form-group">
                 <label asp-for="Dostawca">Dostawca</label>
                 <input asp-for="Dostawca" type="text" placeholder="Nazwa firmy dostawcy" />
             </div>
+
             <div class="form-group">
                 <label asp-for="DataDostawy">Data dostawy</label>
                 <input asp-for="DataDostawy" type="date" />

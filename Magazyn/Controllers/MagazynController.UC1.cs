@@ -12,6 +12,7 @@ public partial class MagazynController : Controller
     public IActionResult RejestracjaTowaru()
     {
         if (!System.IO.File.Exists(DbPath)) return View(new RejestracjaTowaruVm());
+        
         using var conn = Db.OpenConnection(DbPath);
         var vm = new RejestracjaTowaruVm
         {
@@ -29,57 +30,64 @@ public partial class MagazynController : Controller
     {
         using var conn = Db.OpenConnection(DbPath);
 
+        // 1. Walidacja modelu
         if (!ModelState.IsValid)
         {
-            vm.Rodzaje = GetRodzaje(conn);
-            vm.JednostkiMiary = GetJednostkiMiary(conn);
-            vm.StawkiVat = GetStawkiVat(conn);
+            ReloadVmLists(vm, conn);
             return View(vm);
         }
 
-        var userId = GetCurrentUserId();
+        // Przygotowanie nazwy (bezpieczne Trim)
+        string nazwaTrimmed = vm.NazwaTowaru?.Trim() ?? string.Empty;
 
-        long towarId;
+        // 2. Sprawdzenie, czy towar już istnieje (Blokada duplikatów)
         using (var findCmd = conn.CreateCommand())
         {
-            findCmd.CommandText = "SELECT Id FROM Towary WHERE LOWER(TRIM(NazwaTowaru)) = LOWER(TRIM($nazwa)) LIMIT 1";
-            findCmd.Parameters.AddWithValue("$nazwa", vm.NazwaTowaru.Trim());
-            var existing = findCmd.ExecuteScalar();
-            if (existing != null && existing is not DBNull)
+            findCmd.CommandText = "SELECT COUNT(1) FROM Towary WHERE LOWER(TRIM(NazwaTowaru)) = LOWER(TRIM($nazwa))";
+            findCmd.Parameters.AddWithValue("$nazwa", nazwaTrimmed);
+            
+            var count = Convert.ToInt64(findCmd.ExecuteScalar());
+            if (count > 0)
             {
-                towarId = Convert.ToInt64(existing);
-                using var updCmd = conn.CreateCommand();
-                updCmd.CommandText = "UPDATE Towary SET AktualnaIlosc = AktualnaIlosc + $ilosc WHERE Id = $id";
-                updCmd.Parameters.AddWithValue("$ilosc", (double)vm.Ilosc);
-                updCmd.Parameters.AddWithValue("$id", towarId);
-                updCmd.ExecuteNonQuery();
-            }
-            else
-            {
-                using var insCmd = conn.CreateCommand();
-                insCmd.CommandText = "INSERT INTO Towary (NazwaTowaru, RodzajId, JednostkaMiaryId, AktualnaIlosc) VALUES ($nazwa, $rodzajId, $jmId, $ilosc)";
-                insCmd.Parameters.AddWithValue("$nazwa", vm.NazwaTowaru.Trim());
-                insCmd.Parameters.AddWithValue("$rodzajId", vm.RodzajId);
-                insCmd.Parameters.AddWithValue("$jmId", vm.JednostkaMiaryId);
-                insCmd.Parameters.AddWithValue("$ilosc", (double)vm.Ilosc);
-                insCmd.ExecuteNonQuery();
-
-                using var lastIdCmd = conn.CreateCommand();
-                lastIdCmd.CommandText = "SELECT last_insert_rowid()";
-                towarId = Convert.ToInt64(lastIdCmd.ExecuteScalar());
+                // Wyświetlamy komunikat o błędzie pod polem NazwaTowaru
+                ModelState.AddModelError("NazwaTowaru", "Towar o podanej nazwie już istnieje.");
+                ReloadVmLists(vm, conn);
+                return View(vm);
             }
         }
 
+        // 3. Rejestracja NOWEGO towaru
+        var userId = GetCurrentUserId();
+        long towarId;
+
+        using (var insCmd = conn.CreateCommand())
+        {
+            insCmd.CommandText = "INSERT INTO Towary (NazwaTowaru, RodzajId, JednostkaMiaryId, AktualnaIlosc) VALUES ($nazwa, $rodzajId, $jmId, $ilosc)";
+            insCmd.Parameters.AddWithValue("$nazwa", nazwaTrimmed);
+            insCmd.Parameters.AddWithValue("$rodzajId", vm.RodzajId);
+            insCmd.Parameters.AddWithValue("$jmId", vm.JednostkaMiaryId);
+            // POPRAWKA: Użycie .Value rozwiązuje błąd CS8629 dla decimal?
+            insCmd.Parameters.AddWithValue("$ilosc", (double)vm.Ilosc!.Value); 
+            insCmd.ExecuteNonQuery();
+
+            using var lastIdCmd = conn.CreateCommand();
+            lastIdCmd.CommandText = "SELECT last_insert_rowid()";
+            towarId = Convert.ToInt64(lastIdCmd.ExecuteScalar());
+        }
+
+        // 4. Zapisanie historii rejestracji (dostawy)
         using (var regCmd = conn.CreateCommand())
         {
             regCmd.CommandText = @"
-                INSERT INTO RejestracjeTowaru
-                    (TowarId, Ilosc, CenaNetto, StawkaVatId, Opis, Dostawca, DataDostawy, DataRejestracji, RejestrujacyUserId)
-                VALUES
-                    ($towarId, $ilosc, $cena, $vatId, $opis, $dostawca, $dataDostawy, datetime('now'), $userId)";
+                INSERT INTO RejestracjeTowaru 
+                (TowarId, Ilosc, CenaNetto, StawkaVatId, Opis, Dostawca, DataDostawy, DataRejestracji, RejestrujacyUserId) 
+                VALUES 
+                ($towarId, $ilosc, $cena, $vatId, $opis, $dostawca, $dataDostawy, datetime('now'), $userId)";
+            
             regCmd.Parameters.AddWithValue("$towarId", towarId);
-            regCmd.Parameters.AddWithValue("$ilosc", (double)vm.Ilosc);
-            regCmd.Parameters.AddWithValue("$cena", (double)vm.CenaNetto);
+            // POPRAWKA: Użycie .Value dla Ilosc i CenaNetto
+            regCmd.Parameters.AddWithValue("$ilosc", (double)vm.Ilosc!.Value);
+            regCmd.Parameters.AddWithValue("$cena", (double)vm.CenaNetto!.Value);
             regCmd.Parameters.AddWithValue("$vatId", vm.StawkaVatId);
             regCmd.Parameters.AddWithValue("$opis", string.IsNullOrWhiteSpace(vm.Opis) ? DBNull.Value : (object)vm.Opis);
             regCmd.Parameters.AddWithValue("$dostawca", string.IsNullOrWhiteSpace(vm.Dostawca) ? DBNull.Value : (object)vm.Dostawca);
@@ -88,8 +96,17 @@ public partial class MagazynController : Controller
             regCmd.ExecuteNonQuery();
         }
 
-        _logger.LogInformation("[MAG-UC1] '{User}' zarejestrował towar '{Towar}'", SL(User.Identity?.Name), SL(vm.NazwaTowaru));
+        _logger.LogInformation("[MAG-UC1] '{User}' zarejestrował towar '{Towar}'", SL(User.Identity?.Name), SL(nazwaTrimmed));
         TempData["SuccessMessage"] = "Towar został poprawnie zarejestrowany";
+        
         return RedirectToAction(nameof(StanyMagazynowe));
+    }
+
+    // Metoda pomocnicza, żeby nie powtarzać ładowania list
+    private void ReloadVmLists(RejestracjaTowaruVm vm, System.Data.Common.DbConnection conn)
+    {
+        vm.Rodzaje = GetRodzaje(conn);
+        vm.JednostkiMiary = GetJednostkiMiary(conn);
+        vm.StawkiVat = GetStawkiVat(conn);
     }
 }
