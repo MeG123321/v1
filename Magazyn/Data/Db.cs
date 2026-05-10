@@ -14,7 +14,7 @@ public static class Db
     {
         EnsureDatabaseExists(dbPath);
 
-        SqliteConnection connection = new($"Data Source={dbPath}");
+        var connection = new SqliteConnection($"Data Source={dbPath}");
         try
         {
             connection.Open();
@@ -22,9 +22,7 @@ public static class Db
             if (!IsIntegrityOk(connection))
             {
                 connection.Dispose();
-                RepairDatabase(dbPath);
-                connection = new SqliteConnection($"Data Source={dbPath}");
-                connection.Open();
+                return OpenRepairedConnection(dbPath);
             }
 
             return connection;
@@ -32,10 +30,7 @@ public static class Db
         catch (SqliteException ex) when (IsMalformedDatabase(ex))
         {
             connection.Dispose();
-            RepairDatabase(dbPath);
-            connection = new SqliteConnection($"Data Source={dbPath}");
-            connection.Open();
-            return connection;
+            return OpenRepairedConnection(dbPath);
         }
     }
 
@@ -67,6 +62,8 @@ public static class Db
     {
         lock (RepairLock)
         {
+            if (IsDatabaseHealthy(dbPath)) return;
+
             var backupPath = GetCorruptBackupPath(dbPath);
             if (File.Exists(dbPath))
             {
@@ -74,6 +71,30 @@ public static class Db
             }
 
             ReplaceDatabaseFromTemplate(dbPath);
+        }
+    }
+
+    private static SqliteConnection OpenRepairedConnection(string dbPath)
+    {
+        RepairDatabase(dbPath);
+        var repairedConnection = new SqliteConnection($"Data Source={dbPath}");
+        repairedConnection.Open();
+        return repairedConnection;
+    }
+
+    private static bool IsDatabaseHealthy(string dbPath)
+    {
+        if (!File.Exists(dbPath)) return false;
+
+        try
+        {
+            using var connection = new SqliteConnection($"Data Source={dbPath}");
+            connection.Open();
+            return IsIntegrityOk(connection);
+        }
+        catch (SqliteException)
+        {
+            return false;
         }
     }
 
