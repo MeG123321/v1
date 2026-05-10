@@ -22,8 +22,14 @@ public partial class SprzedazController : Controller
     private string DbPath => Db.GetDbPath(_env);
     private static string SL(string? value) => (value ?? "").Replace('\r', '_').Replace('\n', '_');
 
-    private long GetCurrentUserId() =>
-        long.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "0");
+    private long GetCurrentUserId()
+    {
+        var claimValue = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(claimValue) || !long.TryParse(claimValue, out var userId))
+            throw new InvalidOperationException("Brak identyfikatora użytkownika w sesji.");
+
+        return userId;
+    }
 
     private List<SprzedazPozycjaVm> GetDostepneTowary(System.Data.IDbConnection conn)
     {
