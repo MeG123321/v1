@@ -249,6 +249,10 @@ h2 {
     margin-top: 20px;
 }
 
+.mb-20 {
+    margin-bottom: 20px;
+}
+
 .mt-30 {
     margin-top: 30px;
 }
@@ -671,6 +675,10 @@ td {
 .text-muted {
     color: #666;
     margin-bottom: 20px;
+}
+
+.text-main {
+    color: var(--text-main);
 }
 
 .text-bright {
