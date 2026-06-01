@@ -35,33 +35,33 @@ public partial class UzytkownicyController : Controller
         
         command.Parameters.AddWithValue("$id", id);
 
-        using var dbReader = command.ExecuteReader();
-        if (!dbReader.Read())
+        using var reader = command.ExecuteReader();
+        if (!reader.Read())
             return NotFound(new { msg = "Nie znaleziono użytkownika", id });
 
         DateOnly? dataUrodzenia = null;
-        var birthDateRaw = dbReader["DataUrodzenia"]?.ToString();
-        if (DateOnly.TryParse(birthDateRaw, out var parsedBirthDate))
+        var dataUrodzeniaRaw = reader["DataUrodzenia"]?.ToString();
+        if (DateOnly.TryParse(dataUrodzeniaRaw, out var parsedBirthDate))
             dataUrodzenia = parsedBirthDate;
 
         var viewModel = new UserVm
         {
-            Id = Convert.ToInt64(dbReader["id"]),
-            Username = dbReader["username"]?.ToString() ?? "",
+            Id = Convert.ToInt64(reader["id"]),
+            Username = reader["username"]?.ToString() ?? "",
             Password = "",
-            FirstName = dbReader["firstName"]?.ToString() ?? "",
-            LastName = dbReader["LastName"]?.ToString() ?? "",
-            Pesel = dbReader["pesel"]?.ToString() ?? "",
-            Status = StatusToText(dbReader["Status"]),
-            Plec = PlecToText(dbReader["Plec"] == DBNull.Value ? 0 : Convert.ToInt32(dbReader["Plec"])),
+            FirstName = reader["firstName"]?.ToString() ?? "",
+            LastName = reader["LastName"]?.ToString() ?? "",
+            Pesel = reader["pesel"]?.ToString() ?? "",
+            Status = StatusToText(reader["Status"]),
+            Plec = PlecToText(reader["Plec"] == DBNull.Value ? 0 : Convert.ToInt32(reader["Plec"])),
             DataUrodzenia = dataUrodzenia,
-            Email = dbReader["Email"]?.ToString() ?? "",
-            NrTelefonu = dbReader["NrTelefonu"]?.ToString() ?? "",
-            Miejscowosc = dbReader["Miejscowosc"]?.ToString() ?? "",
-            KodPocztowy = dbReader["KodPocztowy"]?.ToString() ?? "",
-            NrPosesji = dbReader["numer_posesji"]?.ToString() ?? "",
-            Ulica = dbReader["Ulica"]?.ToString(),
-            NrLokalu = dbReader["NrLokalu"]?.ToString()
+            Email = reader["Email"]?.ToString() ?? "",
+            NrTelefonu = reader["NrTelefonu"]?.ToString() ?? "",
+            Miejscowosc = reader["Miejscowosc"]?.ToString() ?? "",
+            KodPocztowy = reader["KodPocztowy"]?.ToString() ?? "",
+            NrPosesji = reader["numer_posesji"]?.ToString() ?? "",
+            Ulica = reader["Ulica"]?.ToString(),
+            NrLokalu = reader["NrLokalu"]?.ToString()
         };
 
         return View(viewModel);

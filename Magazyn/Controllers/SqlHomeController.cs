@@ -34,7 +34,7 @@ public class HomeController : Controller
         if (!System.IO.File.Exists(DbPath))
             return NotFound(new { error = "Brak pliku bazy", path = DbPath });
 
-        var userList = new List<object>();
+        var users = new List<object>();
 
         using var connection = Db.OpenConnection(DbPath);
         using var command = connection.CreateCommand();
@@ -52,21 +52,21 @@ ORDER BY id;
         command.Parameters.AddWithValue("$name",  (object?)name  ?? DBNull.Value);
         command.Parameters.AddWithValue("$pesel", (object?)pesel ?? DBNull.Value);
 
-        using var dbReader = command.ExecuteReader();
-        while (dbReader.Read())
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
         {
-            userList.Add(new
+            users.Add(new
             {
-                id        = dbReader["id"],
-                username  = dbReader["username"],
-                firstName = dbReader["firstName"],
-                lastName  = dbReader["LastName"],
-                email     = dbReader["Email"],
-                pesel     = dbReader["pesel"]
+                id        = reader["id"],
+                username  = reader["username"],
+                firstName = reader["firstName"],
+                lastName  = reader["LastName"],
+                email     = reader["Email"],
+                pesel     = reader["pesel"]
             });
         }
 
-        return Json(userList);
+        return Json(users);
     }
 
     [Authorize]
@@ -92,36 +92,36 @@ LIMIT 1;
 ";
         command.Parameters.AddWithValue("$id", id);
 
-        using var dbReader = command.ExecuteReader();
-        if (!dbReader.Read())
+        using var reader = command.ExecuteReader();
+        if (!reader.Read())
             return NotFound(new { msg = "Nie znaleziono użytkownika" });
 
-        var statusInt = dbReader["Status"] == DBNull.Value ? 0 : Convert.ToInt32(dbReader["Status"]);
+        var statusInt = reader["Status"] == DBNull.Value ? 0 : Convert.ToInt32(reader["Status"]);
 
         return Json(new
         {
-            id           = dbReader["id"],
-            username     = dbReader["username"],
-            password     = dbReader["Password"],
-            firstName    = dbReader["firstName"],
-            lastName     = dbReader["LastName"],
-            pesel        = dbReader["pesel"],
+            id           = reader["id"],
+            username     = reader["username"],
+            password     = reader["Password"],
+            firstName    = reader["firstName"],
+            lastName     = reader["LastName"],
+            pesel        = reader["pesel"],
 
             statusInt    = statusInt,
-            status       = StatusToText(dbReader["Status"]),
+            status       = StatusToText(reader["Status"]),
 
-            plec         = dbReader["Plec"] == DBNull.Value ? 0 : Convert.ToInt32(dbReader["Plec"]),
-            dataUrodzenia= dbReader["DataUrodzenia"],
-            email        = dbReader["Email"],
-            nrTelefonu   = dbReader["NrTelefonu"],
-            miejscowosc  = dbReader["Miejscowosc"],
-            kodPocztowy  = dbReader["KodPocztowy"],
-            nrPosesji    = dbReader["numer_posesji"],
-            ulica        = dbReader["Ulica"],
-            nrLokalu     = dbReader["NrLokalu"],
-            zapomniany   = Convert.ToInt32(dbReader["czy_zapomniany"]) == 1,
-            dataZapomnienia  = dbReader["DataZapomnienia"],
-            zapomnialUserId  = dbReader["ZapomnialUserId"]
+            plec         = reader["Plec"] == DBNull.Value ? 0 : Convert.ToInt32(reader["Plec"]),
+            dataUrodzenia= reader["DataUrodzenia"],
+            email        = reader["Email"],
+            nrTelefonu   = reader["NrTelefonu"],
+            miejscowosc  = reader["Miejscowosc"],
+            kodPocztowy  = reader["KodPocztowy"],
+            nrPosesji    = reader["numer_posesji"],
+            ulica        = reader["Ulica"],
+            nrLokalu     = reader["NrLokalu"],
+            zapomniany   = Convert.ToInt32(reader["czy_zapomniany"]) == 1,
+            dataZapomnienia  = reader["DataZapomnienia"],
+            zapomnialUserId  = reader["ZapomnialUserId"]
         });
     }
 

@@ -14,14 +14,14 @@ public partial class MagazynController : Controller
         if (!System.IO.File.Exists(DbPath))
             return View(new StanyMagazynoweVm());
 
-        using var conn = Db.OpenConnection(DbPath);
-        var vm = new StanyMagazynoweVm
+        using var connection = Db.OpenConnection(DbPath);
+        var viewModel = new StanyMagazynoweVm
         {
             NazwaTowaru = nazwaTowar,
             RodzajId = rodzajId,
             ImiePracownika = imiePracownika,
             DataStanu = dataStanu,
-            Rodzaje = GetRodzaje(conn),
+            Rodzaje = GetRodzaje(connection),
             Searched = Request.Query.ContainsKey("nazwaTowar") || Request.Query.ContainsKey("rodzajId") ||
                        Request.Query.ContainsKey("imiePracownika") || Request.Query.ContainsKey("dataStanu")
         };
@@ -66,17 +66,17 @@ WHERE t.CzyAktywny = 1
  ");
         queryBuilder.Append("ORDER BY t.NazwaTowaru");
 
-        using var cmd = conn.CreateCommand();
-        cmd.CommandText = queryBuilder.ToString();
-        if (!string.IsNullOrWhiteSpace(nazwaTowar)) cmd.Parameters.AddWithValue("$nazwa", nazwaTowar);
-        if (rodzajId.HasValue && rodzajId > 0) cmd.Parameters.AddWithValue("$rodzajId", rodzajId.Value);
-        if (!string.IsNullOrWhiteSpace(imiePracownika)) cmd.Parameters.AddWithValue("$imie", imiePracownika);
-        if (useHistorical) cmd.Parameters.AddWithValue("$dataStanu", dataStanu!);
+        using var command = connection.CreateCommand();
+        command.CommandText = queryBuilder.ToString();
+        if (!string.IsNullOrWhiteSpace(nazwaTowar)) command.Parameters.AddWithValue("$nazwa", nazwaTowar);
+        if (rodzajId.HasValue && rodzajId > 0) command.Parameters.AddWithValue("$rodzajId", rodzajId.Value);
+        if (!string.IsNullOrWhiteSpace(imiePracownika)) command.Parameters.AddWithValue("$imie", imiePracownika);
+        if (useHistorical) command.Parameters.AddWithValue("$dataStanu", dataStanu!);
 
-        using var reader = cmd.ExecuteReader();
+        using var reader = command.ExecuteReader();
         while (reader.Read())
         {
-            vm.Wyniki.Add(new TowarStanDto
+            viewModel.Wyniki.Add(new TowarStanDto
             {
                 TowarId = Convert.ToInt64(reader["TowarId"]),
                 NazwaTowaru = reader["NazwaTowaru"].ToString()!,
@@ -86,6 +86,6 @@ WHERE t.CzyAktywny = 1
             });
         }
 
-        return View(vm);
+        return View(viewModel);
     }
 }

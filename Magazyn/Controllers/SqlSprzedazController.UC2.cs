@@ -12,7 +12,7 @@ public partial class SprzedazController : Controller
     [Authorize(Roles = "Administrator,Kierownik sprzedazy")]
     public IActionResult HistoriaSprzedazy(string? dataOd = null, string? dataDo = null, string? nabywca = null, string? sprzedawca = null, string? towar = null)
     {
-        var vm = new HistoriaSprzedazyVm
+       var viewModel = new HistoriaSprzedazyVm
         {
             DataOd = dataOd,
             DataDo = dataDo,
@@ -24,16 +24,16 @@ public partial class SprzedazController : Controller
                        !string.IsNullOrWhiteSpace(towar)
         };
 
-        if (!System.IO.File.Exists(DbPath)) return View(vm);
+       if (!System.IO.File.Exists(DbPath)) return View(viewModel);
 
         if (!ValidateDateRange(dataOd, dataDo, out var validationMessage))
         {
-            vm.ErrorMessage = validationMessage;
-            return View(vm);
+           viewModel.ErrorMessage = validationMessage;
+           return View(viewModel);
         }
 
-        using var conn = Db.OpenConnection(DbPath);
-        var sql = new StringBuilder(@"
+       using var connection = Db.OpenConnection(DbPath);
+       var queryBuilder = new StringBuilder(@"
 SELECT s.Id,
        s.DataSprzedazy,
        s.Nabywca,
@@ -45,16 +45,16 @@ WHERE 1 = 1
 ");
 
         if (!string.IsNullOrWhiteSpace(dataOd))
-            sql.Append("  AND s.DataSprzedazy >= $dataOd\n");
+           queryBuilder.Append("  AND s.DataSprzedazy >= $dataOd\n");
         if (!string.IsNullOrWhiteSpace(dataDo))
-            sql.Append("  AND s.DataSprzedazy <= $dataDo\n");
+           queryBuilder.Append("  AND s.DataSprzedazy <= $dataDo\n");
         if (!string.IsNullOrWhiteSpace(nabywca))
-            sql.Append("  AND LOWER(TRIM(s.Nabywca)) LIKE '%' || LOWER(TRIM($nabywca)) || '%'\n");
+           queryBuilder.Append("  AND LOWER(TRIM(s.Nabywca)) LIKE '%' || LOWER(TRIM($nabywca)) || '%'\n");
         if (!string.IsNullOrWhiteSpace(sprzedawca))
-            sql.Append("  AND LOWER(u.FirstName || ' ' || u.LastName) LIKE '%' || LOWER(TRIM($sprzedawca)) || '%'\n");
+           queryBuilder.Append("  AND LOWER(u.FirstName || ' ' || u.LastName) LIKE '%' || LOWER(TRIM($sprzedawca)) || '%'\n");
         if (!string.IsNullOrWhiteSpace(towar))
         {
-            sql.Append(@"  AND EXISTS (
+           queryBuilder.Append(@"  AND EXISTS (
         SELECT 1
         FROM SprzedazPozycje sp
         JOIN Towary t ON t.Id = sp.TowarId
@@ -63,20 +63,20 @@ WHERE 1 = 1
     )
 ");
         }
-        sql.Append("ORDER BY s.DataSprzedazy DESC, s.Id DESC");
+       queryBuilder.Append("ORDER BY s.DataSprzedazy DESC, s.Id DESC");
 
-        using var cmd = conn.CreateCommand();
-        cmd.CommandText = sql.ToString();
-        if (!string.IsNullOrWhiteSpace(dataOd)) cmd.Parameters.AddWithValue("$dataOd", dataOd);
-        if (!string.IsNullOrWhiteSpace(dataDo)) cmd.Parameters.AddWithValue("$dataDo", dataDo);
-        if (!string.IsNullOrWhiteSpace(nabywca)) cmd.Parameters.AddWithValue("$nabywca", nabywca);
-        if (!string.IsNullOrWhiteSpace(sprzedawca)) cmd.Parameters.AddWithValue("$sprzedawca", sprzedawca);
-        if (!string.IsNullOrWhiteSpace(towar)) cmd.Parameters.AddWithValue("$towar", towar);
+       using var command = connection.CreateCommand();
+       command.CommandText = queryBuilder.ToString();
+       if (!string.IsNullOrWhiteSpace(dataOd)) command.Parameters.AddWithValue("$dataOd", dataOd);
+       if (!string.IsNullOrWhiteSpace(dataDo)) command.Parameters.AddWithValue("$dataDo", dataDo);
+       if (!string.IsNullOrWhiteSpace(nabywca)) command.Parameters.AddWithValue("$nabywca", nabywca);
+       if (!string.IsNullOrWhiteSpace(sprzedawca)) command.Parameters.AddWithValue("$sprzedawca", sprzedawca);
+       if (!string.IsNullOrWhiteSpace(towar)) command.Parameters.AddWithValue("$towar", towar);
 
-        using var reader = cmd.ExecuteReader();
+       using var reader = command.ExecuteReader();
         while (reader.Read())
         {
-            vm.Wyniki.Add(new SprzedazHistoriaRowDto
+           viewModel.Wyniki.Add(new SprzedazHistoriaRowDto
             {
                 Id = Convert.ToInt64(reader["Id"]),
                 DataSprzedazy = reader["DataSprzedazy"].ToString()!,
@@ -86,7 +86,7 @@ WHERE 1 = 1
             });
         }
 
-        return View(vm);
+        return View(viewModel);
     }
 
     private static bool ValidateDateRange(string? dataOd, string? dataDo, out string message)
@@ -94,7 +94,7 @@ WHERE 1 = 1
         message = string.Empty;
         if (string.IsNullOrWhiteSpace(dataOd) && string.IsNullOrWhiteSpace(dataDo)) return true;
 
-        DateTime? od = null;
+        DateTime? dataOdValue = null;
         if (!string.IsNullOrWhiteSpace(dataOd))
         {
             if (!DateTime.TryParse(dataOd, out var parsedOd))
@@ -103,10 +103,10 @@ WHERE 1 = 1
                 return false;
             }
 
-            od = parsedOd.Date;
+            dataOdValue = parsedOd.Date;
         }
 
-        DateTime? doDate = null;
+        DateTime? dataDoValue = null;
         if (!string.IsNullOrWhiteSpace(dataDo))
         {
             if (!DateTime.TryParse(dataDo, out var parsedDo))
@@ -115,12 +115,12 @@ WHERE 1 = 1
                 return false;
             }
 
-            doDate = parsedDo.Date;
+            dataDoValue = parsedDo.Date;
         }
 
-        if (od.HasValue && doDate.HasValue)
+        if (dataOdValue.HasValue && dataDoValue.HasValue)
         {
-            if (doDate.Value < od.Value)
+            if (dataDoValue.Value < dataOdValue.Value)
             {
                 message = "Niepoprawny zakres dat.";
                 return false;

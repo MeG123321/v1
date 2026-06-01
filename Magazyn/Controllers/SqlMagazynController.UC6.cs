@@ -12,24 +12,24 @@ public partial class MagazynController : Controller
     public IActionResult RodzajeTowaru()
     {
         if (!System.IO.File.Exists(DbPath)) return View(new List<TowarRodzajVm>());
-        using var conn = Db.OpenConnection(DbPath);
-        using var cmd = conn.CreateCommand();
-        cmd.CommandText = @"
+       using var connection = Db.OpenConnection(DbPath);
+       using var command = connection.CreateCommand();
+       command.CommandText = @"
 SELECT r.Id, r.Nazwa,
        (SELECT COUNT(*) FROM Towary t WHERE t.RodzajId = r.Id AND t.CzyAktywny = 1) AS LiczbaTowarow
 FROM TowarRodzaje r
 WHERE r.CzyAktywny = 1
 ORDER BY r.Nazwa";
-        var list = new List<TowarRodzajVm>();
-        using var reader = cmd.ExecuteReader();
+       var rodzaje = new List<TowarRodzajVm>();
+       using var reader = command.ExecuteReader();
         while (reader.Read())
-            list.Add(new TowarRodzajVm
+           rodzaje.Add(new TowarRodzajVm
             {
                 Id = Convert.ToInt64(reader["Id"]),
                 Nazwa = reader["Nazwa"].ToString()!,
                 LiczbaTowarow = Convert.ToInt32(reader["LiczbaTowarow"])
             });
-        return View(list);
+       return View(rodzaje);
     }
 
     [HttpPost]
@@ -43,23 +43,23 @@ ORDER BY r.Nazwa";
             return RedirectToAction(nameof(RodzajeTowaru));
         }
 
-        using var conn = Db.OpenConnection(DbPath);
-        using (var checkCmd = conn.CreateCommand())
+        using var connection = Db.OpenConnection(DbPath);
+        using (var checkCommand = connection.CreateCommand())
         {
-            checkCmd.CommandText = "SELECT COUNT(*) FROM TowarRodzaje WHERE LOWER(TRIM(Nazwa)) = LOWER(TRIM($nazwa))";
-            checkCmd.Parameters.AddWithValue("$nazwa", nazwa.Trim());
-            if (Convert.ToInt32(checkCmd.ExecuteScalar()) > 0)
+            checkCommand.CommandText = "SELECT COUNT(*) FROM TowarRodzaje WHERE LOWER(TRIM(Nazwa)) = LOWER(TRIM($nazwa))";
+            checkCommand.Parameters.AddWithValue("$nazwa", nazwa.Trim());
+            if (Convert.ToInt32(checkCommand.ExecuteScalar()) > 0)
             {
                 TempData["ErrorMessage"] = "Podany rodzaj towaru już znajduje się w systemie";
                 return RedirectToAction(nameof(RodzajeTowaru));
             }
         }
 
-        using (var insCmd = conn.CreateCommand())
+        using (var insertCommand = connection.CreateCommand())
         {
-            insCmd.CommandText = "INSERT INTO TowarRodzaje (Nazwa) VALUES ($nazwa)";
-            insCmd.Parameters.AddWithValue("$nazwa", nazwa.Trim());
-            insCmd.ExecuteNonQuery();
+            insertCommand.CommandText = "INSERT INTO TowarRodzaje (Nazwa) VALUES ($nazwa)";
+            insertCommand.Parameters.AddWithValue("$nazwa", nazwa.Trim());
+            insertCommand.ExecuteNonQuery();
         }
 
         TempData["SuccessMessage"] = "Nowy rodzaj towaru został dodany";
@@ -77,25 +77,25 @@ ORDER BY r.Nazwa";
             return RedirectToAction(nameof(RodzajeTowaru));
         }
 
-        using var conn = Db.OpenConnection(DbPath);
-        using (var checkCmd = conn.CreateCommand())
+        using var connection = Db.OpenConnection(DbPath);
+        using (var checkCommand = connection.CreateCommand())
         {
-            checkCmd.CommandText = "SELECT COUNT(*) FROM TowarRodzaje WHERE LOWER(TRIM(Nazwa)) = LOWER(TRIM($nazwa)) AND Id != $id";
-            checkCmd.Parameters.AddWithValue("$nazwa", nazwa.Trim());
-            checkCmd.Parameters.AddWithValue("$id", id);
-            if (Convert.ToInt32(checkCmd.ExecuteScalar()) > 0)
+            checkCommand.CommandText = "SELECT COUNT(*) FROM TowarRodzaje WHERE LOWER(TRIM(Nazwa)) = LOWER(TRIM($nazwa)) AND Id != $id";
+            checkCommand.Parameters.AddWithValue("$nazwa", nazwa.Trim());
+            checkCommand.Parameters.AddWithValue("$id", id);
+            if (Convert.ToInt32(checkCommand.ExecuteScalar()) > 0)
             {
                 TempData["ErrorMessage"] = "Podany rodzaj towaru już znajduje się w systemie";
                 return RedirectToAction(nameof(RodzajeTowaru));
             }
         }
 
-        using (var updCmd = conn.CreateCommand())
+        using (var updateCommand = connection.CreateCommand())
         {
-            updCmd.CommandText = "UPDATE TowarRodzaje SET Nazwa = $nazwa WHERE Id = $id";
-            updCmd.Parameters.AddWithValue("$nazwa", nazwa.Trim());
-            updCmd.Parameters.AddWithValue("$id", id);
-            updCmd.ExecuteNonQuery();
+            updateCommand.CommandText = "UPDATE TowarRodzaje SET Nazwa = $nazwa WHERE Id = $id";
+            updateCommand.Parameters.AddWithValue("$nazwa", nazwa.Trim());
+            updateCommand.Parameters.AddWithValue("$id", id);
+            updateCommand.ExecuteNonQuery();
         }
 
         TempData["SuccessMessage"] = "Rodzaj towaru został zaktualizowany";
@@ -107,23 +107,23 @@ ORDER BY r.Nazwa";
     [Authorize(Roles = "Administrator,Kierownik magazynu")]
     public IActionResult UsunRodzaj(long id)
     {
-        using var conn = Db.OpenConnection(DbPath);
-        using (var checkCmd = conn.CreateCommand())
+        using var connection = Db.OpenConnection(DbPath);
+        using (var checkCommand = connection.CreateCommand())
         {
-            checkCmd.CommandText = "SELECT COUNT(*) FROM Towary WHERE RodzajId = $id AND CzyAktywny = 1";
-            checkCmd.Parameters.AddWithValue("$id", id);
-            if (Convert.ToInt32(checkCmd.ExecuteScalar()) > 0)
+            checkCommand.CommandText = "SELECT COUNT(*) FROM Towary WHERE RodzajId = $id AND CzyAktywny = 1";
+            checkCommand.Parameters.AddWithValue("$id", id);
+            if (Convert.ToInt32(checkCommand.ExecuteScalar()) > 0)
             {
                 TempData["ErrorMessage"] = "Nie można usunąć rodzaju przypisanego do towarów";
                 return RedirectToAction(nameof(RodzajeTowaru));
             }
         }
 
-        using (var delCmd = conn.CreateCommand())
+        using (var deleteCommand = connection.CreateCommand())
         {
-            delCmd.CommandText = "DELETE FROM TowarRodzaje WHERE Id = $id";
-            delCmd.Parameters.AddWithValue("$id", id);
-            delCmd.ExecuteNonQuery();
+            deleteCommand.CommandText = "DELETE FROM TowarRodzaje WHERE Id = $id";
+            deleteCommand.Parameters.AddWithValue("$id", id);
+            deleteCommand.ExecuteNonQuery();
         }
 
         TempData["SuccessMessage"] = "Rodzaj towaru został usunięty";

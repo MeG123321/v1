@@ -51,35 +51,35 @@ LIMIT 1;
 ";
         command.Parameters.AddWithValue("$id", id);
 
-        using var dbReader = command.ExecuteReader();
-        if (!dbReader.Read())
+        using var reader = command.ExecuteReader();
+        if (!reader.Read())
             return NotFound(new { msg = "Nie znaleziono użytkownika", id });
 
-        bool isForgotten = Convert.ToInt32(dbReader["czy_zapomniany"]) == 1;
+        bool isForgotten = Convert.ToInt32(reader["czy_zapomniany"]) == 1;
         
-        string rawRoles = dbReader["RolaRaw"]?.ToString() ?? "";
+        string rawRoles = reader["RolaRaw"]?.ToString() ?? "";
         var roleNames = rawRoles.Split('|', StringSplitOptions.RemoveEmptyEntries).ToList();
 
         var userDetails = new UserDetailsDto
         {
-            Id = Convert.ToInt64(dbReader["id"]),
-            Username = dbReader["username"]?.ToString(),
-            FirstName = dbReader["firstName"]?.ToString(),
-            LastName = dbReader["LastName"]?.ToString(),
-            Pesel = dbReader["pesel"]?.ToString(),
+            Id = Convert.ToInt64(reader["id"]),
+            Username = reader["username"]?.ToString(),
+            FirstName = reader["firstName"]?.ToString(),
+            LastName = reader["LastName"]?.ToString(),
+            Pesel = reader["pesel"]?.ToString(),
             
-            Status = isForgotten ? "Zanonimizowany" : (Convert.ToInt32(dbReader["RawStatus"]) == 1 ? "Aktywny" : "Nieaktywny"),
+            Status = isForgotten ? "Zanonimizowany" : (Convert.ToInt32(reader["RawStatus"]) == 1 ? "Aktywny" : "Nieaktywny"),
             
-            Plec = dbReader["Plec"] is DBNull ? 0 : Convert.ToInt32(dbReader["Plec"]),
-            DataUrodzenia = dbReader["DataUrodzenia"]?.ToString(),
+            Plec = reader["Plec"] is DBNull ? 0 : Convert.ToInt32(reader["Plec"]),
+            DataUrodzenia = reader["DataUrodzenia"]?.ToString(),
 
-            Email = dbReader["Email"]?.ToString(),
-            NrTelefonu = dbReader["NrTelefonu"]?.ToString(),
-            Miejscowosc = dbReader["Miejscowosc"]?.ToString(),
-            KodPocztowy = dbReader["KodPocztowy"]?.ToString(),
-            Ulica = dbReader["Ulica"]?.ToString(),
-            NrPosesji = dbReader["numer_posesji"]?.ToString(),
-            NrLokalu = dbReader["NrLokalu"]?.ToString(),
+            Email = reader["Email"]?.ToString(),
+            NrTelefonu = reader["NrTelefonu"]?.ToString(),
+            Miejscowosc = reader["Miejscowosc"]?.ToString(),
+            KodPocztowy = reader["KodPocztowy"]?.ToString(),
+            Ulica = reader["Ulica"]?.ToString(),
+            NrPosesji = reader["numer_posesji"]?.ToString(),
+            NrLokalu = reader["NrLokalu"]?.ToString(),
 
             IsForgotten = isForgotten,
             RoleList = roleNames,

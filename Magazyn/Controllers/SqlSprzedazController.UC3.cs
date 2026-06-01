@@ -17,27 +17,27 @@ public partial class SprzedazController : Controller
             return RedirectToAction(nameof(HistoriaSprzedazy));
         }
 
-        using var conn = Db.OpenConnection(DbPath);
+       using var connection = Db.OpenConnection(DbPath);
 
-        SzczegolySprzedazyVm? vm = null;
-        using (var cmd = conn.CreateCommand())
+       SzczegolySprzedazyVm? viewModel = null;
+       using (var command = connection.CreateCommand())
         {
-            cmd.CommandText = @"
+           command.CommandText = @"
 SELECT s.Id, s.Nabywca, s.Adres, s.DataSprzedazy, s.DataRejestracji,
        u.FirstName || ' ' || u.LastName AS Sprzedawca
 FROM Sprzedaze s
 JOIN Uzytkownicy u ON u.id = s.SprzedawcaUserId
 WHERE s.Id = $id";
-            cmd.Parameters.AddWithValue("$id", id);
+           command.Parameters.AddWithValue("$id", id);
 
-            using var reader = cmd.ExecuteReader();
+           using var reader = command.ExecuteReader();
             if (!reader.Read())
             {
                 TempData["ErrorMessage"] = "Nie znaleziono szczegółów sprzedaży.";
                 return RedirectToAction(nameof(HistoriaSprzedazy));
             }
 
-            vm = new SzczegolySprzedazyVm
+           viewModel = new SzczegolySprzedazyVm
             {
                 Id = Convert.ToInt64(reader["Id"]),
                 NazwaKlienta = reader["Nabywca"].ToString()!,
@@ -48,20 +48,20 @@ WHERE s.Id = $id";
             };
         }
 
-        using (var itemsCmd = conn.CreateCommand())
+       using (var itemsCommand = connection.CreateCommand())
         {
-            itemsCmd.CommandText = @"
+           itemsCommand.CommandText = @"
 SELECT t.NazwaTowaru, jm.Nazwa AS JednostkaMiary, sp.Ilosc
 FROM SprzedazPozycje sp
 JOIN Towary t ON t.Id = sp.TowarId
 JOIN JednostkiMiary jm ON jm.Id = t.JednostkaMiaryId
 WHERE sp.SprzedazId = $id
 ORDER BY t.NazwaTowaru";
-            itemsCmd.Parameters.AddWithValue("$id", id);
-            using var itemsReader = itemsCmd.ExecuteReader();
+           itemsCommand.Parameters.AddWithValue("$id", id);
+           using var itemsReader = itemsCommand.ExecuteReader();
             while (itemsReader.Read())
             {
-                vm.Pozycje.Add(new SprzedazPozycjaSzczegolDto
+               viewModel.Pozycje.Add(new SprzedazPozycjaSzczegolDto
                 {
                     NazwaTowaru = itemsReader["NazwaTowaru"].ToString()!,
                     JednostkaMiary = itemsReader["JednostkaMiary"].ToString()!,
@@ -70,6 +70,6 @@ ORDER BY t.NazwaTowaru";
             }
         }
 
-        return View(vm);
+        return View(viewModel);
     }
 }

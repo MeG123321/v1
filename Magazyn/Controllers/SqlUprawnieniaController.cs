@@ -35,14 +35,14 @@ public class UprawnieniaController : Controller
 
         ViewBag.SelectedRoles = selectedRoles;
 
-        var userList = new List<UserListRowDto>();
+        var users = new List<UserListRowDto>();
         if (!System.IO.File.Exists(DbPath))
-            return View(userList);
+            return View(users);
 
         using var connection = Db.OpenConnection(DbPath);
         using var command = connection.CreateCommand();
 
-        var sql = @"
+        var query = @"
             SELECT u.id,
                    u.username,
                    u.firstName,
@@ -60,7 +60,7 @@ public class UprawnieniaController : Controller
         {
             for (int i = 0; i < selectedRoles.Length; i++)
             {
-                sql += $@"
+                query += $@"
             AND EXISTS (
                 SELECT 1
                 FROM Uzytkownik_Uprawnienia uu2
@@ -73,29 +73,29 @@ public class UprawnieniaController : Controller
             }
         }
 
-        sql += @"
+        query += @"
             GROUP BY u.id, u.username, u.firstName, u.LastName, u.Email, u.pesel
             ORDER BY u.id;";
 
-        command.CommandText = sql;
+        command.CommandText = query;
 
-        using var dbReader = command.ExecuteReader();
-        while (dbReader.Read())
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
         {
-            userList.Add(new UserListRowDto
+            users.Add(new UserListRowDto
             {
-                Id        = Convert.ToInt64(dbReader["id"]),
-                Username  = dbReader["username"]?.ToString(),
-                FirstName = dbReader["firstName"]?.ToString(),
-                LastName  = dbReader["LastName"]?.ToString(),
-                Email     = dbReader["Email"]?.ToString(),
-                Pesel     = dbReader["pesel"]?.ToString(),
-                Status    = dbReader["Status"]?.ToString(),
-                Rola      = dbReader["Rola"]?.ToString()
+                Id        = Convert.ToInt64(reader["id"]),
+                Username  = reader["username"]?.ToString(),
+                FirstName = reader["firstName"]?.ToString(),
+                LastName  = reader["LastName"]?.ToString(),
+                Email     = reader["Email"]?.ToString(),
+                Pesel     = reader["pesel"]?.ToString(),
+                Status    = reader["Status"]?.ToString(),
+                Rola      = reader["Rola"]?.ToString()
             });
         }
 
-        return View(userList);
+        return View(users);
     }
 
     [HttpPost]
