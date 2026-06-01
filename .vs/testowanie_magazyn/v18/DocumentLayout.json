@@ -1,0 +1,58 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\testowanie_magazyn\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{B6872715-4194-4595-B525-FA43FA49704E}|Magazyn.Tests\\Magazyn.Tests\\Magazyn.Tests.csproj|d:\\testowanie_magazyn\\magazyn.tests\\magazyn.tests\\testydodawanie.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B6872715-4194-4595-B525-FA43FA49704E}|Magazyn.Tests\\Magazyn.Tests\\Magazyn.Tests.csproj|solutionrelative:magazyn.tests\\magazyn.tests\\testydodawanie.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B6872715-4194-4595-B525-FA43FA49704E}|Magazyn.Tests\\Magazyn.Tests\\Magazyn.Tests.csproj|d:\\testowanie_magazyn\\magazyn.tests\\magazyn.tests\\testyedycja.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B6872715-4194-4595-B525-FA43FA49704E}|Magazyn.Tests\\Magazyn.Tests\\Magazyn.Tests.csproj|solutionrelative:magazyn.tests\\magazyn.tests\\testyedycja.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 2,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "Testyedycja.cs",
+              "DocumentMoniker": "D:\\testowanie_magazyn\\Magazyn.Tests\\Magazyn.Tests\\Testyedycja.cs",
+              "RelativeDocumentMoniker": "Magazyn.Tests\\Magazyn.Tests\\Testyedycja.cs",
+              "ToolTip": "D:\\testowanie_magazyn\\Magazyn.Tests\\Magazyn.Tests\\Testyedycja.cs",
+              "RelativeToolTip": "Magazyn.Tests\\Magazyn.Tests\\Testyedycja.cs",
+              "ViewState": "AgIAAOQAAAAAAAAAAAAAAAgBAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-27T12:08:21.708Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Testydodawanie.cs",
+              "DocumentMoniker": "D:\\testowanie_magazyn\\Magazyn.Tests\\Magazyn.Tests\\Testydodawanie.cs",
+              "RelativeDocumentMoniker": "Magazyn.Tests\\Magazyn.Tests\\Testydodawanie.cs",
+              "ToolTip": "D:\\testowanie_magazyn\\Magazyn.Tests\\Magazyn.Tests\\Testydodawanie.cs",
+              "RelativeToolTip": "Magazyn.Tests\\Magazyn.Tests\\Testydodawanie.cs",
+              "ViewState": "AgIAAC4BAAAAAAAAAAAswEYBAAAZAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-04-27T12:05:42.037Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

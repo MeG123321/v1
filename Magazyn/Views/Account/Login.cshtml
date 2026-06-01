@@ -17,14 +17,14 @@
             <div class="logo"><h1>Magazyn GiTA</h1></div>
             <nav class="gitanav">
                 <p>Wejście do systemu</p>
-                <a class="przycisk-menu" asp-controller="Home" asp-action="Index">← Strona główna</a>
+                <a class="przycisk-menu" asp-controller="Home" asp-action="Index">Strona główna</a>
             </nav>
         </aside>
 
         <main class="main">
             <header class="header">
                 <div class="info">
-                    <a asp-controller="Home" asp-action="Index">Strona Główna</a>
+                    <a class="header-link" asp-controller="Home" asp-action="Index">Strona Główna</a>
                 </div>
             </header>
 
@@ -49,17 +49,14 @@
                         </div>
 
                         <div class="form-group form-group-inline">
-                            <label>
-                                <input asp-for="RememberMe" type="checkbox" />
-                                Zapamiętaj mnie
-                            </label>
-                            <a asp-action="RecoverPassword" class="subtle-link">Odzyskaj hasło</a>
+                            
                         </div>
                     </div>
 
                     <div class="btn-group mt-30">
                         <button type="submit" class="btn-primary">Zaloguj</button>
                         <a class="btn-secondary" asp-controller="Home" asp-action="Index">Anuluj</a>
+                        <a class="btn-secondary"asp-action="RecoverPassword">Odzyskaj hasło</a>
                     </div>
                 </form>
             </section>

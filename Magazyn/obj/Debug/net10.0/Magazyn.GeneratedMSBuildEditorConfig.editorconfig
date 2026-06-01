@@ -1,0 +1,135 @@
+is_global = true
+build_property.TargetFramework = net10.0
+build_property.TargetFrameworkIdentifier = .NETCoreApp
+build_property.TargetFrameworkVersion = v10.0
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = true
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = 
+build_property.PlatformNeutralAssembly = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property.RootNamespace = Magazyn
+build_property.RootNamespace = Magazyn
+build_property.ProjectDir = C:\Users\mateu\Documents\GitHub\testowanie_magazyn\Magazyn\
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = 
+build_property.RazorLangVersion = 9.0
+build_property.SupportLocalizedComponentNames = 
+build_property.GenerateRazorMetadataSourceChecksumAttributes = 
+build_property.MSBuildProjectDirectory = C:\Users\mateu\Documents\GitHub\testowanie_magazyn\Magazyn
+build_property._RazorSourceGeneratorDebug = 
+build_property.EffectiveAnalysisLevelStyle = 10.0
+build_property.EnableCodeStyleSeverity = 
+
+[C:/Users/mateu/Documents/GitHub/testowanie_magazyn/Magazyn/Views/Account/ChangePassword.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWNjb3VudFxDaGFuZ2VQYXNzd29yZC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mateu/Documents/GitHub/testowanie_magazyn/Magazyn/Views/Account/Login.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWNjb3VudFxMb2dpbi5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mateu/Documents/GitHub/testowanie_magazyn/Magazyn/Views/Account/MyProfile.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWNjb3VudFxNeVByb2ZpbGUuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mateu/Documents/GitHub/testowanie_magazyn/Magazyn/Views/Account/RecoverPassword.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcQWNjb3VudFxSZWNvdmVyUGFzc3dvcmQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mateu/Documents/GitHub/testowanie_magazyn/Magazyn/Views/Home/index.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcSG9tZVxpbmRleC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mateu/Documents/GitHub/testowanie_magazyn/Magazyn/Views/Magazyn/HistoriaStanow.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTWFnYXp5blxIaXN0b3JpYVN0YW5vdy5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mateu/Documents/GitHub/testowanie_magazyn/Magazyn/Views/Magazyn/RejestracjaTowaru.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTWFnYXp5blxSZWplc3RyYWNqYVRvd2FydS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mateu/Documents/GitHub/testowanie_magazyn/Magazyn/Views/Magazyn/RodzajeTowaru.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTWFnYXp5blxSb2R6YWplVG93YXJ1LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mateu/Documents/GitHub/testowanie_magazyn/Magazyn/Views/Magazyn/StanyMagazynowe.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTWFnYXp5blxTdGFueU1hZ2F6eW5vd2UuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mateu/Documents/GitHub/testowanie_magazyn/Magazyn/Views/Magazyn/SzczegolyRejestracji.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTWFnYXp5blxTemN6ZWdvbHlSZWplc3RyYWNqaS5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mateu/Documents/GitHub/testowanie_magazyn/Magazyn/Views/Magazyn/ZmianaVat.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcTWFnYXp5blxabWlhbmFWYXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mateu/Documents/GitHub/testowanie_magazyn/Magazyn/Views/Shared/Error.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXEVycm9yLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mateu/Documents/GitHub/testowanie_magazyn/Magazyn/Views/Shared/_AdminLayout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9BZG1pbkxheW91dC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mateu/Documents/GitHub/testowanie_magazyn/Magazyn/Views/Shared/_LogoutLink.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9Mb2dvdXRMaW5rLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mateu/Documents/GitHub/testowanie_magazyn/Magazyn/Views/Shared/_ValidationScriptsPartial.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9WYWxpZGF0aW9uU2NyaXB0c1BhcnRpYWwuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mateu/Documents/GitHub/testowanie_magazyn/Magazyn/Views/Sprzedaz/HistoriaSprzedazy.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU3ByemVkYXpcSGlzdG9yaWFTcHJ6ZWRhenkuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mateu/Documents/GitHub/testowanie_magazyn/Magazyn/Views/Sprzedaz/RejestracjaSprzedazy.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU3ByemVkYXpcUmVqZXN0cmFjamFTcHJ6ZWRhenkuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mateu/Documents/GitHub/testowanie_magazyn/Magazyn/Views/Sprzedaz/SzczegolySprzedazy.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU3ByemVkYXpcU3pjemVnb2x5U3ByemVkYXp5LmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mateu/Documents/GitHub/testowanie_magazyn/Magazyn/Views/Uprawnienia/Uprawnienia.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVXByYXduaWVuaWFcVXByYXduaWVuaWEuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mateu/Documents/GitHub/testowanie_magazyn/Magazyn/Views/Uprawnienia/UsersByRole.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVXByYXduaWVuaWFcVXNlcnNCeVJvbGUuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mateu/Documents/GitHub/testowanie_magazyn/Magazyn/Views/Uzytkownicy/AdminPanel.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVXp5dGtvd25pY3lcQWRtaW5QYW5lbC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mateu/Documents/GitHub/testowanie_magazyn/Magazyn/Views/Uzytkownicy/EditUser.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVXp5dGtvd25pY3lcRWRpdFVzZXIuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mateu/Documents/GitHub/testowanie_magazyn/Magazyn/Views/Uzytkownicy/ForgottenUsers.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVXp5dGtvd25pY3lcRm9yZ290dGVuVXNlcnMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mateu/Documents/GitHub/testowanie_magazyn/Magazyn/Views/Uzytkownicy/Rejestracja.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVXp5dGtvd25pY3lcUmVqZXN0cmFjamEuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mateu/Documents/GitHub/testowanie_magazyn/Magazyn/Views/Uzytkownicy/UserDetails.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcVXp5dGtvd25pY3lcVXNlckRldGFpbHMuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mateu/Documents/GitHub/testowanie_magazyn/Magazyn/Views/_ViewImports.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcX1ZpZXdJbXBvcnRzLmNzaHRtbA==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mateu/Documents/GitHub/testowanie_magazyn/Magazyn/Views/_ViewStart.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcX1ZpZXdTdGFydC5jc2h0bWw=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/mateu/Documents/GitHub/testowanie_magazyn/Magazyn/Views/Shared/_Layout.cshtml]
+build_metadata.AdditionalFiles.TargetPath = Vmlld3NcU2hhcmVkXF9MYXlvdXQuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = b-wklo2z3mep
