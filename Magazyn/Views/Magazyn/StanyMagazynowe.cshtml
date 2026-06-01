@@ -10,7 +10,7 @@
 
 @if (!string.IsNullOrEmpty(TempData["SuccessMessage"]?.ToString()))
 {
-    <div style="background:rgba(87,171,90,0.12);border:1px solid var(--status-green);border-radius:6px;color:var(--status-green);padding:15px;margin-bottom:20px;">
+    <div class="alert-success">
         @TempData["SuccessMessage"]
     </div>
 }
@@ -92,8 +92,8 @@
                         <td>
                             @if (isManager)
                             {
-                                <a class="btn-secondary" style="margin-right:4px;" asp-action="HistoriaStanow" asp-route-id="@t.TowarId">Historia</a>
-                                <a class="btn-secondary" style="margin-right:4px;" asp-action="ZmianaVat" asp-route-towarId="@t.TowarId">Zmień VAT</a>
+                                <a class="btn-secondary mr-4" asp-action="HistoriaStanow" asp-route-id="@t.TowarId">Historia</a>
+                                <a class="btn-secondary mr-4" asp-action="ZmianaVat" asp-route-towarId="@t.TowarId">Zmień VAT</a>
                             }
                         </td>
                     </tr>

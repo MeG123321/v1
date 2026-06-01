@@ -17,9 +17,9 @@ public partial class MagazynController : Controller
             return RedirectToAction(nameof(StanyMagazynowe));
         }
 
-        using var conn = Db.OpenConnection(DbPath);
-        using var cmd = conn.CreateCommand();
-        cmd.CommandText = @"
+        using var connection = Db.OpenConnection(DbPath);
+        using var command = connection.CreateCommand();
+        command.CommandText = @"
 SELECT rt.Id, t.NazwaTowaru, r.Nazwa AS RodzajTowaru, jm.Nazwa AS JednostkaMiary,
        rt.Ilosc, rt.CenaNetto, sv.Nazwa AS StawkaVat,
        rt.Opis, rt.Dostawca, rt.DataDostawy, rt.DataRejestracji,
@@ -31,16 +31,16 @@ JOIN JednostkiMiary jm ON jm.Id = t.JednostkaMiaryId
 JOIN StawkiVat sv ON sv.Id = rt.StawkaVatId
 JOIN Uzytkownicy u ON u.id = rt.RejestrujacyUserId
 WHERE rt.Id = $id";
-        cmd.Parameters.AddWithValue("$id", id);
+        command.Parameters.AddWithValue("$id", id);
 
-        using var reader = cmd.ExecuteReader();
+        using var reader = command.ExecuteReader();
         if (!reader.Read())
         {
             TempData["ErrorMessage"] = "Nie znaleziono szczegółowych danych dla wybranego towaru";
             return RedirectToAction(nameof(StanyMagazynowe));
         }
 
-        var vm = new SzczegolyRejestracjiVm
+        var viewModel = new SzczegolyRejestracjiVm
         {
             Id = Convert.ToInt64(reader["Id"]),
             NazwaTowaru = reader["NazwaTowaru"].ToString()!,
@@ -56,6 +56,6 @@ WHERE rt.Id = $id";
             ImieNazwiskoPracownika = reader["ImieNazwisko"].ToString()!
         };
 
-        return View(vm);
+        return View(viewModel);
     }
 }

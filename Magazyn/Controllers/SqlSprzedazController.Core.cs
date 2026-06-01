@@ -31,20 +31,20 @@ public partial class SprzedazController : Controller
         return userId;
     }
 
-    private List<SprzedazPozycjaVm> GetDostepneTowary(System.Data.IDbConnection conn)
+   private List<SprzedazPozycjaVm> GetDostepneTowary(System.Data.IDbConnection connection)
     {
-        var list = new List<SprzedazPozycjaVm>();
-        using var cmd = conn.CreateCommand();
-        cmd.CommandText = @"
+       var towary = new List<SprzedazPozycjaVm>();
+       using var command = connection.CreateCommand();
+       command.CommandText = @"
 SELECT t.Id, t.NazwaTowaru, jm.Nazwa AS JednostkaMiary, t.AktualnaIlosc
 FROM Towary t
 JOIN JednostkiMiary jm ON jm.Id = t.JednostkaMiaryId
 WHERE t.CzyAktywny = 1 AND t.AktualnaIlosc > 0
 ORDER BY t.NazwaTowaru";
-        using var reader = cmd.ExecuteReader();
+       using var reader = command.ExecuteReader();
         while (reader.Read())
         {
-            list.Add(new SprzedazPozycjaVm
+           towary.Add(new SprzedazPozycjaVm
             {
                 TowarId = Convert.ToInt64(reader["Id"]),
                 NazwaTowaru = reader["NazwaTowaru"].ToString()!,
@@ -53,20 +53,20 @@ ORDER BY t.NazwaTowaru";
             });
         }
 
-        return list;
+       return towary;
     }
 
-    private void ReloadPozycje(RejestracjaSprzedazyVm vm, System.Data.IDbConnection conn)
+   private void ReloadPozycje(RejestracjaSprzedazyVm viewModel, System.Data.IDbConnection connection)
     {
-        vm.Pozycje ??= new List<SprzedazPozycjaVm>();
-        var existing = vm.Pozycje.ToDictionary(p => p.TowarId, p => p.Ilosc);
-        var list = GetDostepneTowary(conn);
-        foreach (var item in list)
+       viewModel.Pozycje ??= new List<SprzedazPozycjaVm>();
+       var existing = viewModel.Pozycje.ToDictionary(pozycja => pozycja.TowarId, pozycja => pozycja.Ilosc);
+       var dostepneTowary = GetDostepneTowary(connection);
+       foreach (var item in dostepneTowary)
         {
             if (existing.TryGetValue(item.TowarId, out var ilosc))
                 item.Ilosc = ilosc;
         }
 
-        vm.Pozycje = list;
+       viewModel.Pozycje = dostepneTowary;
     }
 }

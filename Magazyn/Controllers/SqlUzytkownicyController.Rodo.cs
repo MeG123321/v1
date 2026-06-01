@@ -17,10 +17,10 @@ public partial class UzytkownicyController : Controller
         ViewBag.Fname = fname ?? "";
         ViewBag.AdminId = adminId?.ToString() ?? "";
 
-        var forgottenList = new List<ForgottenRowDto>();
+        var forgottenUsers = new List<ForgottenRowDto>();
 
         if (!System.IO.File.Exists(DbPath))
-            return View(forgottenList);
+            return View(forgottenUsers);
 
         using var connection = Db.OpenConnection(DbPath);
         using var command = connection.CreateCommand();
@@ -43,25 +43,25 @@ public partial class UzytkownicyController : Controller
         command.Parameters.AddWithValue("$fname", string.IsNullOrWhiteSpace(fname) ? "" : fname.Trim());
         command.Parameters.AddWithValue("$adminId", adminId.HasValue ? adminId.Value : DBNull.Value);
 
-        using var dbReader = command.ExecuteReader();
-        while (dbReader.Read())
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
         {
-            var firstName = dbReader.IsDBNull(1) ? "" : dbReader.GetString(1);
-            var lastName = dbReader.IsDBNull(2) ? "" : dbReader.GetString(2);
+            var firstName = reader.IsDBNull(1) ? "" : reader.GetString(1);
+            var lastName = reader.IsDBNull(2) ? "" : reader.GetString(2);
 
-            var adminName = dbReader.IsDBNull(5) ? "Nieznany admin" : dbReader.GetString(5);
+            var adminName = reader.IsDBNull(5) ? "Nieznany admin" : reader.GetString(5);
 
-            forgottenList.Add(new ForgottenRowDto
+            forgottenUsers.Add(new ForgottenRowDto
             {
-                Id = dbReader.GetInt64(0),
+                Id = reader.GetInt64(0),
                 FullNameAfterForget = $"{firstName} {lastName}".Trim(),
-                DataZapomnienia = dbReader.IsDBNull(3) ? "" : dbReader.GetString(3),
-                ZapomnialUserId = dbReader.IsDBNull(4) ? "" : dbReader.GetInt64(4).ToString(),
+                DataZapomnienia = reader.IsDBNull(3) ? "" : reader.GetString(3),
+                ZapomnialUserId = reader.IsDBNull(4) ? "" : reader.GetInt64(4).ToString(),
                 AdminName = adminName
             });
         }
 
-        return View(forgottenList);
+        return View(forgottenUsers);
     }
 
     [HttpPost]
@@ -142,11 +142,11 @@ public partial class UzytkownicyController : Controller
         var affectedRows = command.ExecuteNonQuery();
         if (affectedRows == 0) return NotFound(new { msg = "Użytkownik nie istnieje" });
 
-        using (var deleteCmd = connection.CreateCommand())
+        using (var deleteCommand = connection.CreateCommand())
         {
-            deleteCmd.CommandText = "DELETE FROM Uzytkownik_Uprawnienia WHERE uzytkownik_id = $uzytkownikId;";
-            deleteCmd.Parameters.AddWithValue("$uzytkownikId", id);
-            deleteCmd.ExecuteNonQuery();
+            deleteCommand.CommandText = "DELETE FROM Uzytkownik_Uprawnienia WHERE uzytkownik_id = $uzytkownikId;";
+            deleteCommand.Parameters.AddWithValue("$uzytkownikId", id);
+            deleteCommand.ExecuteNonQuery();
         }
 
         return Ok(new { ok = true });

@@ -19,9 +19,9 @@ public partial class UzytkownicyController : Controller
         ViewBag.Name = name ?? "";
         ViewBag.Pesel = pesel ?? "";
 
-        var userList = new List<UserListRowDto>();
+        var users = new List<UserListRowDto>();
         if (!System.IO.File.Exists(DbPath))
-            return View(userList);
+            return View(users);
 
         using var connection = Db.OpenConnection(DbPath);
         using var command = connection.CreateCommand();
@@ -49,22 +49,22 @@ ORDER BY u.id;
         command.Parameters.AddWithValue("$name", name ?? "");
         command.Parameters.AddWithValue("$pesel", pesel ?? "");
 
-        using var dbReader = command.ExecuteReader();
-        while (dbReader.Read())
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
         {
-            userList.Add(new UserListRowDto
+            users.Add(new UserListRowDto
             {
-                Id = Convert.ToInt64(dbReader["id"]),
-                Username = dbReader["username"]?.ToString(),
-                FirstName = dbReader["firstName"]?.ToString(),
-                LastName = dbReader["LastName"]?.ToString(),
-                Email = dbReader["Email"]?.ToString(),
-                Pesel = dbReader["pesel"]?.ToString(),
-                Status = dbReader["Status"]?.ToString(),
-                Rola = dbReader["Rola"]?.ToString()
+                Id = Convert.ToInt64(reader["id"]),
+                Username = reader["username"]?.ToString(),
+                FirstName = reader["firstName"]?.ToString(),
+                LastName = reader["LastName"]?.ToString(),
+                Email = reader["Email"]?.ToString(),
+                Pesel = reader["pesel"]?.ToString(),
+                Status = reader["Status"]?.ToString(),
+                Rola = reader["Rola"]?.ToString()
             });
         }
 
-        return View(userList);
+        return View(users);
     }
 }

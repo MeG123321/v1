@@ -16,11 +16,11 @@ public partial class UzytkownicyController : Controller
     public IActionResult CheckUsername(string username)
     {
         using var connection = Db.OpenConnection(DbPath);
-        using var cmd = connection.CreateCommand();
-        cmd.CommandText = "SELECT COUNT(*) FROM Uzytkownicy WHERE LOWER(TRIM(username)) = LOWER(TRIM($u))";
-        cmd.Parameters.AddWithValue("$u", (username ?? "").Trim());
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT COUNT(*) FROM Uzytkownicy WHERE LOWER(TRIM(username)) = LOWER(TRIM($u))";
+        command.Parameters.AddWithValue("$u", (username ?? "").Trim());
         
-        var count = Convert.ToInt32(cmd.ExecuteScalar());
+        var count = Convert.ToInt32(command.ExecuteScalar());
         
         if (count > 0)
             return Json("Ta nazwa użytkownika jest już zajęta.");
@@ -33,11 +33,11 @@ public partial class UzytkownicyController : Controller
     public IActionResult CheckEmail(string email)
     {
         using var connection = Db.OpenConnection(DbPath);
-        using var cmd = connection.CreateCommand();
-        cmd.CommandText = "SELECT COUNT(*) FROM Uzytkownicy WHERE LOWER(TRIM(Email)) = LOWER(TRIM($e))";
-        cmd.Parameters.AddWithValue("$e", (email ?? "").Trim());
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT COUNT(*) FROM Uzytkownicy WHERE LOWER(TRIM(Email)) = LOWER(TRIM($e))";
+        command.Parameters.AddWithValue("$e", (email ?? "").Trim());
         
-        var count = Convert.ToInt32(cmd.ExecuteScalar());
+        var count = Convert.ToInt32(command.ExecuteScalar());
         
         if (count > 0)
             return Json("Ten adres e-mail jest już zarejestrowany.");
@@ -50,11 +50,11 @@ public partial class UzytkownicyController : Controller
     public IActionResult CheckPesel(string pesel)
     {
         using var connection = Db.OpenConnection(DbPath);
-        using var cmd = connection.CreateCommand();
-        cmd.CommandText = "SELECT COUNT(*) FROM Uzytkownicy WHERE TRIM(pesel) = TRIM($p)";
-        cmd.Parameters.AddWithValue("$p", (pesel ?? "").Trim());
+        using var command = connection.CreateCommand();
+        command.CommandText = "SELECT COUNT(*) FROM Uzytkownicy WHERE TRIM(pesel) = TRIM($p)";
+        command.Parameters.AddWithValue("$p", (pesel ?? "").Trim());
         
-        var count = Convert.ToInt32(cmd.ExecuteScalar());
+        var count = Convert.ToInt32(command.ExecuteScalar());
         
         if (count > 0)
             return Json("Ten PESEL widnieje już w bazie.");
@@ -65,62 +65,62 @@ public partial class UzytkownicyController : Controller
     [HttpPost]
     [ValidateAntiForgeryToken]
     [Authorize(Roles = "Administrator,Kierownik magazynu")]
-    public IActionResult Rejestracja(UserRegistrationDto dto)
+    public IActionResult Rejestracja(UserRegistrationDto registration)
     {
         if (!ModelState.IsValid)
-            return View(dto);
+            return View(registration);
 
         if (!System.IO.File.Exists(DbPath))
         {
             ModelState.AddModelError("", $"Nie znaleziono bazy danych: {DbPath}");
-            return View(dto);
+            return View(registration);
         }
 
         _logger.LogInformation("[AdminAccess] '{User}' rejestruje nowego użytkownika login='{NewLogin}' IP={RemoteIp}",
-            SL(User.Identity?.Name), SL(dto.Username), HttpContext.Connection.RemoteIpAddress);
+            SL(User.Identity?.Name), SL(registration.Username), HttpContext.Connection.RemoteIpAddress);
 
-        dto.Username = (dto.Username ?? "").Trim();
-        dto.Password = (dto.Password ?? "").Trim();
-        dto.FirstName = (dto.FirstName ?? "").Trim();
-        dto.LastName = (dto.LastName ?? "").Trim();
-        dto.Pesel = (dto.Pesel ?? "").Trim();
-        dto.Email = (dto.Email ?? "").Trim();
-        dto.NrTelefonu = (dto.NrTelefonu ?? "").Trim();
-        dto.Miejscowosc = (dto.Miejscowosc ?? "").Trim();
-        dto.KodPocztowy = (dto.KodPocztowy ?? "").Trim();
-        dto.NrPosesji = (dto.NrPosesji ?? "").Trim();
-        dto.Ulica = (dto.Ulica ?? "").Trim();
-        dto.NrLokalu = (dto.NrLokalu ?? "").Trim();
+        registration.Username = (registration.Username ?? "").Trim();
+        registration.Password = (registration.Password ?? "").Trim();
+        registration.FirstName = (registration.FirstName ?? "").Trim();
+        registration.LastName = (registration.LastName ?? "").Trim();
+        registration.Pesel = (registration.Pesel ?? "").Trim();
+        registration.Email = (registration.Email ?? "").Trim();
+        registration.NrTelefonu = (registration.NrTelefonu ?? "").Trim();
+        registration.Miejscowosc = (registration.Miejscowosc ?? "").Trim();
+        registration.KodPocztowy = (registration.KodPocztowy ?? "").Trim();
+        registration.NrPosesji = (registration.NrPosesji ?? "").Trim();
+        registration.Ulica = (registration.Ulica ?? "").Trim();
+        registration.NrLokalu = (registration.NrLokalu ?? "").Trim();
 
-        if (!TryValidatePeselConsistency(dto.Pesel, dto.DataUrodzenia, dto.Plec, out var peselError))
+        if (!TryValidatePeselConsistency(registration.Pesel, registration.DataUrodzenia, registration.Plec, out var peselError))
         {
-            ModelState.AddModelError(nameof(dto.Pesel), peselError);
-            return View(dto);
+            ModelState.AddModelError(nameof(registration.Pesel), peselError);
+            return View(registration);
         }
 
-        var birthDateString = dto.DataUrodzenia?.ToString("yyyy-MM-dd");
+        var birthDateString = registration.DataUrodzenia?.ToString("yyyy-MM-dd");
 
         using var connection = Db.OpenConnection(DbPath);
 
         using (var checkUsernameCommand = connection.CreateCommand())
         {
             checkUsernameCommand.CommandText = "SELECT COUNT(*) FROM Uzytkownicy WHERE LOWER(TRIM(username)) = LOWER(TRIM($username));";
-            checkUsernameCommand.Parameters.AddWithValue("$username", dto.Username);
+            checkUsernameCommand.Parameters.AddWithValue("$username", registration.Username);
             if (Convert.ToInt32(checkUsernameCommand.ExecuteScalar()) > 0)
             {
                 ModelState.AddModelError("Username", "Taki login już istnieje.");
-                return View(dto);
+                return View(registration);
             }
         }
 
         using (var checkEmailCommand = connection.CreateCommand())
         {
             checkEmailCommand.CommandText = "SELECT COUNT(*) FROM Uzytkownicy WHERE LOWER(TRIM(Email)) = LOWER(TRIM($email));";
-            checkEmailCommand.Parameters.AddWithValue("$email", dto.Email);
+            checkEmailCommand.Parameters.AddWithValue("$email", registration.Email);
             if (Convert.ToInt32(checkEmailCommand.ExecuteScalar()) > 0)
             {
                 ModelState.AddModelError("Email", "Taki email już istnieje.");
-                return View(dto);
+                return View(registration);
             }
         }
 
@@ -136,26 +136,26 @@ public partial class UzytkownicyController : Controller
                      NULL, 0, $dataUrodzenia, NULL, $password, $kodPocztowy,
                      0, $nrPosesji, NULL, $status);";
 
-            insertCommand.Parameters.AddWithValue("$email", dto.Email);
-            insertCommand.Parameters.AddWithValue("$firstName", dto.FirstName);
-            insertCommand.Parameters.AddWithValue("$username", dto.Username);
-            insertCommand.Parameters.AddWithValue("$miejscowosc", dto.Miejscowosc);
-            insertCommand.Parameters.AddWithValue("$lastName", dto.LastName);
-            insertCommand.Parameters.AddWithValue("$nrLokalu", string.IsNullOrWhiteSpace(dto.NrLokalu) ? DBNull.Value : dto.NrLokalu);
-            insertCommand.Parameters.AddWithValue("$pesel", dto.Pesel);
-            insertCommand.Parameters.AddWithValue("$plec", PlecToInt(dto.Plec));
-            insertCommand.Parameters.AddWithValue("$nrTelefonu", dto.NrTelefonu);
-            insertCommand.Parameters.AddWithValue("$ulica", string.IsNullOrWhiteSpace(dto.Ulica) ? DBNull.Value : dto.Ulica);
+            insertCommand.Parameters.AddWithValue("$email", registration.Email);
+            insertCommand.Parameters.AddWithValue("$firstName", registration.FirstName);
+            insertCommand.Parameters.AddWithValue("$username", registration.Username);
+            insertCommand.Parameters.AddWithValue("$miejscowosc", registration.Miejscowosc);
+            insertCommand.Parameters.AddWithValue("$lastName", registration.LastName);
+            insertCommand.Parameters.AddWithValue("$nrLokalu", string.IsNullOrWhiteSpace(registration.NrLokalu) ? DBNull.Value : registration.NrLokalu);
+            insertCommand.Parameters.AddWithValue("$pesel", registration.Pesel);
+            insertCommand.Parameters.AddWithValue("$plec", PlecToInt(registration.Plec));
+            insertCommand.Parameters.AddWithValue("$nrTelefonu", registration.NrTelefonu);
+            insertCommand.Parameters.AddWithValue("$ulica", string.IsNullOrWhiteSpace(registration.Ulica) ? DBNull.Value : registration.Ulica);
             insertCommand.Parameters.AddWithValue("$dataUrodzenia", string.IsNullOrWhiteSpace(birthDateString) ? DBNull.Value : birthDateString);
-            insertCommand.Parameters.AddWithValue("$password", string.IsNullOrWhiteSpace(dto.Password) ? DBNull.Value : dto.Password);
-            insertCommand.Parameters.AddWithValue("$kodPocztowy", dto.KodPocztowy);
-            insertCommand.Parameters.AddWithValue("$nrPosesji", dto.NrPosesji);
-            insertCommand.Parameters.AddWithValue("$status", StatusToInt(dto.Status));
+            insertCommand.Parameters.AddWithValue("$password", string.IsNullOrWhiteSpace(registration.Password) ? DBNull.Value : registration.Password);
+            insertCommand.Parameters.AddWithValue("$kodPocztowy", registration.KodPocztowy);
+            insertCommand.Parameters.AddWithValue("$nrPosesji", registration.NrPosesji);
+            insertCommand.Parameters.AddWithValue("$status", StatusToInt(registration.Status));
 
             insertCommand.ExecuteNonQuery();
         }
 
-        if (!string.IsNullOrWhiteSpace(dto.Rola))
+        if (!string.IsNullOrWhiteSpace(registration.Rola))
         {
             long newUserId;
             using (var lastIdCommand = connection.CreateCommand())
@@ -167,7 +167,7 @@ public partial class UzytkownicyController : Controller
             using (var roleIdCommand = connection.CreateCommand())
             {
                 roleIdCommand.CommandText = @"SELECT Id FROM Uprawnienia WHERE TRIM(Nazwa) = TRIM($nazwaRoli) LIMIT 1;";
-                roleIdCommand.Parameters.AddWithValue("$nazwaRoli", dto.Rola.Trim());
+                roleIdCommand.Parameters.AddWithValue("$nazwaRoli", registration.Rola.Trim());
                 var roleIdScalar = roleIdCommand.ExecuteScalar();
                 if (roleIdScalar != null)
                 {
